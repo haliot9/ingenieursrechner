@@ -80,6 +80,17 @@ Jede Entscheidung mit Kontext, Alternativen und Begruendung.
 
 ---
 
+## D10: Declarative module result summaries and process strips
+**Decided:** Module-specific result titles and process strips are declared on `CalculatorModule`, while `ResultSummary` remains generic.
+**Alternative:** Branch in the UI on each module ID.
+**Rationale:**
+- A new calculator module must not require a special-case React branch.
+- Each thermodynamic module owns its visible process topology.
+- The shared summary keeps its metrics, accessibility structure, and responsive behavior.
+**Trade-off:** Modules must keep their process metadata consistent with formulas and diagrams.
+
+---
+
 ## D9: Modul-Adapter-Funktion fuer Diagramm-Daten
 **Entschieden:** Jedes Modul liefert optional `getDiagramSpec()` → generisches `DiagramSpec`.
 **Alternative:** Diagramm-Komponenten lesen direkt aus dem Store/Solver.

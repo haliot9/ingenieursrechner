@@ -4,6 +4,7 @@ Jedes Modul ist ein eigenständiger Rechner für ein Themengebiet (z.B. Thermody
 
 ## Vorhandene Module
 - `carnot/` → Carnot-Kreisprozess (Thermodynamik)
+- `diesel/` → idealer Luftstandard-Diesel-Kreisprozess (Thermodynamik)
 
 ## Neues Modul erstellen
 

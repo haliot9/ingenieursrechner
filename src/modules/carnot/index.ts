@@ -27,6 +27,13 @@ export const carnotModule: CalculatorModule = {
     },
   ],
   groups: VARIABLE_GROUPS,
+  summaryTitle: 'Carnot-Bilanz',
+  processSequence: [
+    { transition: '1 → 2', label: 'adiabate Kompression' },
+    { transition: '2 → 3', label: 'isotherme Wärmezufuhr' },
+    { transition: '3 → 4', label: 'adiabate Expansion' },
+    { transition: '4 → 1', label: 'isotherme Wärmeabfuhr' },
+  ],
   validateValues: validateCarnotCycle,
   getDiagramSpec: getCarnotDiagramSpec,
 }

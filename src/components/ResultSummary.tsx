@@ -33,7 +33,7 @@ export function ResultSummary() {
       <div className="summary-heading">
         <div>
           <p className="eyebrow">Live-Auswertung</p>
-          <h2 id="result-title">Carnot-Bilanz</h2>
+          <h2 id="result-title">{module.summaryTitle ?? 'Zyklusbilanz'}</h2>
         </div>
         <span className={`solver-state ${solved ? 'is-ready' : ''}`}>
           {solved ? 'Zyklus gelöst' : `${inputs} Eingaben · ${computed} berechnet`}
@@ -49,14 +49,11 @@ export function ResultSummary() {
         ))}
       </div>
 
-      <div className="cycle-strip" aria-label="Prozessfolge des Carnot-Kreisprozesses">
-        <span><b>1 → 2</b><small>adiabate Kompression</small></span>
-        <i aria-hidden="true" />
-        <span><b>2 → 3</b><small>isotherme Wärmezufuhr</small></span>
-        <i aria-hidden="true" />
-        <span><b>3 → 4</b><small>adiabate Expansion</small></span>
-        <i aria-hidden="true" />
-        <span><b>4 → 1</b><small>isotherme Wärmeabfuhr</small></span>
+      <div className="cycle-strip" aria-label="Prozessfolge des Kreisprozesses">
+        {(module.processSequence ?? []).flatMap((step, index) => [
+          <span key={step.transition}><b>{step.transition}</b><small>{step.label}</small></span>,
+          ...(index === (module.processSequence?.length ?? 0) - 1 ? [] : [<i aria-hidden="true" key={`${step.transition}-separator`} />]),
+        ])}
       </div>
     </section>
   )

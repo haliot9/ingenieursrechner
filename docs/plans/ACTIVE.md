@@ -42,10 +42,7 @@ Repository: `https://github.com/haliot9/ingenieursrechner`
 ## Release checks
 
 ```bash
-npm test
-npm run lint
-npm run build
-npm audit
+npm run verify
 ```
 
 Expected local gate:
@@ -53,7 +50,7 @@ Expected local gate:
 - 104 tests pass
 - lint exits 0
 - build exits 0
-- audit reports 0 vulnerabilities
+- `npm audit --audit-level=high` reports 0 vulnerabilities
 
 ## Known non-blocking limitation
 

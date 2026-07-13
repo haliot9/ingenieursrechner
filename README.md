@@ -55,14 +55,13 @@ npm ci
 npm run dev
 ```
 
-Quality checks:
+Quality gate:
 
 ```bash
-npm test
-npm run lint
-npm run build
-npm audit
+npm run verify
 ```
+
+This runs the complete test, lint, production-build, and high-severity dependency-audit bundle.
 
 ## Architecture
 
@@ -89,6 +88,10 @@ user values → validation → fixed-point solver
 - `docs/` — architecture, decisions, quality evidence, plans, and failure history
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [src/modules/carnot/README.md](src/modules/carnot/README.md) for details.
+
+## For coding agents and contributors
+
+Start with [`AGENTS.md`](AGENTS.md), then follow [`docs/TESTING.md`](docs/TESTING.md). They define the repository boundaries, decision rules, test strategy, prohibited shortcuts, and required verification evidence without depending on a specific coding-agent product. Supply-chain controls and their limits are documented in [`SECURITY_NOTES.md`](SECURITY_NOTES.md).
 
 ## Model limits
 

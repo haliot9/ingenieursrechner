@@ -18,23 +18,41 @@ Preserve the core promise: the same physical inputs produce the same outputs and
 ## Work loop
 
 1. Recon before mutation: identify whether the boundary is dependency, build, core logic, units, UI, diagram rendering, or deployment.
-2. State the smallest testable requirement.
-3. Add a failing regression or behavior test before production code.
+2. State the smallest observable requirement and the most relevant failure mode.
+3. Add a failing regression or behavior test before production code and confirm it fails for the intended reason.
 4. Implement the smallest coherent slice.
 5. Run the targeted test, then the full quality bundle.
 6. Inspect user-visible behavior in a real browser for UI or diagram changes.
-7. Update module docs and `docs/QUALITY.md` when behavior or evidence changes.
+7. Review the diff for unintended scope and update affected quality evidence.
+8. Report what is verified, untested, or blocked; never convert assumptions into completion claims.
+
+Follow [`docs/TESTING.md`](docs/TESTING.md) for test selection, independent oracles, numerical tolerances, property tests, browser evidence, and anti-gaming rules.
+
+## Decision rules
+
+- Prefer existing module patterns and utilities over parallel machinery.
+- Test behavior at the lowest layer that can prove the requirement.
+- Treat generated output, subagent reports, and passing snapshots as claims until independently verified.
+- Stop and expose ambiguity when requirements, domain conventions, or expected values are missing.
+- Do not broaden scope during a fix; record unrelated findings separately.
+- A large test count, coverage percentage, or green build is evidence only for the behavior it actually exercises.
 
 ## Quality bundle
+
+```bash
+npm run verify
+```
+
+This runs:
 
 ```bash
 npm test
 npm run lint
 npm run build
-npm audit
+npm audit --audit-level=high
 ```
 
-Do not claim release readiness unless all four checks were executed or the blocker is explicit.
+Do not claim release readiness unless the complete bundle was executed successfully or the blocker is explicit.
 
 ## Domain invariants
 
@@ -60,5 +78,8 @@ Do not claim release readiness unless all four checks were executed or the block
 
 - Do not commit `node_modules`, `dist`, personal `USER.md`, or legacy local agent configuration.
 - Use `npm ci` for reproducible dependency restoration.
+- Treat dependency and lockfile changes as executable supply-chain changes requiring review.
+- Pin GitHub Actions to full commit SHAs and keep workflow permissions job-scoped and minimal.
+- Do not add repository secrets or self-hosted runners to pull-request verification.
 - Do not commit secrets.
 - Do not push or deploy without explicit user approval.

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useCalculatorStore } from './store/calculator-store'
 import { ModuleSelector } from './components/ModuleSelector'
 import { CalculatorTable } from './components/CalculatorTable'
@@ -9,6 +10,9 @@ import { DiagramPanel } from './components/diagrams/DiagramPanel'
 
 function App() {
   const { module, steps, errors, values } = useCalculatorStore()
+  useEffect(() => {
+    if (module) document.title = `Ingenieursrechner · ${module.name}`
+  }, [module])
   const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
   const visibleErrors = cycleSolved
     ? errors.filter(error => error.type !== 'insufficient_data')
@@ -73,7 +77,7 @@ function App() {
 
       <footer className="site-footer">
         <div className="page-width footer-inner">
-          <p><strong>Ingenieursrechner</strong> · Carnot-Modul</p>
+          <p><strong>Ingenieursrechner</strong> · {module?.name ?? 'Rechenmodule'}</p>
           <p>Idealisiertes Lehrmodell. Ergebnisse immer mit Aufgabenstellung und Stoffmodell abgleichen.</p>
         </div>
       </footer>

@@ -90,6 +90,10 @@ export interface CalculatorModule {
   processes?: ProcessType[]
   presets?: CalculatorPreset[]
   groups: string[]              // ordered list of variable groups for UI
+  /** Optional module-specific title for the generic result summary. */
+  summaryTitle?: string
+  /** Optional declarative process strip rendered by the generic result summary. */
+  processSequence?: Array<{ transition: string; label: string }>
   /** Optional: validates module-level relationships across multiple values. */
   validateValues?: (values: Record<string, VariableState>) => SolverError[]
   /** Optional: liefert Diagramm-Daten fuer p-v und T-s Darstellung */

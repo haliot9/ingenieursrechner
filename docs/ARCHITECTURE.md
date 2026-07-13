@@ -45,7 +45,7 @@ Jedes Modul definiert ein abgeschlossenes Rechengebiet.
 - `formulas.ts` - Formeln mit `solveFor` (pre-solved Expressions) + `latexSteps`
 - `index.ts` - Export als `CalculatorModule`
 
-**Aktuell:** Carnot-Prozess (Thermodynamik)
+**Aktuell:** Carnot-Prozess und idealer Luftstandard-Diesel-Prozess (Thermodynamik)
 **Geplant:** Weitere Module (Kinematik, Stroemungsmechanik, etc.)
 
 ### 3. State Management (`src/store/`)
@@ -63,7 +63,7 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - `DiagramPanel` - module-independent p-v and T-s visualizations
 - `StepDisplay` - expandable KaTeX derivation steps
 - `ValueInput` / `UnitSelector` - unit-aware inputs with mobile-size controls
-- `ModuleSelector` - module navigation
+- `ModuleSelector` - accessible live-filtered module picker driven by the module registry
 
 ## Datenfluss (Detail)
 ```

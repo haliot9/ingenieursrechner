@@ -110,4 +110,4 @@ The Vite build uses relative asset paths so the app works below a repository-spe
 
 ## License
 
-No license has been selected yet. All rights remain with the repository owner until a license is added.
+Licensed under the [MIT License](LICENSE).

@@ -7,13 +7,11 @@ Preserve the core promise: the same physical inputs produce the same outputs and
 
 ## Read order
 
-1. `docs/plans/ACTIVE.md` — current work and blockers
-2. `src/modules/<module>/TASKS.md` — module backlog
-3. `src/modules/<module>/README.md` — domain conventions and limits
-4. `docs/ARCHITECTURE.md` — system boundaries
-5. `docs/DECISIONS.md` — architectural rationale
-6. `src/core/types.ts` — interface source of truth
-7. nearest source and tests
+1. `src/modules/<module>/README.md` — domain conventions and limits
+2. `docs/ARCHITECTURE.md` — system boundaries
+3. `docs/DECISIONS.md` — architectural rationale
+4. `src/core/types.ts` — interface source of truth
+5. nearest source and tests
 
 ## Work loop
 

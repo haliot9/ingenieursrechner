@@ -6,7 +6,7 @@
  *   - variables: Which golden-state variables are given as input
  *   - expectedOutputs: Which variables the solver should be able to compute
  *
- * Categorization follows the ACTIVE.md plan.
+ * Categorization is intentionally documented by this test helper.
  */
 
 export interface InputSet {

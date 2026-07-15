@@ -1,11 +1,13 @@
 import type { CalculatorModule } from '../core/types'
 import { carnotModule } from './carnot'
 import { dieselModule } from './diesel'
+import { ottoModule } from './otto'
 
 /** Registry of all available calculator modules */
 export const MODULES: Record<string, CalculatorModule> = {
   carnot: carnotModule,
   diesel: dieselModule,
+  otto: ottoModule,
 }
 
 /** Get module by ID */

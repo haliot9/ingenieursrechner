@@ -4,7 +4,7 @@
 
 A deterministic, browser-based engineering calculator that derives every solvable quantity from the values provided and exposes the complete calculation path.
 
-The current production-ready modules cover the ideal Carnot cycle and the ideal air-standard Diesel cycle.
+The current production-ready modules cover the ideal Carnot cycle, the ideal air-standard Diesel cycle, and the ideal air-standard Otto cycle.
 
 ## Privacy
 
@@ -83,12 +83,13 @@ user values → validation → fixed-point solver
 - `src/core/` — framework-independent solver, validation, units, and types
 - `src/modules/carnot/` — Carnot variables, formulas, preset, and diagram adapter
 - `src/modules/diesel/` — ideal air-standard Diesel variables, formulas, preset, and diagram adapter
+- `src/modules/otto/` — ideal air-standard Otto variables, formulas, preset, and diagram adapter
 - `src/store/` — UI/solver integration and unit boundary
 - `src/components/` — responsive inputs, results, diagrams, and derivation UI
 - `tests/` — unit, property-based, robustness, store, and component regression tests
 - `docs/` — architecture, decisions, quality evidence, plans, and failure history
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), and [src/modules/diesel/README.md](src/modules/diesel/README.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), and [src/modules/otto/README.md](src/modules/otto/README.md) for details.
 
 ## For coding agents and contributors
 

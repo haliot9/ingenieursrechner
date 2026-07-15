@@ -87,7 +87,7 @@ user values → validation → fixed-point solver
 - `src/store/` — UI/solver integration and unit boundary
 - `src/components/` — responsive inputs, results, diagrams, and derivation UI
 - `tests/` — unit, property-based, robustness, store, and component regression tests
-- `docs/` — architecture, decisions, quality evidence, plans, and failure history
+- `docs/` — architecture, decisions, and testing guidance
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), and [src/modules/otto/README.md](src/modules/otto/README.md) for details.
 

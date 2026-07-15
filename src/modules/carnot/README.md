@@ -131,9 +131,6 @@ The expected efficiency is 50%. The preset is defined in `index.ts`; the generic
 
 ## Bekannte Einschränkungen und offene Punkte
 
-Vollständige Liste → **`src/modules/carnot/TASKS.md`**
-
-Kurzüberblick:
 - Nur ideales Gas (`p·v = Rs·T` gilt exakt)
 - κ als konstant angenommen (keine Temperaturabhängigkeit)
 - Zirkuläre Abhängigkeiten (implizite Gleichungen) kann der Fixed-Point-Solver nicht lösen
@@ -148,4 +145,3 @@ Kurzüberblick:
 - Formeln:   `src/modules/carnot/formulas.ts`
 - Export:    `src/modules/carnot/index.ts`
 - Tests:     `tests/core/solver.test.ts`, `tests/modules/carnot/`
-- Backlog:   `src/modules/carnot/TASKS.md`

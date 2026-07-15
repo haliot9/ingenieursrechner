@@ -89,9 +89,8 @@ src/utils/
 
 ## Bekannte Einschraenkungen
 
-- **Polytrope Overlay (mittlere Wirklinie):** Noch nicht implementiert. Geplantes Interface
-  (`DiagramOverlay`) ist im Design-Dokument (`docs/plans/2026-03-04-diagram-engine-design.md`)
-  beschrieben. Wird bei Joule-Implementierung aufgegriffen.
+- **Polytrope Overlay (mittlere Wirklinie):** Noch nicht implementiert. Ein passendes
+  `DiagramOverlay`-Interface wird bei Bedarf als Teil des jeweiligen Moduldesigns festgelegt.
 - **EnergyArrow-Positionierung:** Aktuell werden alle Pfeile am Diagramm-Zentrum platziert,
   auch wenn `location` ein spezifisches Segment referenziert. Segment-spezifische Platzierung
   ist als Verbesserung geplant.

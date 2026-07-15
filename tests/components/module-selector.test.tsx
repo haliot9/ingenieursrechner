@@ -39,6 +39,23 @@ describe('ModuleSelector live search', () => {
     expect((search as HTMLInputElement).value).toBe('Diesel-Prozess')
   })
 
+  it('filters registered modules while typing and selects Otto from the dropdown', () => {
+    render(<ModuleSelector />)
+
+    const search = screen.getByRole('searchbox', { name: 'Rechnermodul suchen' })
+    fireEvent.focus(search)
+    fireEvent.change(search, { target: { value: 'ott' } })
+
+    expect(screen.getByRole('option', { name: 'Otto-Prozess' })).toBeTruthy()
+    expect(screen.queryByRole('option', { name: 'Diesel-Prozess' })).toBeNull()
+
+    fireEvent.keyDown(search, { key: 'ArrowDown' })
+    fireEvent.keyDown(search, { key: 'Enter' })
+
+    expect(useCalculatorStore.getState().activeModuleId).toBe('otto')
+    expect((search as HTMLInputElement).value).toBe('Otto-Prozess')
+  })
+
   it('closes an open listbox with Escape without changing the active module', () => {
     render(<ModuleSelector />)
     const search = screen.getByRole('searchbox', { name: 'Rechnermodul suchen' })

@@ -86,3 +86,7 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - **SI intern:** Alle Berechnungen in SI-Einheiten, Konvertierung nur am Ein-/Ausgang
 - **Pre-solved Formeln:** Keine symbolische Umstellung zur Laufzeit, alle solveFor-Richtungen vordefiniert
 - **Kein Backend:** Alles laeuft client-side im Browser
+
+## Static Joule / Brayton module
+
+src/modules/joule owns the ideal four-state Joule/Brayton configuration, formula registry, cross-variable validation, and diagram adapter. It registers through the existing module registry and generic result/store/renderer seams; no solver, store, renderer, or UI special case is introduced.

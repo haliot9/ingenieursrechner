@@ -18,3 +18,9 @@ describe('App module metadata', () => {
     expect(document.title).toBe('Ingenieursrechner · Diesel-Prozess')
   })
 })
+
+  it('updates the document title for Joule', () => {
+    render(<App />)
+    act(() => useCalculatorStore.getState().setModule('joule'))
+    expect(document.title).toBe('Ingenieursrechner · Joule-/Brayton-Prozess')
+  })

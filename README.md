@@ -111,3 +111,7 @@ The Vite build uses relative asset paths so the app works below a repository-spe
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+## Joule / Brayton
+
+The calculator includes a static ideal four-state Joule/Brayton module with an inspectable reference preset, component work, heat balances, efficiency, back-work ratio, and p-v/T-s diagrams. It intentionally excludes staging, recuperation, losses, and optimisation.

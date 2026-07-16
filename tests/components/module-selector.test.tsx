@@ -68,3 +68,12 @@ describe('ModuleSelector live search', () => {
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 })
+
+  it('finds and activates the registered Joule module', () => {
+    render(<ModuleSelector />)
+    const search = screen.getByRole('searchbox', { name: 'Rechnermodul suchen' })
+    fireEvent.focus(search)
+    fireEvent.change(search, { target: { value: 'jou' } })
+    fireEvent.click(screen.getByRole('option', { name: 'Joule-/Brayton-Prozess' }))
+    expect(useCalculatorStore.getState().activeModuleId).toBe('joule')
+  })

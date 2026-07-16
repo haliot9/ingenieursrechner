@@ -39,3 +39,7 @@ In `tests/modules/<name>/` mindestens 3 Testfälle mit bekannten Ergebnissen.
 - Module kennen nur `core/types.ts` - keine direkte UI-Abhängigkeit
 - Formeln müssen für ALLE lösbaren Variablen `solveFor` haben
 - Einheiten intern immer in SI
+
+## joule
+
+Static ideal Joule/Brayton cycle module. Module-local files own the pressure-ratio contract (pressureRatio), formulas, typed contradiction checks, and diagram mapping.

@@ -33,9 +33,9 @@ describe('Joule calculation-step rendering regression', () => {
 
   it.each([
     'Pa', 'kPa', 'bar', 'MPa', 'atm',
-    'm^3', 'cm^3', 'kg/m^3', 'm^3/kg', 'L/kg',
+    'm^3', 'cm^3', 'kg/m^3', 'm^3/kg', 'L', 'L/kg',
     'K', 'degC', 'J/(kg*K)', 'kJ/(kg*K)',
-    'kg', 'g', 'kg/mol', 'g/mol', 'J/kg', 'kJ/kg',
+    'kg', 'g', 'kg/mol', 'g/mol', 'g/L', 'J/kg', 'kJ/kg',
   ])('renders the configured unit %s without a KaTeX error', unit => {
     const html = renderLatex(`x = 1 \\; ${unitToLatex(unit)}`, true)
 

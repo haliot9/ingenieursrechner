@@ -2,7 +2,7 @@ import { evaluate } from 'mathjs'
 import type { SolutionStep, SolverResult, VariableState, Variable, SolverError } from './types'
 import { FormulaRegistry } from './formula-registry'
 import { validateInput } from './validator'
-import { unitToLatex } from '../utils/latex'
+import { unitToLatex } from '../utils/unit-latex'
 
 interface SolverConfig {
   maxIterations?: number

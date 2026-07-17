@@ -1,5 +1,13 @@
 import katex from 'katex'
 
+/** Convert a configured engineering unit to valid KaTeX without treating exponents as text. */
+export function unitToLatex(unit: string): string {
+  if (!unit) return ''
+
+  const mathUnit = unit.replace(/\*/g, '\\cdot ')
+  return `\\mathrm{${mathUnit}}`
+}
+
 /**
  * Render a LaTeX string to HTML using KaTeX.
  */
@@ -32,7 +40,7 @@ export function numberToLatex(n: number, unit?: string): string {
   }
 
   if (unit) {
-    return `${numStr} \\; \\text{${unit}}`
+    return `${numStr} \\; ${unitToLatex(unit)}`
   }
   return numStr
 }

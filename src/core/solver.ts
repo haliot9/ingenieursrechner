@@ -2,6 +2,7 @@ import { evaluate } from 'mathjs'
 import type { SolutionStep, SolverResult, VariableState, Variable, SolverError } from './types'
 import { FormulaRegistry } from './formula-registry'
 import { validateInput } from './validator'
+import { unitToLatex } from '../utils/latex'
 
 interface SolverConfig {
   maxIterations?: number
@@ -116,6 +117,9 @@ export function solve(
           variables
         )
 
+        const resultUnit = values[targetId]?.unit ?? targetVar?.defaultUnit ?? ''
+        const resultUnitLatex = unitToLatex(resultUnit)
+
         // Record the step
         const step: SolutionStep = {
           formulaId: formula.id,
@@ -125,9 +129,9 @@ export function solve(
           originalLatex: formula.latex,
           rearrangedLatex: latexSteps?.rearranged ?? formula.latex,
           substitutedLatex,
-          resultLatex: `${targetVar?.latex ?? targetId} = ${formatNumber(numResult)} \\; \\text{${values[targetId]?.unit ?? ''}}`,
+          resultLatex: `${targetVar?.latex ?? targetId} = ${formatNumber(numResult)}${resultUnitLatex ? ` \\; ${resultUnitLatex}` : ''}`,
           resultValue: numResult,
-          resultUnit: values[targetId]?.unit ?? '',
+          resultUnit,
           explanation: latexSteps?.explanation ?? `Berechnet mit ${formula.name}`,
         }
 

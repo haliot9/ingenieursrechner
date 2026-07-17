@@ -1,4 +1,7 @@
 import katex from 'katex'
+import { unitToLatex } from './unit-latex'
+
+export { unitToLatex }
 
 /**
  * Render a LaTeX string to HTML using KaTeX.
@@ -32,7 +35,7 @@ export function numberToLatex(n: number, unit?: string): string {
   }
 
   if (unit) {
-    return `${numStr} \\; \\text{${unit}}`
+    return `${numStr} \\; ${unitToLatex(unit)}`
   }
   return numStr
 }

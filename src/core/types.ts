@@ -16,6 +16,43 @@ export interface VariableConstraint {
   message: string              // e.g. "Temperatur muss > 0 K sein"
 }
 
+export type DerivationRowKind = 'formula' | 'rearrangement' | 'substitution' | 'result'
+
+export interface DerivationRow {
+  kind: DerivationRowKind
+  latex: string
+  displayMode: boolean
+}
+
+export type NarrativePhase = 'given-state-and-properties' | 'compression-1-2' | 'heat-input-2-3' | 'expansion-3-4' | 'heat-rejection-4-1' | 'balances' | 'performance'
+
+export interface NarrativeMetadata {
+  phase: NarrativePhase
+  rank: number
+}
+
+export interface DerivationContext {
+  values: Record<string, number>
+  formatValue: (value: number) => string
+}
+
+export type SubstitutionPolicy =
+  | { mode: 'mathjs' }
+  | { mode: 'explicit-override'; buildLatex: (context: DerivationContext) => string }
+
+export interface JouleTargetPresentation {
+  optedIn: true
+  rearrangement: 'show' | 'omit'
+  substitution: SubstitutionPolicy
+  narrative: NarrativeMetadata
+}
+
+export interface LatexStepDefinition {
+  rearranged: string
+  explanation: string
+  derivation?: JouleTargetPresentation
+}
+
 /** A formula that relates variables */
 export interface Formula {
   id: string                    // unique key
@@ -30,7 +67,7 @@ export interface Formula {
    * LaTeX templates for each solve direction.
    * Key = variable to solve for, value = { rearranged: LaTeX, explanation: string }
    */
-  latexSteps: Record<string, { rearranged: string; explanation: string }>
+  latexSteps: Record<string, LatexStepDefinition>
   /** Which variable IDs are involved */
   variables: string[]
   /** Optional: only applies when certain process type is active */
@@ -52,7 +89,24 @@ export interface SolutionStep {
   resultValue: number            // numeric result
   resultUnit: string             // unit of the result
   explanation: string            // human-readable explanation
+  derivationState?: DerivationState
+  derivationProvenance?: DerivationProvenance
+  narrative?: NarrativeMetadata
 }
+
+export interface DerivationProvenance {
+  formulaId: string
+  targetId: string
+  sourceVariableIds: readonly string[]
+  sourceStepIndexes: Readonly<Record<string, number>>
+  rawStepIndex: number
+}
+
+export type DerivationState =
+  | { mode: 'structured'; rows: readonly DerivationRow[] }
+  | { mode: 'unavailable'; resultRow: DerivationRow; reasonCode: 'metadata_invalid' | 'ast_unacceptable' | 'render_input_invalid' | 'adapter_exception' }
+  | { mode: 'legacy' }
+
 
 /** The state of a single variable in the calculator */
 export interface VariableState {

@@ -46,4 +46,16 @@ describe('Joule calculation-step rendering regression', () => {
   it('omits markup for dimensionless results', () => {
     expect(unitToLatex('')).toBe('')
   })
+
+  it('renders every structured reference row through the real KaTeX path', () => {
+    const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
+      T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10), T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+    })
+    const rendered = result.steps.flatMap(step => step.derivationState?.mode === 'structured'
+      ? step.derivationState.rows.map(row => renderLatex(row.latex, row.displayMode))
+      : [])
+    expect(rendered).toHaveLength(86)
+    expect(rendered.some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
+  })
+
 })

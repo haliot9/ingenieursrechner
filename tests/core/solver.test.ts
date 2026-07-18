@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { solve, formatNumber } from '../../src/core/solver'
 import { FormulaRegistry } from '../../src/core/formula-registry'
 import { carnotModule } from '../../src/modules/carnot'
-import type { VariableState } from '../../src/core/types'
+import type { Formula, Variable, VariableState } from '../../src/core/types'
 
 // ─── Carnot cycle state convention used in this module ──────────────────────
 //
@@ -249,5 +249,36 @@ describe('formatNumber', () => {
   it('should use scientific notation for small numbers', () => {
     const result = formatNumber(0.000123)
     expect(result).toContain('\\times 10^')
+  })
+})
+
+
+describe('presentation failure isolation', () => {
+  it('keeps accepted values, errors, raw order, and later calculations unchanged when the adapter throws', () => {
+    const variables: Variable[] = [
+      { id: 'a', symbol: 'a', latex: 'a', name: 'a', defaultUnit: '', alternativeUnits: [] },
+      { id: 'x', symbol: 'x', latex: 'x', name: 'x', defaultUnit: '', alternativeUnits: [] },
+      { id: 'y', symbol: 'y', latex: 'y', name: 'y', defaultUnit: '', alternativeUnits: [] },
+    ]
+    const xFormula = (withFault: boolean): Formula => ({
+      id: 'x_from_a', name: 'x', latex: 'x = a', variables: ['x', 'a'], solveFor: { x: 'a' },
+      latexSteps: { x: withFault
+        ? { rearranged: 'x = a', explanation: 'x', derivation: { optedIn: true, rearrangement: 'show', substitution: { mode: 'explicit-override', buildLatex: () => { throw new Error('forced presentation fault') } }, narrative: { phase: 'performance', rank: 1 } } }
+        : { rearranged: 'x = a', explanation: 'x' } },
+    })
+    const yFormula: Formula = { id: 'y_from_x', name: 'y', latex: 'y = x + 1', variables: ['y', 'x'], solveFor: { y: 'x + 1' }, latexSteps: { y: { rearranged: 'y = x + 1', explanation: 'y' } } }
+    const run = (withFault: boolean) => {
+      const registry = new FormulaRegistry()
+      registry.registerAll([xFormula(withFault), yFormula])
+      return solve(registry, variables, { a: { value: 2, unit: '', isUserInput: true, isComputed: false } })
+    }
+    const baseline = run(false)
+    const faulted = run(true)
+    expect(faulted.values).toEqual(baseline.values)
+    expect(faulted.errors).toEqual(baseline.errors)
+    expect(faulted.unsolved).toEqual(baseline.unsolved)
+    expect(faulted.steps.map(step => step.targetVariable)).toEqual(baseline.steps.map(step => step.targetVariable))
+    expect(faulted.steps[0].derivationState?.mode).toBe('unavailable')
+    expect(faulted.values.y.value).toBe(3)
   })
 })

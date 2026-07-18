@@ -2,7 +2,7 @@ import { evaluate } from 'mathjs'
 import type { SolutionStep, SolverResult, VariableState, Variable, SolverError } from './types'
 import { FormulaRegistry } from './formula-registry'
 import { validateInput } from './validator'
-import { unitToLatex } from '../utils/unit-latex'
+import { buildSolutionStepNoThrow, formatNumber } from './derivation-builder'
 
 interface SolverConfig {
   maxIterations?: number
@@ -108,43 +108,34 @@ export function solve(
             continue
           }
         }
-        const latexSteps = formula.latexSteps[targetId]
-
-        // Build substitution LaTeX
-        const substitutedLatex = buildSubstitutedLatex(
-          formula.solveFor[targetId],
-          scope,
-          variables
+        const rawStepIndex = steps.length
+        const sourceStepIndexes = Object.fromEntries(
+          formula.variables
+            .filter(varId => varId !== targetId)
+            .flatMap(varId => values[varId]?.isComputed && values[varId]?.stepIndex !== undefined
+              ? [[varId, values[varId].stepIndex]]
+              : [])
         )
-
-        const resultUnit = values[targetId]?.unit ?? targetVar?.defaultUnit ?? ''
-        const resultUnitLatex = unitToLatex(resultUnit)
-
-        // Record the step
-        const step: SolutionStep = {
-          formulaId: formula.id,
-          formulaName: formula.name,
-          targetVariable: targetId,
-          targetSymbol: targetVar?.latex ?? targetId,
-          originalLatex: formula.latex,
-          rearrangedLatex: latexSteps?.rearranged ?? formula.latex,
-          substitutedLatex,
-          resultLatex: `${targetVar?.latex ?? targetId} = ${formatNumber(numResult)}${resultUnitLatex ? ` \\; ${resultUnitLatex}` : ''}`,
-          resultValue: numResult,
-          resultUnit,
-          explanation: latexSteps?.explanation ?? `Berechnet mit ${formula.name}`,
-        }
-
-        steps.push(step)
         values[targetId] = {
           value: numResult,
           unit: values[targetId]?.unit ?? targetVar?.defaultUnit ?? '',
           isUserInput: false,
           isComputed: true,
-          stepIndex: steps.length - 1,
+          stepIndex: rawStepIndex,
         }
-
         changed = true
+
+        const presentation = buildSolutionStepNoThrow({
+          formula,
+          targetId,
+          target: targetVar,
+          evaluationScope: scope,
+          acceptedValue: numResult,
+          sourceVariableIds: formula.variables.filter(varId => varId !== targetId),
+          sourceStepIndexes,
+          rawStepIndex,
+        }, variables)
+        steps.push(presentation.step)
       } catch (err) {
         errors.push({
           type: 'computation_error',
@@ -172,33 +163,6 @@ export function solve(
   }
 
   return { values, steps, unsolved, errors }
-}
-
-/** Format a number nicely for LaTeX display */
-function formatNumber(n: number): string {
-  if (Math.abs(n) >= 1e6 || (Math.abs(n) < 1e-3 && n !== 0)) {
-    const exp = Math.floor(Math.log10(Math.abs(n)))
-    const mantissa = n / Math.pow(10, exp)
-    return `${mantissa.toFixed(3)} \\times 10^{${exp}}`
-  }
-  // Avoid floating point noise
-  const rounded = Math.round(n * 1e10) / 1e10
-  if (Number.isInteger(rounded)) return rounded.toString()
-  return rounded.toPrecision(6).replace(/\.?0+$/, '')
-}
-
-/** Build a LaTeX string showing the substitution of values */
-function buildSubstitutedLatex(
-  _expression: string,
-  scope: Record<string, number>,
-  variables: Variable[]
-): string {
-  // Build a simple substitution display
-  const parts = Object.entries(scope).map(([varId, value]) => {
-    const v = variables.find(v => v.id === varId)
-    return `${v?.latex ?? varId} = ${formatNumber(value)}`
-  })
-  return parts.join(', \\quad ')
 }
 
 export { formatNumber }

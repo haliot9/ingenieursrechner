@@ -189,6 +189,16 @@ function cloneValues(variables: Variable[], inputValues: Record<string, Variable
     : { value: null, unit: variable.defaultUnit, isUserInput: false, isComputed: false }]))
 }
 
+function deduplicatePlannedContradictions(errors: readonly SolverError[]): SolverError[] {
+  const seenFormulaIds = new Set<string>()
+  return errors.filter(error => {
+    if (error.type !== 'contradiction' || !error.formulaId) return true
+    if (seenFormulaIds.has(error.formulaId)) return false
+    seenFormulaIds.add(error.formulaId)
+    return true
+  })
+}
+
 function solveSelectedPlan(
   registry: FormulaRegistry,
   variables: Variable[],
@@ -216,14 +226,14 @@ function solveSelectedPlan(
     const formula = formulaById.get(direction.formulaId)!
     const scope: Record<string, number> = {}
     if (!direction.requiredIds.every(id => values[id]?.value !== null && values[id]?.value !== undefined)) {
-      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Selected route ${direction.id} lost a required fact.` })
+      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Der ausgewählte Rechenweg „${direction.id}“ enthält nicht mehr alle erforderlichen Werte.` })
       break
     }
     for (const id of direction.requiredIds) scope[id] = values[id].value!
     try {
       const evaluated = evaluate(formula.solveFor[direction.targetId], scope)
       const value = typeof evaluated === 'number' ? evaluated : Number(evaluated)
-      if (!Number.isFinite(value)) throw new Error('non-finite result')
+      if (!Number.isFinite(value)) { errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Der ausgewählte Rechenweg „${direction.id}“ ergab keinen endlichen Wert.` }); break }
       const target = variables.find(variable => variable.id === direction.targetId)
       if (target) {
         const constraint = validateInput(target, { value, unit: target.defaultUnit, isUserInput: false, isComputed: true })
@@ -238,7 +248,7 @@ function solveSelectedPlan(
       const presentation = buildSolutionStepNoThrow({ formula, targetId: direction.targetId, target, evaluationScope: scope, acceptedValue: value, sourceVariableIds: direction.requiredIds, sourceStepIndexes, rawStepIndex }, variables)
       steps.push(presentation.step)
     } catch (error) {
-      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Selected route ${direction.id} failed: ${error instanceof Error ? error.message : String(error)}` })
+      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Der ausgewählte Rechenweg „${direction.id}“ konnte nicht ausgeführt werden: ${error instanceof Error ? error.message : String(error)}` })
       break
     }
   }
@@ -254,13 +264,13 @@ function solveSelectedPlan(
       const evaluated = evaluate(formula.solveFor[direction.targetId], scope)
       const value = typeof evaluated === 'number' ? evaluated : Number(evaluated)
       if (!Number.isFinite(value) || !equalDerivedValue(value, values[direction.targetId].value!, true)) {
-        errors.push({ type: 'contradiction', variableId: direction.targetId, formulaId: formula.id, message: `Immutable user fact ${direction.targetId} contradicts ${direction.id}.` })
+        errors.push({ type: 'contradiction', variableId: direction.targetId, formulaId: formula.id, message: `Unveränderliche eingegebene Werte widersprechen der Beziehung „${formula.name}“ (${direction.id}).` })
       }
     } catch (error) {
-      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Validation route ${direction.id} failed: ${error instanceof Error ? error.message : String(error)}` })
+      errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Die Prüfbeziehung „${direction.id}“ konnte nicht ausgeführt werden: ${error instanceof Error ? error.message : String(error)}` })
     }
   }
 
   const unsolved = variables.filter(variable => values[variable.id]?.value === null || values[variable.id]?.value === undefined).map(variable => variable.id)
-  return { values, steps, unsolved, errors, plan }
+  return { values, steps, unsolved, errors: deduplicatePlannedContradictions(errors), plan }
 }

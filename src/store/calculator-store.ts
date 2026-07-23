@@ -53,6 +53,21 @@ function fromSI(value: number, defaultUnit: string, displayUnit: string): number
   try { return convertUnit(value, defaultUnit, displayUnit) } catch { return value }
 }
 
+function userOnlyValues(module: CalculatorModule, displayValues: Record<string, VariableState>): Record<string, VariableState> {
+  const values = createInitialValues(module)
+  for (const variable of module.variables) {
+    const current = displayValues[variable.id]
+    values[variable.id] = {
+      ...values[variable.id],
+      unit: current?.unit ?? variable.defaultUnit,
+      ...(current?.isUserInput && current.value !== null
+        ? { value: current.value, isUserInput: true }
+        : {}),
+    }
+  }
+  return values
+}
+
 type PresentationExecutionConfig = PlannedExecutionConfig & { narrativeOrderingPolicy?: import('../core/types').NarrativeOrderingPolicy; diagnostics?: readonly import('../core/types').DiagnosticRelation[]; visibleAlternativeDirectionIds?: readonly string[] }
 
 function solveScenario(
@@ -69,7 +84,7 @@ function solveScenario(
   }
 
   const inputErrors = [...validateAllInputs(module.variables, siInputs), ...(module.validateValues?.(siInputs) ?? [])]
-  if (inputErrors.length > 0) return { values: displayValues, steps: [], unsolved: [], errors: inputErrors }
+  if (inputErrors.length > 0) return { values: userOnlyValues(module, displayValues), steps: [], unsolved: [], errors: inputErrors, plan: undefined, presentation: undefined }
 
   const result = solve(registry, module.variables, siInputs, Object.values(activeProcesses), { plannedExecution: module.plannedExecution })
   const errors = [...result.errors, ...(module.validateValues?.(result.values) ?? [])]

@@ -72,9 +72,12 @@ describe('Known-Facts-First Joule golden routes', () => {
       p1: input(100_000), p2: input(1_000_000), pressureRatio: input(9), T1: input(300),
       T3: input(1400), kappa: input(1.4), Rs: input(287),
     })
-    expect(result.values.pressureRatio.value).toBe(9)
-    expect(result.values.pressureRatio.isUserInput).toBe(true)
-    expect(result.errors.some(error => error.type === 'contradiction' && error.variableId === 'pressureRatio')).toBe(true)
+    const contradictions = result.errors.filter(error => error.type === 'contradiction' && error.formulaId === 'pressure_ratio')
+    expect(contradictions).toHaveLength(1)
+    expect(contradictions[0].message).toMatch(/Unveränderliche eingegebene Werte.*Druckverhältnis/)
+    expect(result.values.p1).toMatchObject({ value: 100_000, isUserInput: true })
+    expect(result.values.p2).toMatchObject({ value: 1_000_000, isUserInput: true })
+    expect(result.values.pressureRatio).toMatchObject({ value: 9, isUserInput: true })
   })
 
   it('GR-06 uses the energy route as primary and retains ideal efficiency as an alternative', () => {

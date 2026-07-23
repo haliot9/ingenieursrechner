@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { solve, formatNumber } from '../../src/core/solver'
 import { FormulaRegistry } from '../../src/core/formula-registry'
 import { carnotModule } from '../../src/modules/carnot'
+import { jouleModule } from '../../src/modules/joule'
 import type { Formula, Variable, VariableState } from '../../src/core/types'
 
 // ─── Carnot cycle state convention used in this module ──────────────────────
@@ -274,6 +275,22 @@ describe('planned execution evidence isolation', () => {
     expect(result.values.x.value).toBeNull()
     expect(result.steps.some(step => step.targetVariable === 'x')).toBe(false)
     expect(result.errors).toMatchObject([{ type: 'contradiction', variableId: 'x' }])
+  })
+})
+
+describe('planned execution contradiction localization', () => {
+  it('deduplicates one German pressure-ratio contradiction while retaining immutable user facts', () => {
+    const input = (value: number, unit = ''): VariableState => ({ value, unit, isUserInput: true, isComputed: false })
+    const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
+      T1: input(300, 'K'), p1: input(100_000, 'Pa'), p2: input(1_000_000, 'Pa'), pressureRatio: input(9),
+      T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+    }, [], { plannedExecution: jouleModule.plannedExecution })
+    const contradictions = result.errors.filter(error => error.type === 'contradiction' && error.formulaId === 'pressure_ratio')
+    expect(contradictions).toHaveLength(1)
+    expect(contradictions[0].message).toMatch(/Unveränderliche eingegebene Werte.*Druckverhältnis/)
+    expect(result.values.p1.value).toBe(100_000)
+    expect(result.values.p2.value).toBe(1_000_000)
+    expect(result.values.pressureRatio.value).toBe(9)
   })
 })
 

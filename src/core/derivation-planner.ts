@@ -172,12 +172,10 @@ export function planDerivations(input: DerivationPlannerInput): ReachabilityPlan
   const alternativesByTarget = new Map<string, readonly RouteCandidate[]>()
   for (const [targetId, primary] of primaryByTarget) {
     if (alternativeBudget === 0) break
-    const primaryDirection = directionsById.get(primary.directionId)!
     const alternatives = directions
       .filter(direction => direction.targetId === targetId && direction.id !== primary.directionId)
       .filter(direction => direction.mode === 'derive' && preconditionState(direction, outcomes) === 'satisfied')
       .filter(direction => direction.requiredIds.every(requiredId => reachable.has(requiredId)))
-      .filter(direction => direction.routePriority === primaryDirection.routePriority)
       .map(direction => candidateFor(direction, selected, knownFactIds, 'equivalent-alternative'))
       .sort((left, right) => compareCandidates(left, right, directionsById))
       .slice(0, Math.min(2, alternativeBudget))

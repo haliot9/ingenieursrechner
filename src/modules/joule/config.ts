@@ -1,5 +1,6 @@
 import type { ProcessType, Variable } from '../../core/types'
 import type { PlannedExecutionConfig } from '../../core/solver'
+import type { PreconditionOutcome } from '../../core/derivation-planner'
 import type { DirectionPolicy } from '../../core/solve-directions'
 import { validateJouleCycle } from './validation'
 
@@ -41,20 +42,77 @@ export const ALL_VARIABLES = [...stateVariables, ...cycleVariables]
 export const VARIABLE_GROUPS = ['Zustand 1', 'Zustand 2', 'Zustand 3', 'Zustand 4', 'Kreisprozessparameter', 'Stoffeigenschaften', 'Energiebilanz']
 
 
+const heatInputConditions = [{ id: 'positive-cp-and-q-in' }]
+const heatRejectionConditions = [{ id: 'positive-cp-and-negative-q-out' }]
+const idealEtaConditions = [{ id: 'kappa-and-pressure-ratio-domain' }]
+const idealPressureRatioConditions = [{ id: 'kappa-and-efficiency-domain' }]
+
+function combine(...outcomes: PreconditionOutcome[]): PreconditionOutcome {
+  if (outcomes.includes('unsatisfied')) return 'unsatisfied'
+  return outcomes.includes('unknown') ? 'unknown' : 'satisfied'
+}
+
+function positive(value: number | undefined): PreconditionOutcome {
+  return value === undefined ? 'unknown' : value > 0 ? 'satisfied' : 'unsatisfied'
+}
+
+function negative(value: number | undefined): PreconditionOutcome {
+  return value === undefined ? 'unknown' : value < 0 ? 'satisfied' : 'unsatisfied'
+}
+
+function greaterThanOne(value: number | undefined): PreconditionOutcome {
+  return value === undefined ? 'unknown' : value > 1 ? 'satisfied' : 'unsatisfied'
+}
+
+function efficiencyDomain(value: number | undefined): PreconditionOutcome {
+  return value === undefined ? 'unknown' : value > 0 && value < 1 ? 'satisfied' : 'unsatisfied'
+}
+
+function positiveCp(values: ReadonlyMap<string, number>): PreconditionOutcome {
+  const cp = values.get('cp')
+  if (cp !== undefined) return positive(cp)
+  // In a frozen Joule scenario cp is known positive when its canonical property roots prove it.
+  const rs = values.get('Rs')
+  const kappa = values.get('kappa')
+  return combine(positive(rs), greaterThanOne(kappa))
+}
+
 export const JOULE_DIRECTION_POLICIES: Readonly<Record<string, DirectionPolicy>> = {
-  'heat_input:T3': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-02' },
-  'heat_input:T2': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#direction-policy' },
-  'heat_rejection:T1': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-03' },
-  'heat_rejection:T4': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#direction-policy' },
-  'ideal_efficiency:eta': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-06' },
-  'ideal_efficiency:pressureRatio': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-03' },
+  'heat_input:T3': { mode: 'derive', routePriority: 0, conditions: heatInputConditions, sourceRef: 'golden-routes.md#GR-02' },
+  'heat_input:T2': { mode: 'derive', routePriority: 0, conditions: heatInputConditions, sourceRef: 'golden-routes.md#direction-policy' },
+  'heat_rejection:T1': { mode: 'derive', routePriority: 0, conditions: heatRejectionConditions, sourceRef: 'golden-routes.md#GR-03' },
+  'heat_rejection:T4': { mode: 'derive', routePriority: 0, conditions: heatRejectionConditions, sourceRef: 'golden-routes.md#direction-policy' },
+  'efficiency:eta': { mode: 'derive', routePriority: 10, sourceRef: 'golden-routes.md#GR-06-energy-primary' },
+  'ideal_efficiency:eta': { mode: 'derive', routePriority: 20, conditions: idealEtaConditions, sourceRef: 'golden-routes.md#GR-06-ideal-alternative' },
+  'ideal_efficiency:pressureRatio': { mode: 'derive', routePriority: 0, conditions: idealPressureRatioConditions, sourceRef: 'golden-routes.md#GR-03' },
   'ideal_gas_1:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
   'ideal_gas_2:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
   'ideal_gas_3:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
   'ideal_gas_4:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
 }
 
+export const joulePreconditionOutcomes: PlannedExecutionConfig['preconditionOutcomes'] = (knownFacts, directions) => {
+  const values = new Map(knownFacts.map(fact => [fact.id, fact.valueSI]))
+  const outcomes: Record<string, PreconditionOutcome> = {}
+  for (const direction of directions) {
+    for (const condition of direction.conditions ?? []) {
+      const outcome = condition.id === 'positive-cp-and-q-in'
+        ? combine(positiveCp(values), positive(values.get('q_in')))
+        : condition.id === 'positive-cp-and-negative-q-out'
+          ? combine(positiveCp(values), negative(values.get('q_out')))
+          : condition.id === 'kappa-and-pressure-ratio-domain'
+            ? combine(greaterThanOne(values.get('kappa')), greaterThanOne(values.get('pressureRatio')))
+            : condition.id === 'kappa-and-efficiency-domain'
+              ? combine(greaterThanOne(values.get('kappa')), efficiencyDomain(values.get('eta')))
+              : 'unknown'
+      outcomes[`${direction.id}:${condition.id}`] = outcome
+    }
+  }
+  return outcomes
+}
+
 export const JOULE_PLANNED_EXECUTION: PlannedExecutionConfig = {
   policies: JOULE_DIRECTION_POLICIES,
+  preconditionOutcomes: joulePreconditionOutcomes,
   postValidate: (targetId, values) => validateJouleCycle(values).filter(error => error.variableId === targetId),
 }

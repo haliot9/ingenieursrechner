@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { FormulaRegistry } from '../../../src/core/formula-registry'
+import { compileSolveDirections } from '../../../src/core/solve-directions'
 import { solve } from '../../../src/core/solver'
 import type { VariableState } from '../../../src/core/types'
 import { jouleModule } from '../../../src/modules/joule'
+import { ALL_VARIABLES, JOULE_DIRECTION_POLICIES } from '../../../src/modules/joule/config'
+import { JOULE_FORMULAS } from '../../../src/modules/joule/formulas'
 
 function input(value: number, unit = ''): VariableState {
   return { value, unit, isUserInput: true, isComputed: false }
@@ -81,6 +84,49 @@ describe('Known-Facts-First Joule golden routes', () => {
     expect(result.values.eta.value).toBeCloseTo(0.4820525320768787, 10)
     expect(result.plan?.primaryByTarget.get('eta')?.directionId).toBe('efficiency:eta')
     expect(result.plan?.alternativesByTarget.get('eta')?.map(route => route.directionId)).toContain('ideal_efficiency:eta')
+  })
+
+
+  it('makes GR-06 energy primary by explicit policy priority rather than stable ID', () => {
+    const directions = compileSolveDirections(JOULE_FORMULAS, ALL_VARIABLES.map(variable => variable.id), JOULE_DIRECTION_POLICIES)
+    const energy = directions.find(direction => direction.id === 'efficiency:eta')!
+    const ideal = directions.find(direction => direction.id === 'ideal_efficiency:eta')!
+    expect(energy.routePriority).toBeLessThan(ideal.routePriority)
+    expect(energy.sourceRef).toContain('GR-06')
+    expect(ideal.sourceRef).toContain('GR-06')
+  })
+
+  it('blocks invalid heat-input and ideal-pressure-ratio preconditions before execution', () => {
+    const negativeHeat = solveJoule({ cp: input(1000), T2: input(500), q_in: input(-10) })
+    expect(negativeHeat.values.T3.value).toBeNull()
+    expect(negativeHeat.steps.some(step => step.targetVariable === 'T3')).toBe(false)
+    expect(negativeHeat.plan?.blocked.find(blocked => blocked.targetId === 'T3')?.candidates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ directionId: 'heat_input:T3', preconditionState: 'unsatisfied' }),
+    ]))
+
+    const invalidEfficiency = solveJoule({ eta: input(1.2), kappa: input(1.4) })
+    expect(invalidEfficiency.values.pressureRatio.value).toBeNull()
+    expect(invalidEfficiency.steps.some(step => step.targetVariable === 'pressureRatio')).toBe(false)
+    expect(invalidEfficiency.plan?.blocked.find(blocked => blocked.targetId === 'pressureRatio')?.candidates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ directionId: 'ideal_efficiency:pressureRatio', preconditionState: 'unsatisfied' }),
+    ]))
+  })
+
+
+  it('blocks invalid heat-rejection and ideal-eta preconditions before execution', () => {
+    const positiveRejection = solveJoule({ cp: input(1000), T4: input(700), q_out: input(10) })
+    expect(positiveRejection.values.T1.value).toBeNull()
+    expect(positiveRejection.steps.some(step => step.targetVariable === 'T1')).toBe(false)
+    expect(positiveRejection.plan?.blocked.find(blocked => blocked.targetId === 'T1')?.candidates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ directionId: 'heat_rejection:T1', preconditionState: 'unsatisfied' }),
+    ]))
+
+    const invalidPressureRatio = solveJoule({ pressureRatio: input(1), kappa: input(1.4) })
+    expect(invalidPressureRatio.values.eta.value).toBeNull()
+    expect(invalidPressureRatio.steps.some(step => step.targetVariable === 'eta')).toBe(false)
+    expect(invalidPressureRatio.plan?.blocked.find(blocked => blocked.targetId === 'eta')?.candidates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ directionId: 'ideal_efficiency:eta', preconditionState: 'unsatisfied' }),
+    ]))
   })
 
   it('GR-07 treats Rs as validate-only and never derives it from p-v-T', () => {

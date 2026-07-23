@@ -66,6 +66,21 @@ describe('planDerivations', () => {
     expect(alternatives.flat().every(route => route.disposition === 'equivalent-alternative')).toBe(true)
   })
 
+
+  it('keeps a lower-ranked semantic route as an alternative while priority selects the primary', () => {
+    const result = planDerivations({
+      knownFacts: [fact('seed')],
+      directions: [
+        direction('a_ideal:eta', 'eta', ['seed'], 20),
+        direction('z_energy:eta', 'eta', ['seed'], 10),
+      ],
+      targetIds: ['eta'],
+    })
+
+    expect(result.primaryByTarget.get('eta')?.directionId).toBe('z_energy:eta')
+    expect(result.alternativesByTarget.get('eta')?.map(route => route.directionId)).toEqual(['a_ideal:eta'])
+  })
+
   it('blocks disabled, validate-only, cyclic, and unknown-precondition routes without mutating facts', () => {
     const facts = Object.freeze([fact('seed')])
     const disabled = { ...direction('disabled:disabled', 'disabled', ['seed']), mode: 'disabled' as const }

@@ -4,11 +4,12 @@ import { FormulaRegistry } from './formula-registry'
 import { validateInput } from './validator'
 import { buildSolutionStepNoThrow, formatNumber } from './derivation-builder'
 import { compileSolveDirections, type DirectionPolicy } from './solve-directions'
-import { planDerivations, type KnownFact } from './derivation-planner'
+import { planDerivations, type KnownFact, type PreconditionOutcome } from './derivation-planner'
 
 export interface PlannedExecutionConfig {
   policies?: Readonly<Record<string, DirectionPolicy>>
   postValidate?: (targetId: string, values: Record<string, VariableState>) => SolverError[]
+  preconditionOutcomes?: (knownFacts: readonly KnownFact[], directions: readonly import('./solve-directions').SolveDirection[]) => Readonly<Record<string, PreconditionOutcome>>
 }
 
 interface SolverConfig {
@@ -202,7 +203,8 @@ function solveSelectedPlan(
   const knownFacts: KnownFact[] = Object.entries(values)
     .filter(([, state]) => state.value !== null && state.value !== undefined)
     .map(([id, state]) => ({ id, valueSI: state.value!, source: state.isUserInput ? 'user' : 'derived' }))
-  const plan = planDerivations({ knownFacts, directions })
+  const preconditionOutcomes = execution.preconditionOutcomes?.(knownFacts, directions) ?? {}
+  const plan = planDerivations({ knownFacts, directions, preconditionOutcomes })
   const errors: SolverError[] = []
   const steps: SolutionStep[] = []
 

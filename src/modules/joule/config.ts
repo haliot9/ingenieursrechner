@@ -1,4 +1,4 @@
-import type { ProcessType, Variable } from '../../core/types'
+import type { DiagnosticRelation, NarrativeOrderingPolicy, ProcessType, Variable } from '../../core/types'
 import type { PlannedExecutionConfig } from '../../core/solver'
 import type { PreconditionOutcome } from '../../core/derivation-planner'
 import type { DirectionPolicy } from '../../core/solve-directions'
@@ -111,8 +111,18 @@ export const joulePreconditionOutcomes: PlannedExecutionConfig['preconditionOutc
   return outcomes
 }
 
-export const JOULE_PLANNED_EXECUTION: PlannedExecutionConfig = {
+export const JOULE_NARRATIVE_ORDER: NarrativeOrderingPolicy = {
+  contextRanks: { 'given-state-and-properties': 0, 'compression-1-2': 1, 'heat-input-2-3': 2, 'expansion-3-4': 3, 'heat-rejection-4-1': 4, balances: 5, performance: 6 },
+}
+
+export const JOULE_DIAGNOSTICS: readonly DiagnosticRelation[] = [{
+  id: 'gr-04-temperature-relation', targetIds: ['T2', 'T3'], latex: 'T_3 = T_2 + q_{in}/c_p', missingFactHint: 'r_p, p_2 oder eine andere freigegebene Zustandsbedingung',
+}]
+
+export const JOULE_PLANNED_EXECUTION: PlannedExecutionConfig & { narrativeOrderingPolicy: NarrativeOrderingPolicy; diagnostics: readonly DiagnosticRelation[] } = {
   policies: JOULE_DIRECTION_POLICIES,
   preconditionOutcomes: joulePreconditionOutcomes,
   postValidate: (targetId, values) => validateJouleCycle(values).filter(error => error.variableId === targetId),
+  narrativeOrderingPolicy: JOULE_NARRATIVE_ORDER,
+  diagnostics: JOULE_DIAGNOSTICS,
 }

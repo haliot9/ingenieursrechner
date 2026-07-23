@@ -9,14 +9,14 @@ import { ErrorDisplay } from './components/ErrorDisplay'
 import { DiagramPanel } from './components/diagrams/DiagramPanel'
 
 function App() {
-  const { module, steps, errors, values } = useCalculatorStore()
+  const { module, steps, errors, values, presentation } = useCalculatorStore()
   useEffect(() => {
     if (module) document.title = `Ingenieursrechner · ${module.name}`
   }, [module])
   const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
-  const visibleErrors = cycleSolved
-    ? errors.filter(error => error.type !== 'insufficient_data')
-    : errors
+  const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
+  const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
+    .filter(error => !presentation || error.type !== 'contradiction')
 
   return (
     <div className="app-shell">
@@ -68,7 +68,7 @@ function App() {
                 <ResultSummary />
                 <ErrorDisplay errors={visibleErrors} />
                 <DiagramPanel />
-                <StepDisplay steps={steps} />
+                <StepDisplay steps={steps} presentation={presentation} contradictions={presentationContradictions} />
               </aside>
             </div>
           </>

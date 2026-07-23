@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { FormulaRegistry } from '../../src/core/formula-registry'
-import { buildSolutionStepNoThrow, formatNumber, orderStepsByNarrative } from '../../src/core/derivation-builder'
+import { buildPresentationPlan, buildSolutionStepNoThrow, formatNumber, orderStepsByNarrative } from '../../src/core/derivation-builder'
 import { solve } from '../../src/core/solver'
-import type { Formula, SolutionStep, VariableState } from '../../src/core/types'
+import type { Formula, ReachabilityPlan, SolutionStep, VariableState } from '../../src/core/types'
 import { jouleModule } from '../../src/modules/joule'
 
 function input(value: number, unit = ''): VariableState {
@@ -91,6 +91,42 @@ describe('Joule derivation inventory (corrected RED contract)', () => {
     const source: SolutionStep = { formulaId: 'source', formulaName: 'source', targetVariable: 'source', targetSymbol: 'source', originalLatex: '', rearrangedLatex: '', substitutedLatex: '', resultLatex: '', resultValue: 1, resultUnit: '', explanation: '', derivationProvenance: { formulaId: 'source', targetId: 'source', sourceVariableIds: [], sourceStepIndexes: {}, rawStepIndex: 1 }, narrative: { phase: 'performance', rank: 1 } }
     const target: SolutionStep = { ...source, formulaId: 'target', targetVariable: 'target', derivationProvenance: { formulaId: 'target', targetId: 'target', sourceVariableIds: ['source'], sourceStepIndexes: { source: 1 }, rawStepIndex: 0 }, narrative: { phase: 'given-state-and-properties', rank: 1 } }
     expect(orderStepsByNarrative([target, source]).map(step => step.targetVariable)).toEqual(['source', 'target'])
+  })
+
+
+
+  it('uses module context policy only after dependency readiness', () => {
+    const later: SolutionStep = { formulaId: 'later', formulaName: 'later', targetVariable: 'later', targetSymbol: 'later', originalLatex: '', rearrangedLatex: '', substitutedLatex: '', resultLatex: '', resultValue: 1, resultUnit: '', explanation: '', derivationProvenance: { formulaId: 'later', targetId: 'later', sourceVariableIds: [], sourceStepIndexes: {}, rawStepIndex: 0 }, narrative: { contextId: 'late', phase: 'late', rank: 0 } }
+    const preferred: SolutionStep = { ...later, formulaId: 'preferred', targetVariable: 'preferred', derivationProvenance: { formulaId: 'preferred', targetId: 'preferred', sourceVariableIds: [], sourceStepIndexes: {}, rawStepIndex: 1 }, narrative: { contextId: 'preferred', phase: 'preferred', rank: 0 } }
+    expect(orderStepsByNarrative([later, preferred], { contextRanks: { preferred: 0, late: 1 } }).map(step => step.targetVariable)).toEqual(['preferred', 'later'])
+  })
+
+
+
+  it('builds serializable alternative and blocked presentation without promoting a relation to evidence', () => {
+    const primary: SolutionStep = { formulaId: 'efficiency', formulaName: 'Energie-Wirkungsgrad', targetVariable: 'eta', targetSymbol: '\\eta', originalLatex: '\\eta = -w/q', rearrangedLatex: '', substitutedLatex: '', resultLatex: '\\eta = 0.48', resultValue: 0.48, resultUnit: '', explanation: '', derivationProvenance: { formulaId: 'efficiency', targetId: 'eta', sourceVariableIds: [], sourceStepIndexes: {}, rawStepIndex: 0 }, narrative: { contextId: 'performance', rank: 0 } }
+    const plan: ReachabilityPlan = {
+      reachableIds: ['eta'],
+      primaryByTarget: new Map([['eta', { targetId: 'eta', directionId: 'efficiency:eta', dependencyIds: [], closureDirectionIds: ['efficiency:eta'], cost: { closureApplications: 1, nonUserIntermediateFacts: 0, downstreamReuse: 0, detachedBranchStarts: 0 }, disposition: 'primary' }]]),
+      alternativesByTarget: new Map([['eta', [
+        { targetId: 'eta', directionId: 'ideal_efficiency:eta', dependencyIds: ['pressureRatio', 'kappa'], closureDirectionIds: ['ideal_efficiency:eta'], cost: { closureApplications: 1, nonUserIntermediateFacts: 0, downstreamReuse: 0, detachedBranchStarts: 0 }, disposition: 'equivalent-alternative' },
+        { targetId: 'eta', directionId: 'other_efficiency:eta', dependencyIds: [], closureDirectionIds: ['other_efficiency:eta'], cost: { closureApplications: 1, nonUserIntermediateFacts: 0, downstreamReuse: 0, detachedBranchStarts: 0 }, disposition: 'equivalent-alternative' },
+      ]]]),
+      blocked: [{ targetId: 'T2', candidates: [{ directionId: 'compressor_temperature:T2', missingIds: ['pressureRatio'] }] }, { targetId: 'T3', candidates: [{ directionId: 'heat_input:T3', missingIds: ['T2'] }] }],
+    }
+    const presentation = buildPresentationPlan({
+      steps: [primary], plan,
+      formulas: [
+        { id: 'ideal_efficiency', name: 'Idealer Joule-Wirkungsgrad', latex: '\\eta = 1 - 1/r_p', variables: [], solveFor: {}, latexSteps: {} },
+        { id: 'other_efficiency', name: 'Andere Herleitung', latex: '\\eta = 0.48', variables: [], solveFor: {}, latexSteps: {} },
+      ],
+      visibleAlternativeDirectionIds: ['ideal_efficiency:eta'],
+      diagnostics: [{ id: 'temperature-gap', targetIds: ['T2', 'T3'], latex: 'T_3 = T_2 + q_{in}/c_p', missingFactHint: 'r_p oder p_2' }],
+    })
+    expect(presentation.primarySteps).toEqual([primary])
+    expect(presentation.alternatives).toEqual([expect.objectContaining({ targetId: 'eta', label: 'Alternative Herleitung', latex: '\\eta = 1 - 1/r_p' })])
+    expect(presentation.blocked).toEqual([expect.objectContaining({ latex: 'T_3 = T_2 + q_{in}/c_p', missingFactHint: 'r_p oder p_2' })])
+    expect(JSON.parse(JSON.stringify(presentation)).blocked[0]).not.toHaveProperty('value')
   })
 
 })

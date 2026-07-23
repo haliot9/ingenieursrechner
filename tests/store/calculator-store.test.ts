@@ -40,4 +40,23 @@ describe('calculator presets', () => {
     expect(values.eta.value).toBeCloseTo(0.5, 8)
     expect(errors.filter(error => error.type !== 'insufficient_data')).toEqual([])
   })
+
+
+  it('atomically clears planned Joule evidence and presentation with the scenario', () => {
+    const store = useCalculatorStore.getState()
+    store.setModule('joule')
+    store.loadPreset('reference-air')
+    expect(useCalculatorStore.getState().plan).toBeTruthy()
+    expect(useCalculatorStore.getState().presentation?.primarySteps.length).toBeGreaterThan(0)
+
+    store.clearAll()
+    const cleared = useCalculatorStore.getState()
+    expect(cleared.values.T1.value).toBeNull()
+    expect(cleared.steps).toEqual([])
+    expect(cleared.plan).toBeUndefined()
+    expect(cleared.presentation).toBeUndefined()
+    expect(cleared.errors).toEqual([])
+    expect(cleared.unsolved).toEqual([])
+  })
+
 })

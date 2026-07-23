@@ -27,11 +27,15 @@ export interface DerivationRow {
 }
 
 export interface NarrativeMetadata {
-  /** Module-owned generic narrative context; core does not encode Joule phases. */
+  /** Module-owned generic narrative context; core never owns module phase names. */
   contextId?: string
-  /** Backward-compatible generic ordering key consumed by the legacy builder. */
-  phase: string
+  /** Legacy metadata accepted for existing formula declarations; never interpreted by core. */
+  phase?: string
   rank: number
+}
+
+export interface NarrativeOrderingPolicy {
+  contextRanks: Readonly<Record<string, number>>
 }
 
 export interface DerivationContext {
@@ -167,6 +171,36 @@ export interface SolverResult {
   errors: SolverError[]
   /** Present only for an explicitly planned module run. */
   plan?: import('./derivation-planner').ReachabilityPlan
+}
+
+
+export interface DiagnosticRelation {
+  id: string
+  targetIds: readonly string[]
+  latex: string
+  missingFactHint: string
+}
+
+export interface PresentationAlternative {
+  targetId: string
+  formulaId: string
+  formulaName: string
+  label: string
+  latex: string
+}
+
+export interface PresentationBlocked {
+  relationId: string
+  targetIds: readonly string[]
+  latex: string
+  missingFactHint: string
+  missingIds: readonly string[]
+}
+
+export interface PresentationPlan {
+  primarySteps: readonly SolutionStep[]
+  alternatives: readonly PresentationAlternative[]
+  blocked: readonly PresentationBlocked[]
 }
 
 export interface SolverError {

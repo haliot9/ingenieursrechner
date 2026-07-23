@@ -37,8 +37,9 @@ const BASE_JOULE_FORMULAS: Formula[] = [
   formula('compressor_work', 'Verdichterarbeit', 'w_comp = c_p (T_2 - T_1)', ['w_comp', 'cp', 'T2', 'T1'], { w_comp: 'cp * (T2 - T1)' }, 'Energiebilanz'),
   formula('turbine_work', 'Turbinenarbeit', 'w_turb = c_p (T_4 - T_3)', ['w_turb', 'cp', 'T4', 'T3'], { w_turb: 'cp * (T4 - T3)' }, 'Energiebilanz'),
   formula('net_work', 'Nettoarbeit', 'w_netto = w_comp + w_turb', ['w_netto', 'w_comp', 'w_turb'], { w_netto: 'w_comp + w_turb' }, 'Energiebilanz'),
-  formula('heat_input', 'Isobare Wärmezufuhr', 'q_in = c_p (T_3 - T_2)', ['q_in', 'cp', 'T3', 'T2'], { q_in: 'cp * (T3 - T2)' }, 'Energiebilanz'),
-  formula('heat_rejection', 'Isobare Wärmeabfuhr', 'q_out = c_p (T_1 - T_4)', ['q_out', 'cp', 'T1', 'T4'], { q_out: 'cp * (T1 - T4)' }, 'Energiebilanz'),
+  formula('heat_input', 'Isobare Wärmezufuhr', 'q_in = c_p (T_3 - T_2)', ['q_in', 'cp', 'T3', 'T2'], { q_in: 'cp * (T3 - T2)', T3: 'T2 + q_in / cp', T2: 'T3 - q_in / cp' }, 'Energiebilanz'),
+  formula('heat_rejection', 'Isobare Wärmeabfuhr', 'q_out = c_p (T_1 - T_4)', ['q_out', 'cp', 'T1', 'T4'], { q_out: 'cp * (T1 - T4)', T1: 'T4 + q_out / cp', T4: 'T1 - q_out / cp' }, 'Energiebilanz'),
+  { ...formula('ideal_efficiency', 'Idealer Joule-Wirkungsgrad', 'η = 1 - 1 / r_p^((κ-1)/κ)', ['eta', 'pressureRatio', 'kappa'], { eta: '1 - 1 / pressureRatio ^ ((kappa - 1) / kappa)', pressureRatio: '(1 - eta) ^ (-kappa / (kappa - 1))' }, 'Wirkungsgrad'), applicableProcesses: ['known-facts-first'] },
   formula('efficiency', 'Wirkungsgrad aus Energien', 'η = -w_netto / q_in', ['eta', 'w_netto', 'q_in'], { eta: '-w_netto / q_in' }, 'Wirkungsgrad'),
   formula('back_work_ratio', 'Back-Work-Ratio', 'BWR = w_comp / (-w_turb)', ['back_work_ratio', 'w_comp', 'w_turb'], { back_work_ratio: 'w_comp / (-w_turb)' }, 'Wirkungsgrad'),
 ]
@@ -49,9 +50,9 @@ type PresentationEntry = {
   derivation: import('../../core/types').JouleTargetPresentation
 }
 
-const presentation = (rearranged: string, phase: import('../../core/types').NarrativePhase, rank: number, policy: 'show' | 'omit' = 'show', substitution: import('../../core/types').SubstitutionPolicy = { mode: 'mathjs' }): PresentationEntry => ({
+const presentation = (rearranged: string, contextId: string, rank: number, policy: 'show' | 'omit' = 'show', substitution: import('../../core/types').SubstitutionPolicy = { mode: 'mathjs' }): PresentationEntry => ({
   rearranged,
-  derivation: { optedIn: true, rearrangement: policy, substitution, narrative: { phase, rank } },
+  derivation: { optedIn: true, rearrangement: policy, substitution, narrative: { contextId, phase: contextId, rank } },
 })
 
 const JOULE_PRESENTATION: Record<string, PresentationEntry> = {

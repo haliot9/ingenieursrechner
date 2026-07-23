@@ -5,7 +5,6 @@ import type {
   DerivationProvenance,
   DerivationRow,
   Formula,
-  NarrativeMetadata,
   SolutionStep,
   Variable,
 } from './types'
@@ -127,17 +126,7 @@ export function buildSolutionStepNoThrow(input: BuildSolutionStepInput, variable
   }
 }
 
-const phaseOrder: Record<NarrativeMetadata['phase'], number> = {
-  'given-state-and-properties': 0,
-  'compression-1-2': 1,
-  'heat-input-2-3': 2,
-  'expansion-3-4': 3,
-  'heat-rejection-4-1': 4,
-  balances: 5,
-  performance: 6,
-}
-
-export function orderStepsByNarrative(steps: SolutionStep[]): SolutionStep[] {
+export function orderStepsByNarrative(steps: SolutionStep[], policy?: import('./types').NarrativeOrderingPolicy): SolutionStep[] {
   const byRawIndex = new Map(steps.map((step, index) => [step.derivationProvenance?.rawStepIndex ?? index, step]))
   const remaining = new Set(steps)
   const ordered: SolutionStep[] = []
@@ -151,9 +140,11 @@ export function orderStepsByNarrative(steps: SolutionStep[]): SolutionStep[] {
     ready.sort((left, right) => {
       const leftNarrative = left.narrative
       const rightNarrative = right.narrative
-      const leftPhase = leftNarrative ? phaseOrder[leftNarrative.phase] : Number.MAX_SAFE_INTEGER
-      const rightPhase = rightNarrative ? phaseOrder[rightNarrative.phase] : Number.MAX_SAFE_INTEGER
-      return leftPhase - rightPhase
+      const leftContext = leftNarrative?.contextId
+      const rightContext = rightNarrative?.contextId
+      const leftRank = leftContext === undefined ? Number.MAX_SAFE_INTEGER : policy?.contextRanks[leftContext] ?? Number.MAX_SAFE_INTEGER
+      const rightRank = rightContext === undefined ? Number.MAX_SAFE_INTEGER : policy?.contextRanks[rightContext] ?? Number.MAX_SAFE_INTEGER
+      return leftRank - rightRank
         || (leftNarrative?.rank ?? 0) - (rightNarrative?.rank ?? 0)
         || (left.derivationProvenance?.rawStepIndex ?? steps.indexOf(left)) - (right.derivationProvenance?.rawStepIndex ?? steps.indexOf(right))
     })
@@ -162,4 +153,39 @@ export function orderStepsByNarrative(steps: SolutionStep[]): SolutionStep[] {
     remaining.delete(next)
   }
   return ordered
+}
+
+
+export interface BuildPresentationPlanInput {
+  steps: readonly SolutionStep[]
+  plan?: import('./derivation-planner').ReachabilityPlan
+  formulas: readonly Formula[]
+  orderingPolicy?: import('./types').NarrativeOrderingPolicy
+  diagnostics?: readonly import('./types').DiagnosticRelation[]
+  visibleAlternativeDirectionIds?: readonly string[]
+}
+
+function directionFormulaId(directionId: string): string {
+  return directionId.slice(0, directionId.lastIndexOf(':'))
+}
+
+export function buildPresentationPlan(input: BuildPresentationPlanInput): import('./types').PresentationPlan {
+  const primarySteps = orderStepsByNarrative([...input.steps], input.orderingPolicy)
+  if (!input.plan) return { primarySteps, alternatives: [], blocked: [] }
+
+  const formulas = new Map(input.formulas.map(formula => [formula.id, formula]))
+  const visibleAlternativeIds = input.visibleAlternativeDirectionIds ? new Set(input.visibleAlternativeDirectionIds) : undefined
+  const alternatives = [...input.plan.alternativesByTarget.entries()].flatMap(([targetId, candidates]) => candidates
+    .filter(candidate => !visibleAlternativeIds || visibleAlternativeIds.has(candidate.directionId))
+    .flatMap(candidate => {
+    const formula = formulas.get(directionFormulaId(candidate.directionId))
+    return formula ? [{ targetId, formulaId: formula.id, formulaName: formula.name, label: 'Alternative Herleitung', latex: formula.latex }] : []
+  }))
+  const blockedTargets = new Map(input.plan.blocked.map(blocked => [blocked.targetId, blocked]))
+  const blocked = (input.diagnostics ?? []).flatMap(relation => {
+    if (!relation.targetIds.every(targetId => blockedTargets.has(targetId))) return []
+    const missingIds = [...new Set(relation.targetIds.flatMap(targetId => blockedTargets.get(targetId)!.candidates.flatMap(candidate => candidate.missingIds)))].sort()
+    return [{ relationId: relation.id, targetIds: relation.targetIds, latex: relation.latex, missingFactHint: relation.missingFactHint, missingIds }]
+  })
+  return { primarySteps, alternatives, blocked }
 }

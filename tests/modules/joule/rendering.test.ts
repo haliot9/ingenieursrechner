@@ -58,4 +58,18 @@ describe('Joule calculation-step rendering regression', () => {
     expect(rendered.some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
   })
 
+
+
+  it('renders primary, alternative, blocked, and contradiction math without KaTeX fallbacks', () => {
+    const formulas = [
+      '-\\frac{w_{netto}}{q_{in}}',
+      '\\eta = 1 - \\frac{1}{r_p^{(\\kappa-1)/\\kappa}}',
+      'T_3 = T_2 + q_{in}/c_p',
+      '\\frac{p_2}{p_1} = 10 \\neq r_p = 9',
+    ]
+    const rendered = formulas.map(latex => renderLatex(latex, true))
+    expect(rendered).toHaveLength(4)
+    expect(rendered.some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
+  })
+
 })

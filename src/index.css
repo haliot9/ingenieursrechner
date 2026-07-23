@@ -242,3 +242,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+.alternative-derivation, .blocked-relation, .contradiction-panel { margin: 16px 20px 20px; padding: 16px; border: 1px solid var(--border); background: #f8fafc; }
+.alternative-derivation > summary { cursor: pointer; color: var(--accent); font-size: 12px; font-weight: 800; }
+.alternative-derivation > p, .blocked-relation > p, .contradiction-panel > p { margin: 10px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.blocked-relation { border-left: 3px solid var(--warning); }
+.blocked-relation h3, .contradiction-panel h3 { margin: 0; font-size: 13px; }
+.contradiction-panel { border-left: 3px solid var(--error); background: #fff5f4; }
+.contradiction-panel h3, .contradiction-panel p { color: var(--error); }
+.blocked-relation .formula-line, .alternative-derivation .formula-line { margin-top: 12px; }
+@media (max-width: 760px) { .alternative-derivation, .blocked-relation, .contradiction-panel { margin: 14px; padding: 14px; } }

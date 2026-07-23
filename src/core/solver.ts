@@ -264,7 +264,7 @@ function solveSelectedPlan(
       const evaluated = evaluate(formula.solveFor[direction.targetId], scope)
       const value = typeof evaluated === 'number' ? evaluated : Number(evaluated)
       if (!Number.isFinite(value) || !equalDerivedValue(value, values[direction.targetId].value!, true)) {
-        errors.push({ type: 'contradiction', variableId: direction.targetId, formulaId: formula.id, message: `Unveränderliche eingegebene Werte widersprechen der Beziehung „${formula.name}“ (${direction.id}).` })
+        errors.push({ type: 'contradiction', variableId: direction.targetId, formulaId: formula.id, message: `Unveränderliche eingegebene Werte widersprechen der Beziehung „${formula.name}“.` })
       }
     } catch (error) {
       errors.push({ type: 'computation_error', variableId: direction.targetId, formulaId: formula.id, message: `Die Prüfbeziehung „${direction.id}“ konnte nicht ausgeführt werden: ${error instanceof Error ? error.message : String(error)}` })

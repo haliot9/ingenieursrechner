@@ -69,10 +69,36 @@ function selectedClosure(
   direction: SolveDirection,
   selected: ReadonlyMap<string, RouteCandidate>,
 ): string[] {
-  return [...new Set([
-    ...direction.requiredIds.flatMap(requiredId => selected.get(requiredId)?.closureDirectionIds ?? []),
-    direction.id,
-  ])].sort(compareStrings)
+  const closure = new Set<string>()
+  const visiting = new Set<string>()
+  const visit = (factId: string) => {
+    const candidate = selected.get(factId)
+    if (!candidate || visiting.has(factId)) return
+    visiting.add(factId)
+    candidate.dependencyIds.forEach(visit)
+    closure.add(candidate.directionId)
+    visiting.delete(factId)
+  }
+
+  direction.requiredIds.forEach(visit)
+  closure.add(direction.id)
+  return [...closure].sort(compareStrings)
+}
+
+function wouldCreatePredecessorCycle(
+  direction: SolveDirection,
+  selected: ReadonlyMap<string, RouteCandidate>,
+): boolean {
+  const reachesTarget = (factId: string, visiting: ReadonlySet<string>): boolean => {
+    if (factId === direction.targetId) return true
+    const candidate = selected.get(factId)
+    if (!candidate || visiting.has(factId)) return false
+    const nextVisiting = new Set(visiting)
+    nextVisiting.add(factId)
+    return candidate.dependencyIds.some(dependencyId => reachesTarget(dependencyId, nextVisiting))
+  }
+
+  return direction.requiredIds.some(requiredId => reachesTarget(requiredId, new Set()))
 }
 
 function candidateFor(
@@ -110,6 +136,19 @@ function compareCandidates(left: RouteCandidate, right: RouteCandidate, directio
     || compareStrings(left.directionId, right.directionId)
 }
 
+function refreshSelected(
+  selected: ReadonlyMap<string, RouteCandidate>,
+  directions: ReadonlyMap<string, SolveDirection>,
+  knownFactIds: ReadonlySet<string>,
+): Map<string, RouteCandidate> {
+  const refreshed = new Map<string, RouteCandidate>()
+  for (const [targetId, existing] of selected) {
+    const direction = directions.get(existing.directionId)!
+    refreshed.set(targetId, candidateFor(direction, selected, knownFactIds, 'primary'))
+  }
+  return refreshed
+}
+
 function relevantTargets(
   targetIds: readonly string[] | undefined,
   selected: ReadonlyMap<string, RouteCandidate>,
@@ -133,35 +172,38 @@ export function planDerivations(input: DerivationPlannerInput): ReachabilityPlan
   const outcomes = input.preconditionOutcomes ?? {}
   const directions = [...input.directions].sort((left, right) => compareStrings(left.id, right.id))
   const directionsById = new Map(directions.map(direction => [direction.id, direction]))
-  const selected = new Map<string, RouteCandidate>()
+  let selected = new Map<string, RouteCandidate>()
 
   while (true) {
+    selected = refreshSelected(selected, directionsById, knownFactIds)
     const readyByTarget = new Map<string, RouteCandidate[]>()
     for (const direction of directions) {
-      if (direction.mode !== 'derive' || reachable.has(direction.targetId)) continue
+      if (direction.mode !== 'derive' || knownFactIds.has(direction.targetId)) continue
       if (preconditionState(direction, outcomes) !== 'satisfied') continue
       if (!direction.requiredIds.every(requiredId => reachable.has(requiredId))) continue
+      if (wouldCreatePredecessorCycle(direction, selected)) continue
       const candidate = candidateFor(direction, selected, knownFactIds, 'candidate')
       const candidates = readyByTarget.get(direction.targetId) ?? []
       candidates.push(candidate)
       readyByTarget.set(direction.targetId, candidates)
     }
-    if (readyByTarget.size === 0) break
 
-    const next = [...readyByTarget.entries()]
-      .sort(([left], [right]) => compareStrings(left, right))
-      .map(([, candidates]) => [...candidates].sort((left, right) => compareCandidates(left, right, directionsById))[0])
-
-    for (const candidate of next) {
-      const direction = directionsById.get(candidate.directionId)!
-      if (candidate.dependencyIds.includes(candidate.targetId)) {
-        throw new Error(`Self-referential derivation route: ${candidate.directionId}`)
+    let changed = false
+    for (const [targetId, candidates] of [...readyByTarget.entries()].sort(([left], [right]) => compareStrings(left, right))) {
+      const next = [...candidates].sort((left, right) => compareCandidates(left, right, directionsById))[0]
+      const previous = selected.get(targetId)
+      if (!previous || compareCandidates(next, previous, directionsById) < 0) {
+        const direction = directionsById.get(next.directionId)!
+        if (wouldCreatePredecessorCycle(direction, selected)) continue
+        selected.set(targetId, { ...next, disposition: 'primary' })
+        reachable.add(targetId)
+        changed = true
       }
-      selected.set(candidate.targetId, { ...candidate, disposition: 'primary' })
-      reachable.add(direction.targetId)
     }
+    if (!changed) break
   }
 
+  selected = refreshSelected(selected, directionsById, knownFactIds)
   const relevant = relevantTargets(input.targetIds, selected)
   const primaryByTarget = new Map<string, RouteCandidate>()
   for (const [targetId, candidate] of selected) {
@@ -176,6 +218,7 @@ export function planDerivations(input: DerivationPlannerInput): ReachabilityPlan
       .filter(direction => direction.targetId === targetId && direction.id !== primary.directionId)
       .filter(direction => direction.mode === 'derive' && preconditionState(direction, outcomes) === 'satisfied')
       .filter(direction => direction.requiredIds.every(requiredId => reachable.has(requiredId)))
+      .filter(direction => !wouldCreatePredecessorCycle(direction, selected))
       .map(direction => candidateFor(direction, selected, knownFactIds, 'equivalent-alternative'))
       .sort((left, right) => compareCandidates(left, right, directionsById))
       .slice(0, Math.min(2, alternativeBudget))

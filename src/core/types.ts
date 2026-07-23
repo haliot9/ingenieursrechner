@@ -1,3 +1,5 @@
+import type { PlannedExecutionConfig } from './solver'
+
 /** A physical variable in the calculator (e.g., pressure, temperature) */
 export interface Variable {
   id: string                    // unique key, e.g. "p1", "T2", "eta"
@@ -24,10 +26,11 @@ export interface DerivationRow {
   displayMode: boolean
 }
 
-export type NarrativePhase = 'given-state-and-properties' | 'compression-1-2' | 'heat-input-2-3' | 'expansion-3-4' | 'heat-rejection-4-1' | 'balances' | 'performance'
-
 export interface NarrativeMetadata {
-  phase: NarrativePhase
+  /** Module-owned generic narrative context; core does not encode Joule phases. */
+  contextId?: string
+  /** Backward-compatible generic ordering key consumed by the legacy builder. */
+  phase: string
   rank: number
 }
 
@@ -152,6 +155,8 @@ export interface CalculatorModule {
   validateValues?: (values: Record<string, VariableState>) => SolverError[]
   /** Optional: liefert Diagramm-Daten fuer p-v und T-s Darstellung */
   getDiagramSpec?: (values: Record<string, VariableState>) => DiagramSpec | null
+  /** Explicit opt-in; omitted modules retain the legacy solver. */
+  plannedExecution?: PlannedExecutionConfig
 }
 
 /** Result of a solver run */
@@ -160,6 +165,8 @@ export interface SolverResult {
   steps: SolutionStep[]
   unsolved: string[]            // variable IDs that couldn't be computed
   errors: SolverError[]
+  /** Present only for an explicitly planned module run. */
+  plan?: import('./derivation-planner').ReachabilityPlan
 }
 
 export interface SolverError {

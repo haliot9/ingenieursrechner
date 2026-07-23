@@ -253,6 +253,30 @@ describe('formatNumber', () => {
 })
 
 
+
+describe('planned execution evidence isolation', () => {
+  it('does not commit a rejected primary value or evidence row', () => {
+    const variables: Variable[] = [
+      { id: 'a', symbol: 'a', latex: 'a', name: 'a', defaultUnit: '', alternativeUnits: [] },
+      { id: 'x', symbol: 'x', latex: 'x', name: 'x', defaultUnit: '', alternativeUnits: [] },
+    ]
+    const formula: Formula = {
+      id: 'x_from_a', name: 'x from a', latex: 'x = a', variables: ['x', 'a'],
+      solveFor: { x: 'a' }, latexSteps: { x: { rearranged: 'x = a', explanation: 'test' } },
+    }
+    const registry = new FormulaRegistry()
+    registry.register(formula)
+    const result = solve(registry, variables, { a: { value: 2, unit: '', isUserInput: true, isComputed: false } }, [], {
+      plannedExecution: { postValidate: targetId => targetId === 'x'
+        ? [{ type: 'contradiction', variableId: 'x', message: 'forced post-validation failure' }]
+        : [] },
+    })
+    expect(result.values.x.value).toBeNull()
+    expect(result.steps.some(step => step.targetVariable === 'x')).toBe(false)
+    expect(result.errors).toMatchObject([{ type: 'contradiction', variableId: 'x' }])
+  })
+})
+
 describe('presentation failure isolation', () => {
   it('keeps accepted values, errors, raw order, and later calculations unchanged when the adapter throws', () => {
     const variables: Variable[] = [

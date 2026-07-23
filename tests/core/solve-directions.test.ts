@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parse } from 'mathjs'
 import { compileSolveDirections } from '../../src/core/solve-directions'
 import { JOULE_FORMULAS } from '../../src/modules/joule/formulas'
 import { ALL_VARIABLES } from '../../src/modules/joule/config'
@@ -7,10 +8,17 @@ import type { Formula } from '../../src/core/types'
 describe('compileSolveDirections', () => {
   it('derives stable sorted required IDs from the expression AST', () => {
     const directions = compileSolveDirections(JOULE_FORMULAS, ALL_VARIABLES.map(variable => variable.id))
-    expect(JOULE_FORMULAS).toHaveLength(24)
-    expect(directions).toHaveLength(42)
+    expect(JOULE_FORMULAS).toHaveLength(25)
+    expect(directions).toHaveLength(48)
     expect(directions.map(direction => direction.id)).toEqual([...directions.map(direction => direction.id)].sort((left, right) => left.localeCompare(right)))
     expect(directions.find(direction => direction.id === 'cp_from_kappa_cv:cp')?.requiredIds).toEqual(['cv', 'kappa'])
+    for (const direction of directions) {
+      const expression = JOULE_FORMULAS.find(formula => formula.id === direction.formulaId)?.solveFor[direction.targetId]
+      const freshRequiredIds = [...new Set(parse(expression!).filter(node => node.type === 'SymbolNode')
+        .map(node => (node as unknown as { name: string }).name)
+        .filter(name => ALL_VARIABLES.some(variable => variable.id === name)))].sort()
+      expect(direction.requiredIds).toEqual(freshRequiredIds)
+    }
   })
 
   it('applies an ID-keyed policy without copying expression or dependencies into the policy', () => {
@@ -36,6 +44,7 @@ describe('compileSolveDirections', () => {
       routePriority: 17,
       conditions,
     })
+    expect(direction.sourceRef).toBeUndefined()
   })
 
   it('rejects unknown symbols instead of treating them as quantities', () => {

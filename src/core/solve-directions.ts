@@ -12,6 +12,7 @@ export interface DirectionPolicy {
   mode?: SolveDirectionMode
   routePriority?: number
   conditions?: readonly DomainCondition[]
+  sourceRef?: string
 }
 
 export interface SolveDirection {
@@ -22,6 +23,7 @@ export interface SolveDirection {
   mode: SolveDirectionMode
   routePriority: number
   conditions?: readonly DomainCondition[]
+  sourceRef?: string
 }
 
 const ALLOWED_FUNCTIONS = new Set(['log'])
@@ -56,6 +58,7 @@ export function compileSolveDirections(
         mode: policy?.mode ?? 'derive',
         routePriority: policy?.routePriority ?? 0,
         ...(policy?.conditions ? { conditions: [...policy.conditions] } : {}),
+        ...(policy?.sourceRef ? { sourceRef: policy.sourceRef } : {}),
       })
     }
   }

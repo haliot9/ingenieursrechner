@@ -1,5 +1,5 @@
 import type { CalculatorModule } from '../../core/types'
-import { ALL_VARIABLES, PROCESSES, VARIABLE_GROUPS } from './config'
+import { ALL_VARIABLES, JOULE_PLANNED_EXECUTION, PROCESSES, VARIABLE_GROUPS } from './config'
 import { JOULE_FORMULAS } from './formulas'
 import { validateJouleCycle } from './validation'
 import { getJouleDiagramSpec } from './diagram'
@@ -15,6 +15,7 @@ export const jouleModule: CalculatorModule = {
   groups: VARIABLE_GROUPS,
   validateValues: validateJouleCycle,
   getDiagramSpec: getJouleDiagramSpec,
+  plannedExecution: JOULE_PLANNED_EXECUTION,
   summaryTitle: 'Joule-/Brayton-Bilanz',
   processSequence: [
     { transition: '1 → 2', label: 'adiabate Verdichtung' },

@@ -1,4 +1,7 @@
 import type { ProcessType, Variable } from '../../core/types'
+import type { PlannedExecutionConfig } from '../../core/solver'
+import type { DirectionPolicy } from '../../core/solve-directions'
+import { validateJouleCycle } from './validation'
 
 export const PROCESSES: ProcessType[] = [
   { id: 'adiabatic', name: 'Adiabat (isentrop)', description: 'q = 0, s = const', constraints: ['q = 0', 's = const'] },
@@ -36,3 +39,22 @@ const cycleVariables: Variable[] = [
 
 export const ALL_VARIABLES = [...stateVariables, ...cycleVariables]
 export const VARIABLE_GROUPS = ['Zustand 1', 'Zustand 2', 'Zustand 3', 'Zustand 4', 'Kreisprozessparameter', 'Stoffeigenschaften', 'Energiebilanz']
+
+
+export const JOULE_DIRECTION_POLICIES: Readonly<Record<string, DirectionPolicy>> = {
+  'heat_input:T3': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-02' },
+  'heat_input:T2': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#direction-policy' },
+  'heat_rejection:T1': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-03' },
+  'heat_rejection:T4': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#direction-policy' },
+  'ideal_efficiency:eta': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-06' },
+  'ideal_efficiency:pressureRatio': { mode: 'derive', routePriority: 0, sourceRef: 'golden-routes.md#GR-03' },
+  'ideal_gas_1:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
+  'ideal_gas_2:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
+  'ideal_gas_3:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
+  'ideal_gas_4:Rs': { mode: 'validate-only', sourceRef: 'golden-routes.md#GR-07' },
+}
+
+export const JOULE_PLANNED_EXECUTION: PlannedExecutionConfig = {
+  policies: JOULE_DIRECTION_POLICIES,
+  postValidate: (targetId, values) => validateJouleCycle(values).filter(error => error.variableId === targetId),
+}

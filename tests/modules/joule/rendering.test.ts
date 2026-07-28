@@ -3,6 +3,7 @@ import { FormulaRegistry } from '../../../src/core/formula-registry'
 import { solve } from '../../../src/core/solver'
 import type { VariableState } from '../../../src/core/types'
 import { jouleModule } from '../../../src/modules/joule'
+import { composeJouleCalculationStory } from '../../../src/modules/joule/calculation-story'
 import { renderLatex, unitToLatex } from '../../../src/utils/latex'
 
 function input(value: number, unit = ''): VariableState {
@@ -47,15 +48,22 @@ describe('Joule calculation-step rendering regression', () => {
     expect(unitToLatex('')).toBe('')
   })
 
-  it('renders every structured reference row through the real KaTeX path', () => {
+  it('renders every semantic story equation through the real KaTeX path without density assertions', () => {
     const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
       T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10), T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+    }, [], { plannedExecution: jouleModule.plannedExecution })
+    const story = composeJouleCalculationStory({
+      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
     })
-    const rendered = result.steps.flatMap(step => step.derivationState?.mode === 'structured'
-      ? step.derivationState.rows.map(row => renderLatex(row.latex, row.displayMode))
-      : [])
-    expect(rendered).toHaveLength(86)
+
+    expect(story.mode).toBe('complete')
+    if (story.mode !== 'complete') throw new Error('expected a complete story')
+    const rendered = story.story.rows.map(row => renderLatex(row.equationLatex, false))
     expect(rendered.some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
+    expect(story.story.rows.filter(row => row.id === 'cv-resolved')).toHaveLength(1)
+    expect(story.story.rows.filter(row => row.kind === 'reuse' && row.equationLatex.includes('c_p'))).toHaveLength(1)
+    expect(story.story.rows.map(row => row.equationLatex)).toContain('R_s = c_p - c_v')
+    expect(story.story.rows.map(row => row.equationLatex)).toContain('κ = \\frac{c_p}{c_v}')
   })
 
 

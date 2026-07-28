@@ -4,7 +4,7 @@
 
 A deterministic, browser-based engineering calculator that derives every solvable quantity from the values provided and exposes the complete calculation path.
 
-The current production-ready modules cover the ideal Carnot cycle, the ideal air-standard Diesel cycle, and the ideal air-standard Otto cycle.
+The current production-ready modules cover the ideal Carnot cycle, the ideal air-standard Diesel cycle, the ideal air-standard Otto cycle, and the static ideal Joule/Brayton cycle.
 
 ## Privacy
 
@@ -24,9 +24,9 @@ The public site is hosted by GitHub Pages; normal connection metadata is therefo
 - Input and computed-result constraint validation
 - Mobile-first cards and 44 px minimum interactive targets
 
-## Reference case
+## Module-specific reference cases
 
-Use **Referenzfall Luft** in the UI to load:
+Each module owns its own **Referenzfall Luft** preset. The following table is the Carnot reference case; select the Joule/Brayton module for its separate four-state reference case.
 
 | Input | Value |
 |---|---:|
@@ -71,11 +71,12 @@ module definitions + formulas + presets
                  ▼
          FormulaRegistry
                  │
-user values → validation → fixed-point solver
+user values → validation → route planning → fixed-point solver
+                 │                                  │
+                 ▼                                  ▼
+     values + SolutionStep provenance + PresentationPlan
                  │
-                 ▼
-     values + steps + errors + diagrams
-                 │
+                 ├── optional finite module calculation-story adapter
                  ▼
        Zustand store → React UI
 ```
@@ -84,12 +85,13 @@ user values → validation → fixed-point solver
 - `src/modules/carnot/` — Carnot variables, formulas, preset, and diagram adapter
 - `src/modules/diesel/` — ideal air-standard Diesel variables, formulas, preset, and diagram adapter
 - `src/modules/otto/` — ideal air-standard Otto variables, formulas, preset, and diagram adapter
-- `src/store/` — UI/solver integration and unit boundary
-- `src/components/` — responsive inputs, results, diagrams, and derivation UI
+- `src/modules/joule/` — static ideal Joule/Brayton variables, formulas, preset, diagram adapter, and bounded calculation-story recipe
+- `src/store/` — UI/solver integration, unit boundary, and isolated optional story composition
+- `src/components/` — responsive inputs, results, diagrams, legacy derivations, and the bounded calculation-story renderer
 - `tests/` — unit, property-based, robustness, store, and component regression tests
 - `docs/` — architecture, decisions, and testing guidance
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), and [src/modules/otto/README.md](src/modules/otto/README.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), [src/modules/otto/README.md](src/modules/otto/README.md), and [src/modules/joule/README.md](src/modules/joule/README.md) for details.
 
 ## For coding agents and contributors
 

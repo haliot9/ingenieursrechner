@@ -17,7 +17,11 @@ User-Input (Werte + Einheiten)
   Solver (solver.ts) <--- FormulaRegistry <--- CalculatorModule
         |                                           |
         v                                     config.ts + formulas.ts
-  SolverResult {values, steps, errors}
+  ReachabilityPlan + SolverResult {values, steps, errors, provenance}
+        |
+        +--> PresentationPlan --> legacy StepDisplay
+        |
+        +--> optional module calculation-story adapter --> CalculationStoryDisplay
         |
         v
   UI-Rendering (React Components + KaTeX)
@@ -45,7 +49,7 @@ Jedes Modul definiert ein abgeschlossenes Rechengebiet.
 - `formulas.ts` - Formeln mit `solveFor` (pre-solved Expressions) + `latexSteps`
 - `index.ts` - Export als `CalculatorModule`
 
-**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel- und Otto-Prozesse (Thermodynamik)
+**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel-, Otto- und statische ideale Joule-/Brayton-Prozesse (Thermodynamik)
 **Geplant:** Weitere Module (Kinematik, Stroemungsmechanik, etc.)
 
 ### 3. State Management (`src/store/`)
@@ -61,7 +65,8 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - `CalculatorTable` - collapsible input groups; desktop table and mobile card layout
 - `ResultSummary` - cycle status, energy balance, efficiency, and process sequence
 - `DiagramPanel` - module-independent p-v and T-s visualizations
-- `StepDisplay` - expandable KaTeX derivation steps
+- `StepDisplay` - expandable KaTeX derivation steps for legacy/non-opted-in paths
+- `CalculationStoryDisplay` - continuous semantic proof spine for a module-owned opted-in story
 - `ValueInput` / `UnitSelector` - unit-aware inputs with mobile-size controls
 - `ModuleSelector` - accessible live-filtered module picker driven by the module registry
 
@@ -86,6 +91,12 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - **SI intern:** Alle Berechnungen in SI-Einheiten, Konvertierung nur am Ein-/Ausgang
 - **Pre-solved Formeln:** Keine symbolische Umstellung zur Laufzeit, alle solveFor-Richtungen vordefiniert
 - **Kein Backend:** Alles laeuft client-side im Browser
+
+## Bounded calculation-story seam
+
+`CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving has completed. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; the store catches adapter failure without altering accepted numeric state.
+
+The first implementation is intentionally finite and Joule-owned. It matches only two material-property route signatures and renders semantic rows through the existing KaTeX utility. A complete story declares the exact solver directions it consumes (`formulaId`, target variable, and direction identity). The UI renders that story once and filters only matching primary cards before passing the remaining `PresentationPlan` to `StepDisplay`; alternatives, blocked relations, and contradictions remain legacy truth surfaces. It does not parse arbitrary formulas, recompute values, mutate the route planner, or create a generic CAS. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md).
 
 ## Static Joule / Brayton module
 

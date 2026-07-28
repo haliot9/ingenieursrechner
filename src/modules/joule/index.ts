@@ -3,6 +3,7 @@ import { ALL_VARIABLES, JOULE_PLANNED_EXECUTION, PROCESSES, VARIABLE_GROUPS } fr
 import { JOULE_FORMULAS } from './formulas'
 import { validateJouleCycle } from './validation'
 import { getJouleDiagramSpec } from './diagram'
+import { composeJouleCalculationStory } from './calculation-story'
 
 export const jouleModule: CalculatorModule = {
   id: 'joule',
@@ -16,6 +17,7 @@ export const jouleModule: CalculatorModule = {
   validateValues: validateJouleCycle,
   getDiagramSpec: getJouleDiagramSpec,
   plannedExecution: JOULE_PLANNED_EXECUTION,
+  calculationStory: composeJouleCalculationStory,
   summaryTitle: 'Joule-/Brayton-Bilanz',
   processSequence: [
     { transition: '1 → 2', label: 'adiabate Verdichtung' },

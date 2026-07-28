@@ -42,7 +42,7 @@ describe('Joule calculation-story composer', () => {
     ]) {
       const row = story.story.rows.find(candidate => candidate.id === id)
       expect(row?.rowRole).toBe('subject-change')
-      expect(row?.equation).toEqual({ bridgeLatex: '\\Longleftrightarrow', lhsLatex, relationLatex: '=', rhsLatex })
+      expect(row?.equation).toEqual({ bridgeLatex: '\\Longrightarrow', lhsLatex, relationLatex: '=', rhsLatex })
       expect(row?.operation).toMatchObject({ kind: 'integrate' })
     }
 

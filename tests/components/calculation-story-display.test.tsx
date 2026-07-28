@@ -67,12 +67,14 @@ it('renders story math in display mode, one equation core, milestones, and uniqu
       alternatives: [
         { parentRowId: 'boxed', title: 'Alternative', rows: [rows[1]] },
         { parentRowId: 'boxed', title: 'Alternative', rows: [rows[1]] },
+        { parentRowId: 'other', title: 'Other alternative', rows: [rows[1]] },
       ],
     },
   }
   const { container } = render(<CalculationStoryDisplay story={story as never} />)
   expect(container.querySelector('.story-equation-display .katex-display')).toBeTruthy()
   expect(container.querySelectorAll('[data-story-parent-alternative="boxed"]')).toHaveLength(1)
+  expect(container.querySelectorAll('[data-story-parent-alternative="other"]')).toHaveLength(0)
   expect(container.querySelector('.story-result-core')).toBeTruthy()
   expect(container.querySelector('.story-milestone')?.textContent).toContain('Zustand 1 vollständig')
 })

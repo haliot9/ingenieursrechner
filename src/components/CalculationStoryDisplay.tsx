@@ -12,7 +12,7 @@ function EquationRow({ row, index, alternatives }: { row: CalculationStoryRow; i
   if (row.kind === 'milestone') return <div className="story-milestone" data-story-role="milestone">✓ {row.label ?? row.equationLatex}</div>
   const equation = row.equation ?? fallbackEquation(row)
   const operation = operationLatex(row.operation)
-  const attached = alternatives.filter((alternative, alternativeIndex, all) => all.findIndex(candidate => candidate.parentRowId === alternative.parentRowId && candidate.rows.map(row => row.id).join('|') === alternative.rows.map(row => row.id).join('|')) === alternativeIndex)
+  const attached = alternatives.filter(alternative => alternative.parentRowId === row.id).filter((alternative, alternativeIndex, all) => all.findIndex(candidate => candidate.rows.map(row => row.id).join('|') === alternative.rows.map(row => row.id).join('|')) === alternativeIndex)
   return <>
     <div className={`story-row story-spacing-${row.spacing ?? 'continuation'}`} data-story-row={row.kind} data-story-role={row.rowRole}>
       <div className="story-operation">{operation && <MathFragment latex={operation} />}</div>

@@ -60,7 +60,7 @@ function materialRows(input: CalculationStoryCompositionInput, selected: Set<str
   const rows: CalculationStoryRow[] = [row('material:kappa', 'governing', 'start', `κ = \\frac{${cp}}{${cv}}`), row('material:rs', 'governing', 'start', `${rs} = ${cp} - ${cv}`)]
   if (selected.has('cv_from_Rs_kappa:cv')) rows.push(
     row('material:cp', 'result', 'subject-change', `${cp}=\\kappa ${cv}`, { equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: cp, relationLatex: '=', rhsLatex: `\\kappa ${cv}` }, box: 'core' }),
-    row('material:substitute-cp', 'transform', 'continuation', `=${kappa}${cv}-${cv}`),
+    row('material:substitute-cp', 'transform', 'continuation', `=${kappa} ${cv}-${cv}`),
     row('material:factor', 'transform', 'continuation', `=${cv}(\\kappa-1)`),
     row('material:cv-resolved', 'result', 'subject-change', `${cv}=\\frac{${rs}}{\\kappa-1}`, { equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: cv, relationLatex: '=', rhsLatex: `\\frac{${rs}}{\\kappa-1}` }, box: 'core', state: 'reachable' }),
     row('material:cv-substitution', 'numeric', 'numeric', `=\\frac{${valueLatex(input, 'Rs')}}{${valueLatex(input, 'kappa')}-1}`, { equation: { relationLatex: '=', rhsLatex: `\\frac{${valueLatex(input, 'Rs')}}{${valueLatex(input, 'kappa')}-1}` } }),

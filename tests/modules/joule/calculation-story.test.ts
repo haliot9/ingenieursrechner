@@ -58,6 +58,7 @@ describe('Joule learning story Golden v0.2', () => {
 
     expect(story.sections?.map(section => section.id)).not.toContain('overview')
     expect(byId('material:memory')).toBeUndefined()
+    expect(story.rows.some(row => row.equationLatex.includes('κc_v'))).toBe(false)
     expect(byId('material:cp')?.equation?.rhsLatex).toBe('\\kappa c_v')
     expect(byId('material:cp')?.equation?.bridgeLatex).toBe('\\Longleftrightarrow')
     expect(byId('material:cv-resolved')?.equation?.rhsLatex).toBe('\\frac{R_s}{\\kappa-1}')

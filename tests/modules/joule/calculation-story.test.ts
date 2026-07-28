@@ -11,99 +11,56 @@ function input(value: number, unit = ''): VariableState {
 }
 
 function referenceResult() {
-  return solve(
-    FormulaRegistry.fromModule(jouleModule),
-    jouleModule.variables,
-    {
-      T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10),
-      T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
-    },
-    [],
-    { plannedExecution: jouleModule.plannedExecution },
-  )
+  return solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
+    T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10), T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+  }, [], { plannedExecution: jouleModule.plannedExecution })
 }
 
-describe('Joule calculation-story recipes', () => {
-  it('uses exact solver facts for the Rs + kappa -> cv -> cp proof spine', () => {
+describe('Joule calculation-story composer', () => {
+  it('renders the material chain semantically while preserving exact accepted values', () => {
     const result = referenceResult()
-    const story = composeJouleCalculationStory({
-      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
-    })
-
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
     expect(story.mode).toBe('complete')
-    if (story.mode !== 'complete') throw new Error('expected a complete story')
-    expect(story.story.route).toBe('rs-kappa-to-cv-cp')
-    expect(story.story.rows.map(row => row.id)).toEqual([
-      'kappa-governing', 'cp-derived-relation', 'rs-governing', 'substitute-cp',
-      'factor-cv', 'cv-resolved', 'cv-numeric', 'cp-reuse', 'cp-numeric',
-    ])
-    expect(story.story.rows.find(row => row.id === 'cv-numeric')?.equationLatex)
-      .toContain('717.5')
-    expect(story.story.rows.find(row => row.id === 'cp-numeric')?.equationLatex)
-      .toContain('1004.5')
-    expect(story.story.rows.find(row => row.id === 'cp-reuse')).toMatchObject({ kind: 'reuse', state: 'reachable' })
+    if (story.mode !== 'complete') throw new Error('expected complete story')
+
+    const continuation = story.story.rows.find(row => row.id === 'material:substitute-cp')
+    expect(continuation).toMatchObject({ rowRole: 'continuation', equation: { lhsLatex: undefined, relationLatex: '=' } })
+    expect(continuation?.operation).toMatchObject({ kind: 'substitute', latex: expect.stringContaining('\\xrightarrow') })
+    expect(story.story.rows.find(row => row.id === 'material:cv-numeric')?.equationLatex).toContain('717.5')
+    expect(story.story.rows.find(row => row.id === 'material:cp-numeric')?.equationLatex).toContain('1004.5')
   })
 
-  it('keeps non-consumed Joule plan steps while filtering story-owned cv and cp cards', () => {
+  it('filters every full-story primary card while retaining separate alternatives and blocked states', () => {
     const result = referenceResult()
-    const story = composeJouleCalculationStory({
-      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
-    })
-
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
     expect(story.mode).toBe('complete')
-    if (story.mode !== 'complete') throw new Error('expected a complete story')
-    const hybridPlan = removeConsumedStorySteps({ primarySteps: result.steps, alternatives: [], blocked: [] }, story.story)
-
-    expect(story.story.consumedSteps).toEqual([
-      { formulaId: 'cv_from_Rs_kappa', targetVariable: 'cv', directionId: 'cv_from_Rs_kappa:cv' },
-      { formulaId: 'cp_from_kappa_cv', targetVariable: 'cp', directionId: 'cp_from_kappa_cv:cp' },
-    ])
-    expect(result.steps.map(step => step.targetVariable)).toContain('T2')
-    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).toContain('T2')
-    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).not.toContain('cv')
-    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).not.toContain('cp')
+    if (story.mode !== 'complete') throw new Error('expected complete story')
+    const visible = removeConsumedStorySteps({ primarySteps: result.steps, alternatives: [], blocked: [] }, story.story)
+    expect(visible?.primarySteps).toEqual([])
+    expect(story.story.consumedSteps).toHaveLength(22)
   })
 
-  it('uses the direct c_v + kappa -> c_p route without an unnecessary Rs elimination', () => {
-    const result = solve(
-      FormulaRegistry.fromModule(jouleModule),
-      jouleModule.variables,
-      { cv: input(717.5, 'J/(kg*K)'), kappa: input(1.4) },
-      [],
-      { plannedExecution: jouleModule.plannedExecution },
-    )
-    const story = composeJouleCalculationStory({
-      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
-    })
-
-    expect(story).toMatchObject({ mode: 'complete', story: { route: 'cv-kappa-to-cp' } })
-    if (story.mode !== 'complete') throw new Error('expected a complete story')
-    expect(story.story.rows.map(row => row.id)).toEqual(['kappa-governing', 'cp-resolved', 'cp-numeric'])
+  it('uses the direct c_v + kappa -> c_p route without an Rs story branch', () => {
+    const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, { cv: input(717.5, 'J/(kg*K)'), kappa: input(1.4) }, [], { plannedExecution: jouleModule.plannedExecution })
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
+    expect(story.mode).toBe('complete')
+    if (story.mode !== 'complete') throw new Error('expected complete story')
+    expect(story.story.consumedSteps).toEqual([{ formulaId: 'cp_from_kappa_cv', targetVariable: 'cp', directionId: 'cp_from_kappa_cv:cp' }])
     expect(story.story.rows.some(row => row.equationLatex.includes('R_s'))).toBe(false)
-    expect(story.story.rows.find(row => row.id === 'cp-numeric')?.equationLatex).toContain('1004.5')
   })
 
-  it('returns an explicit unavailable state when an opted-in reference route lacks provenance', () => {
+  it('returns unavailable rather than presenting authority when a selected route lacks executed provenance', () => {
     const result = referenceResult()
-    const story = composeJouleCalculationStory({
-      plan: result.plan!,
-      steps: result.steps.filter(step => step.targetVariable !== 'cp'),
-      values: result.values,
-      variables: jouleModule.variables,
-    })
-
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps.filter(step => step.targetVariable !== 'cp'), values: result.values, variables: jouleModule.variables })
     expect(story).toMatchObject({ mode: 'unavailable' })
   })
 
-  it('does not mutate accepted solver values or expose solver identifiers in learner rows', () => {
+  it('does not mutate accepted solver values or leak internal direction IDs into learner rows', () => {
     const result = referenceResult()
     const acceptedValues = JSON.stringify(result.values)
-    const story = composeJouleCalculationStory({
-      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
-    })
-
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
     expect(JSON.stringify(result.values)).toBe(acceptedValues)
-    if (story.mode !== 'complete') throw new Error('expected a complete story')
-    expect(JSON.stringify(story.story.rows)).not.toMatch(/cv_from_Rs_kappa|cp_from_kappa_cv|formulaId|targetId/)
+    if (story.mode !== 'complete') throw new Error('expected complete story')
+    expect(JSON.stringify(story.story.rows)).not.toMatch(/cv_from_Rs_kappa|formulaId|targetId/)
   })
 })

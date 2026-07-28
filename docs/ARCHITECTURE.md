@@ -92,11 +92,11 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - **Pre-solved Formeln:** Keine symbolische Umstellung zur Laufzeit, alle solveFor-Richtungen vordefiniert
 - **Kein Backend:** Alles laeuft client-side im Browser
 
-## Bounded calculation-story seam
+## Calculation-story seam
 
-`CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving has completed. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; the store catches adapter failure without altering accepted numeric state.
+`CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; store-level exception handling never alters accepted numeric state.
 
-The first implementation is intentionally finite and Joule-owned. It matches only two material-property route signatures and renders semantic rows through the existing KaTeX utility. A complete story declares the exact solver directions it consumes (`formulaId`, target variable, and direction identity). The UI renders that story once and filters only matching primary cards before passing the remaining `PresentationPlan` to `StepDisplay`; alternatives, blocked relations, and contradictions remain legacy truth surfaces. It does not parse arbitrary formulas, recompute values, mutate the route planner, or create a generic CAS. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md).
+The Joule implementation is a full finite recipe registry over all 44 registered derive directions. Every recipe is keyed by exact direction identity and a complete story consumes each selected primary direction exactly once. The four `ideal_gas_n:Rs` directions remain validate-only checks. Rows carry semantic chain state (chain ID, row role, structured bridge/left/relation/right equation, and KaTeX operation) so rendering never infers algebraic continuity from raw strings. Checks and alternatives remain separate presentation states. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md), whose name is retained for link continuity although it now documents the full story.
 
 ## Static Joule / Brayton module
 

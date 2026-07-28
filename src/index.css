@@ -279,3 +279,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .story-equation { min-width: 34rem; }
   .story-note { grid-column: 2; margin: 2px 0 4px; }
 }
+
+.story-equation-grid { width: max-content; min-width: 100%; display: grid; grid-template-columns: minmax(1.5rem, max-content) minmax(4.5rem, max-content) minmax(1.2rem, max-content) minmax(0, max-content); gap: .42rem; align-items: baseline; color: var(--text-primary); font-size: 15px; }
+.story-bridge { min-width: 1.5rem; text-align: right; }
+.story-lhs { min-width: 4.5rem; text-align: right; }
+.story-relation { min-width: 1.2rem; text-align: center; }
+.story-rhs { min-width: max-content; }
+.story-row[data-story-role='continuation'] .story-lhs { visibility: hidden; }
+.story-row[data-story-role='numeric'] .story-equation-grid { color: var(--text-secondary); font-size: 13px; }
+@media (max-width: 760px) { .story-equation-grid { min-width: 34rem; } }

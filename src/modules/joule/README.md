@@ -4,16 +4,24 @@ Static deterministic educational model of the ideal four-state Joule/Brayton hea
 
 ## Topology and signs
 
-1->2 is isentropic compression, 2->3 is isobaric heat input, 3->4 is isentropic expansion, and 4->1 is isobaric heat rejection.
+1->2 is isentropic compression, 2->3 is isobaric heat input, 3->4 is isentropic expansion, and 4->1 is isobaric heat rejection. The repository convention is preserved: `q_in > 0`, `q_out < 0`, `w_comp > 0`, `w_turb < 0`, and `w_netto < 0`.
 
-The repository convention is preserved: q_in > 0, q_out < 0, w_comp > 0, w_turb < 0, and w_netto < 0. The module exposes the dimensionless back_work_ratio.
+## Full calculation-story contract
+
+The module owns a finite recipe registry for all 44 registered `derive` directions. The four `ideal_gas_n:Rs` directions remain validate-only checks; they never become material-property derivations. A recipe is keyed by exact `formulaId:targetId`, names an approved formula-registry entry point, retains declared conditions, and emits semantic chain rows from accepted `SolutionStep` provenance.
+
+The composer consumes every selected primary direction exactly once. Missing recipe or execution evidence produces explicit `unavailable` output without changing solver values. Shared ideal-gas, entropy-datum, and material relations have stable proof-node identities; checks such as the cycle residual remain separate from the primary spine.
+
+## Presentation boundary
+
+`CalculationStoryDisplay` receives chain semantics (`rowRole`, operation KaTeX, bridge/left/relation/right equation fields), not string-comparison hints. Unchanged left subjects are omitted only on explicit continuation rows. Every equation has a keyboard-focusable local horizontal scroller; the page itself remains constrained at mobile width.
+
+The story consumes all primary Joule cards on a complete reference route. Legacy `StepDisplay` remains unchanged for Carnot, Diesel, Otto, alternatives, blocked relations, and contradictions.
 
 ## Assumptions and non-goals
 
-Ideal gas with constant Rs, cp, cv, and kappa. The module validates the heat-engine domain. It does not implement dynamic stages, intercooling, reheat, recuperation, losses, variable heat capacities, sweeps, optimisation, heatmaps, or finite-optimum claims.
+Ideal gas with constant Rs, cp, cv, and kappa. The module validates the heat-engine domain. It does not implement dynamic stages, intercooling, reheat, recuperation, losses, variable heat capacities, runtime symbolic algebra, LLM generation, optimiser behaviour, or solver/direction-policy changes.
 
-## Bounded calculation-story pilot
+## Evidence
 
-The module owns a finite learner-facing pilot for `R_s + kappa -> c_v -> c_p` and direct `c_v + kappa -> c_p`. It is presentation-only: a complete story declares the exact consumed `cv`/`cp` solver directions, renders the continuous proof once, and filters only those matching primary cards. The remaining `PresentationPlan`, including alternatives, blocked relations, and contradictions, stays in the legacy derivation surface.
-
-On narrow screens, each equation uses a labelled local horizontal scroller so a long expression can move without widening the document. See [CALCULATION_STORY_PILOT.md](../../../docs/CALCULATION_STORY_PILOT.md) for the bounded routes and evidence contract.
+`tests/modules/joule/calculation-story-full.test.ts` reconciles the live 48-direction inventory (44 derive, four validate-only) and reference consumption. `tests/modules/joule/calculation-story.test.ts` covers provenance rejection, semantic material chains, and atomic full-story filtering. `tests/components/calculation-story-display.test.tsx` covers the semantic DOM grid, KaTeX operation rendering, and local scroller contract.

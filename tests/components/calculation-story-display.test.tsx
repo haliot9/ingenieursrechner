@@ -6,25 +6,23 @@ import { CalculationStoryDisplay } from '../../src/components/CalculationStoryDi
 const completeStory = {
   mode: 'complete' as const,
   story: {
-    route: 'rs-kappa-to-cv-cp',
-    title: 'Stoffeigenschaften: Rₛ + κ → cᵥ → cₚ',
+    route: 'test', title: 'Kette', consumedSteps: [], unconsumedPrimarySteps: [],
     rows: [
-      { id: 'governing', kind: 'governing' as const, equationLatex: '\\kappa = \\frac{c_p}{c_v}', note: 'Freigegebene Grundbeziehung.' },
-      { id: 'long', kind: 'result' as const, equationLatex: 'c_v = \\frac{R_s}{\\kappa - 1} = \\frac{287.05\\;\\mathrm{J/(kg\\cdot K)}}{1.4 - 1}', operation: 'durch κ − 1 teilen', state: 'reachable' as const },
-      { id: 'reuse', kind: 'reuse' as const, equationLatex: 'c_p = \\kappa c_v', operation: 'cᵥ wiederverwenden', note: 'Bereits bewiesene Beziehung verwenden.', state: 'reachable' as const },
+      { id: 'start', kind: 'governing' as const, rowRole: 'start' as const, equationLatex: '\\kappa = \\frac{c_p}{c_v}', equation: { lhsLatex: '\\kappa', relationLatex: '=', rhsLatex: '\\frac{c_p}{c_v}' } },
+      { id: 'continuation', kind: 'transform' as const, rowRole: 'continuation' as const, equationLatex: 'R_s = \\kappa c_v-c_v', equation: { relationLatex: '=', rhsLatex: '\\kappa c_v-c_v' }, operation: { kind: 'factor' as const, latex: '\\xrightarrow{\\text{factor }c_v}' } },
+      { id: 'numeric', kind: 'numeric' as const, rowRole: 'numeric' as const, equationLatex: 'c_v = \\frac{287.05\\;\\mathrm{J/(kg\\cdot K)}}{1.4 - 1}', equation: { lhsLatex: 'c_v', relationLatex: '=', rhsLatex: '\\frac{287.05\\;\\mathrm{J/(kg\\cdot K)}}{1.4 - 1}' } },
     ],
   },
 }
 
 describe('CalculationStoryDisplay', () => {
-  it('renders a labelled keyboard-focusable local proof scroller with KaTeX rows and reuse', () => {
+  it('renders semantic grid columns, KaTeX operations, and local keyboard scrollers', () => {
     const { container } = render(<CalculationStoryDisplay story={completeStory} />)
     const scroller = screen.getByRole('region', { name: 'Herleitung: Gleichungszeilen' })
-
     expect(scroller.tabIndex).toBe(0)
-    expect(scroller.classList.contains('calculation-story-spine')).toBe(true)
-    expect(container.querySelector('[data-long-equation="true"]')).toBeTruthy()
-    expect(screen.getByText('cᵥ wiederverwenden')).toBeTruthy()
+    expect(container.querySelector('[data-story-role="continuation"] .story-lhs')).toBeTruthy()
+    expect(container.querySelectorAll('.story-equation-scroller')).toHaveLength(3)
+    expect(container.querySelectorAll('.story-operation .katex')).toHaveLength(1)
     expect(container.innerHTML).not.toContain('katex-error')
     expect(container.innerHTML).not.toContain('LaTeX Error')
   })

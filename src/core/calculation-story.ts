@@ -3,12 +3,31 @@ import type { PresentationPlan, SolutionStep, Variable, VariableState } from './
 
 export type CalculationStoryRowKind = 'governing' | 'transform' | 'result' | 'numeric' | 'reuse'
 export type CalculationStoryFactState = 'derived' | 'reachable'
+export type StoryRelation = 'equals' | 'equivalent' | 'implies'
+export type StoryRowRole = 'start' | 'continuation' | 'subject-change' | 'reuse' | 'numeric' | 'check'
+export type StoryOperationKind = 'substitute' | 'equate' | 'isolate' | 'factor' | 'divide' | 'multiply' | 'exponentiate' | 'root' | 'logarithm' | 'integrate' | 'reuse'
+
+export interface StoryEquation {
+  bridgeLatex?: string
+  lhsLatex?: string
+  relationLatex: string
+  rhsLatex: string
+}
+
+export interface StoryOperation {
+  kind: StoryOperationKind
+  latex: string
+}
 
 export interface CalculationStoryRow {
   id: string
   kind: CalculationStoryRowKind
+  /** Semantic chain identity; rendering must never infer it from strings. */
+  chainId?: string
+  rowRole?: StoryRowRole
   equationLatex: string
-  operation?: string
+  equation?: StoryEquation
+  operation?: StoryOperation | string
   note?: string
   state?: CalculationStoryFactState
 }
@@ -25,6 +44,8 @@ export interface CalculationStory {
   rows: readonly CalculationStoryRow[]
   /** Exact selected solver directions represented by the continuous story. */
   consumedSteps: readonly CalculationStoryConsumedStep[]
+  /** Selected primary directions that could not be represented; complete stories keep this empty. */
+  unconsumedPrimarySteps?: readonly CalculationStoryConsumedStep[]
 }
 
 export function isConsumedStoryStep(story: CalculationStory, step: SolutionStep): boolean {

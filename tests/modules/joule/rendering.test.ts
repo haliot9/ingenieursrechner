@@ -60,10 +60,13 @@ describe('Joule calculation-step rendering regression', () => {
     if (story.mode !== 'complete') throw new Error('expected a complete story')
     const rendered = story.story.rows.map(row => renderLatex(row.equationLatex, false))
     expect(rendered.some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
-    expect(story.story.rows.filter(row => row.id === 'cv-resolved')).toHaveLength(1)
-    expect(story.story.rows.filter(row => row.kind === 'reuse' && row.equationLatex.includes('c_p'))).toHaveLength(1)
+    expect(story.story.rows.filter(row => row.id === 'material:cv-resolved')).toHaveLength(1)
+    expect(story.story.rows.filter(row => row.id === 'material:cp-reuse')).toHaveLength(1)
     expect(story.story.rows.map(row => row.equationLatex)).toContain('R_s = c_p - c_v')
     expect(story.story.rows.map(row => row.equationLatex)).toContain('κ = \\frac{c_p}{c_v}')
+    const operations = story.story.rows.flatMap(row => typeof row.operation === 'object' ? [row.operation.latex] : [])
+    expect(operations).not.toEqual([])
+    expect(operations.map(latex => renderLatex(latex, false)).some(html => html.includes('katex-error') || html.includes('LaTeX Error'))).toBe(false)
   })
 
 

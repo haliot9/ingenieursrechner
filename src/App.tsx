@@ -7,9 +7,10 @@ import { ResultSummary } from './components/ResultSummary'
 import { StepDisplay } from './components/StepDisplay'
 import { ErrorDisplay } from './components/ErrorDisplay'
 import { DiagramPanel } from './components/diagrams/DiagramPanel'
+import { CalculationStoryDisplay } from './components/CalculationStoryDisplay'
 
 function App() {
-  const { module, steps, errors, values, presentation } = useCalculatorStore()
+  const { module, steps, errors, values, presentation, story } = useCalculatorStore()
   useEffect(() => {
     if (module) document.title = `Ingenieursrechner · ${module.name}`
   }, [module])
@@ -17,6 +18,7 @@ function App() {
   const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
   const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
     .filter(error => !presentation || error.type !== 'contradiction')
+  const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
 
   return (
     <div className="app-shell">
@@ -68,7 +70,9 @@ function App() {
                 <ResultSummary />
                 <ErrorDisplay errors={visibleErrors} />
                 <DiagramPanel />
-                <StepDisplay steps={steps} presentation={presentation} contradictions={presentationContradictions} />
+                {displayStory
+                  ? <CalculationStoryDisplay story={displayStory} />
+                  : <StepDisplay steps={steps} presentation={presentation} contradictions={presentationContradictions} />}
               </aside>
             </div>
           </>

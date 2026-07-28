@@ -161,6 +161,8 @@ export interface CalculatorModule {
   getDiagramSpec?: (values: Record<string, VariableState>) => DiagramSpec | null
   /** Explicit opt-in; omitted modules retain the legacy solver. */
   plannedExecution?: PlannedExecutionConfig
+  /** Optional module-owned learner-facing story adapter. */
+  calculationStory?: import('./calculation-story').CalculationStoryComposer
 }
 
 /** Result of a solver run */

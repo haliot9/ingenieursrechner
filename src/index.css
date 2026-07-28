@@ -282,7 +282,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 }
 
 .story-equation-line { width: max-content; min-width: 100%; display: flex; align-items: baseline; gap: .42rem; }
-.story-equation-grid { width: max-content; min-width: 100%; display: grid; grid-template-columns: minmax(4.5rem, max-content) minmax(1.2rem, max-content) minmax(0, max-content); gap: .42rem; align-items: baseline; color: var(--text-primary); font-size: 15px; }
+.story-equation-grid { width: max-content; min-width: 0; display: grid; grid-template-columns: minmax(4.5rem, max-content) minmax(1.2rem, max-content) minmax(0, max-content); gap: .42rem; align-items: baseline; color: var(--text-primary); font-size: 15px; }
 .story-bridge { min-width: 1.5rem; text-align: right; }
 .story-lhs { min-width: 4.5rem; text-align: right; }
 .story-relation { min-width: 1.2rem; text-align: center; }

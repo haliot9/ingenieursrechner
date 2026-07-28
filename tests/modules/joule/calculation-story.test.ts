@@ -30,6 +30,27 @@ describe('Joule calculation-story composer', () => {
     expect(story.story.rows.find(row => row.id === 'cp_from_kappa_cv:cp:numeric')?.equationLatex).toContain('1004.5')
   })
 
+  it('uses explicit semantic equations for entropy integrations and the cycle check', () => {
+    const result = referenceResult()
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
+    expect(story.mode).toBe('complete')
+    if (story.mode !== 'complete') throw new Error('expected complete story')
+
+    for (const [id, lhsLatex, rhsLatex] of [
+      ['shared:entropy-integral', 's_i-s_{ref}', 'c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)'],
+      ['isentropic_entropy_12:s2:integral', 's_2-s_1', '0'],
+    ]) {
+      const row = story.story.rows.find(candidate => candidate.id === id)
+      expect(row?.rowRole).toBe('subject-change')
+      expect(row?.equation).toEqual({ bridgeLatex: '\\Longleftrightarrow', lhsLatex, relationLatex: '=', rhsLatex })
+      expect(row?.operation).toMatchObject({ kind: 'integrate' })
+    }
+
+    const cycleCheck = story.story.rows.find(row => row.id === 'net_work:w_netto:check')
+    expect(cycleCheck?.rowRole).toBe('check')
+    expect(cycleCheck?.equation).toEqual({ lhsLatex: 'w_{netto}+(q_{in}+q_{out})', relationLatex: '\\approx', rhsLatex: '0' })
+  })
+
   it('filters every full-story primary card while retaining separate alternatives and blocked states', () => {
     const result = referenceResult()
     const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })

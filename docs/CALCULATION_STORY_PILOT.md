@@ -82,3 +82,4 @@ Add a route only when its planner direction identity, source relations, conditio
 - Final story numbers must use `SolverResult.values` before display-unit conversion; using store display values would silently violate the canonical-value boundary.
 - Zustand shallow state replacement exposed a real stale-output risk: an early invalid-input result that omitted `story` retained the prior story. The invalid branch now explicitly clears it.
 - The pilot deliberately stops at the material-property proof spine. Extending it to the full Joule cycle needs new finite recipes and route-specific acceptance tests, not a generic fallback.
+- Verification gap recorded after execution: `npm test`, lint, and build pass locally and in pull-request CI, but the canonical audit gate remains red on the pre-existing five-high `brace-expansion` dependency chain. This pilot changes neither dependencies nor the lockfile; remediation is deliberately outside scope.

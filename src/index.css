@@ -290,3 +290,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .story-row[data-story-role='continuation'] .story-lhs { visibility: hidden; }
 .story-row[data-story-role='numeric'] .story-equation-grid { color: var(--text-secondary); font-size: 13px; }
 @media (max-width: 760px) { .story-equation-grid { min-width: 34rem; } }
+
+.calculation-story-overview { padding: 20px 28px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+.calculation-story-overview h3 { margin: 0; font-size: 15px; }
+.calculation-story-overview > p { margin: 8px 0 14px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.calculation-story-overview dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.calculation-story-overview dl > div { min-width: 0; padding: 10px; border-left: 3px solid var(--accent); background: #fff; }
+.calculation-story-overview dt { color: var(--text-secondary); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.calculation-story-overview dd { margin: 4px 0 0; font-size: 11px; line-height: 1.45; }
+.story-disclosure { padding: 0; border-top: 1px solid var(--border); }
+.story-disclosure > summary, .story-parent-alternative > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--accent); font-size: 12px; font-weight: 800; list-style: none; }
+.story-disclosure > summary { padding: 0 12px; background: var(--bg-tertiary); }
+.story-disclosure > summary::-webkit-details-marker, .story-parent-alternative > summary::-webkit-details-marker { display: none; }
+.story-parent-alternative { margin: 6px 0 8px max(0px, 142px); padding: 0 10px; border-left: 2px solid var(--border-strong); background: #f8fafc; }
+.story-parent-alternative .story-row { grid-template-columns: minmax(100px, .55fr) minmax(0, 1.65fr) minmax(120px, .8fr); }
+.story-equation-display .katex { font-size: 1.12em; }
+.story-row.story-spacing-chain { margin-top: 12px; }
+.story-row.story-spacing-result .story-equation-scroller { margin-block: 4px; }
+.story-row.story-spacing-result .story-rhs { font-weight: 700; }
+@media (max-width: 760px) {
+  .calculation-story-overview { padding: 16px; }
+  .calculation-story-overview dl { grid-template-columns: 1fr; }
+  .story-parent-alternative { margin-left: 0; }
+  .story-parent-alternative .story-row { grid-template-columns: minmax(68px, max-content) minmax(0, 1fr); }
+  .story-equation-display .katex { font-size: 1.16em; }
+}

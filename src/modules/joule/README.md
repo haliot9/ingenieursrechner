@@ -4,30 +4,24 @@ Static deterministic educational model of the ideal four-state Joule/Brayton hea
 
 ## Topology and signs
 
-1->2 is isentropic compression, 2->3 is isobaric heat input, 3->4 is isentropic expansion, and 4->1 is isobaric heat rejection. The repository convention is preserved: `q_in > 0`, `q_out < 0`, `w_comp > 0`, `w_turb < 0`, and `w_netto < 0`.
+1→2 is isentropic compression, 2→3 is isobaric heat input, 3→4 is isentropic expansion, and 4→1 is isobaric heat rejection. Repository signs remain `q_in > 0`, `q_out < 0`, `w_comp > 0`, `w_turb < 0`, and `w_netto < 0`.
 
-## Full calculation-story contract
+## Learning story v0.2
 
-The module owns a finite recipe registry for all 44 registered `derive` directions. The four `ideal_gas_n:Rs` directions remain validate-only checks; they never become material-property derivations. A recipe is keyed by exact `formulaId:targetId`, names an approved formula-registry entry point, retains declared conditions, and emits semantic chain rows from accepted `SolutionStep` provenance.
+The Joule story is a presentation-only composition over accepted solver provenance. It begins with the model, givens, scope, signs, and dependency route; then follows state 1 → 2 → 3 → 4 before cycle performance. It models a simple ideal steady-flow cycle per unit mass: `v` is specific volume, while mass flow, total power, and transient piston systems are explicitly outside the module.
 
-The composer consumes every selected primary direction exactly once. Missing recipe or execution evidence produces explicit `unavailable` output without changing solver values. Shared ideal-gas, entropy-datum, and material relations have stable proof-node identities; checks such as the cycle residual remain separate from the primary spine.
+Rows carry typed semantic equations, spacing roles, section tiers, and optional collapse state. Reusable first-use relations are proven once and boxed without their bridge glyph; subsequent process rows reuse that proof. The optional relative-entropy datum is collapsed by default and contains the full finite micro-step integration sequence. The main spine does not require it.
 
-## Presentation boundary
+`CalculationStoryDisplay` uses display-sized KaTeX with local keyboard-focusable equation scrolling. Numeric story substitutions use controlled stacked units for the required specific-energy, specific-heat, and specific-volume forms.
 
-`CalculationStoryDisplay` receives chain semantics (`rowRole`, operation KaTeX, bridge/left/relation/right equation fields), not string-comparison hints. Unchanged left subjects are omitted only on explicit continuation rows. Every equation has a keyboard-focusable local horizontal scroller; the page itself remains constrained at mobile width.
+## Authority boundary
 
-The story consumes all primary Joule cards on a complete reference route. Legacy `StepDisplay` remains unchanged for Carnot, Diesel, Otto, alternatives, blocked relations, and contradictions.
+The finite recipe registry covers all 44 registered `derive` directions. The four `ideal_gas_n:Rs` directions remain validate-only. The story consumes each selected primary direction once, never changes formula expressions, values, solve directions, or policy, and returns unavailable if selected execution provenance is incomplete.
 
-## Assumptions and non-goals
-
-Ideal gas with constant Rs, cp, cv, and kappa. The module validates the heat-engine domain. It does not implement dynamic stages, intercooling, reheat, recuperation, losses, variable heat capacities, runtime symbolic algebra, LLM generation, optimiser behaviour, or solver/direction-policy changes.
+Joule alternatives are rendered as collapsed rows attached to their selected parent result. Legacy `StepDisplay` retains its behavior for non-Joule modules; it does not render a detached second alternative dialect for the complete Joule story.
 
 ## Evidence
 
-`tests/modules/joule/calculation-story-full.test.ts` reconciles the live 48-direction inventory (44 derive, four validate-only) and reference consumption. `tests/modules/joule/calculation-story.test.ts` covers provenance rejection, semantic material chains, all four reverse-heat targets, GR-02/GR-03 alternate solver routes, entropy consequence rows, cycle-check semantics, and atomic full-story filtering. `tests/components/calculation-story-display.test.tsx` covers the semantic DOM grid, KaTeX operation rendering, and local scroller contract.
-
-## Semantic-family authority
-
-The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
-
-The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.
+- `tests/modules/joule/calculation-story.test.ts`: Golden hierarchy, entropy micro-step IDs, first-use/reuse rules, state markers, boxed payloads, units, telemetry removal, alternatives, and solver immutability.
+- `tests/modules/joule/calculation-story-full.test.ts`: 44 derive / four validate-only registry reconciliation.
+- `tests/components/calculation-story-display.test.tsx`: semantic grid, overview, collapsible tier, parent alternative, KaTeX rendering, and local scroll behavior.

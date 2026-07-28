@@ -22,7 +22,8 @@ function App() {
   const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
   const completeStory = story?.mode === 'complete' ? story.story : undefined
   const legacySteps = completeStory ? steps.filter(step => !isConsumedStoryStep(completeStory, step)) : steps
-  const legacyPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
+  const filteredPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
+  const legacyPresentation = completeStory?.route === 'joule-learning-story-v0.2' && filteredPresentation ? { ...filteredPresentation, alternatives: [] } : filteredPresentation
   const hasLegacyContent = legacySteps.length > 0
     || (legacyPresentation?.alternatives.length ?? 0) > 0
     || (legacyPresentation?.blocked.length ?? 0) > 0

@@ -31,3 +31,26 @@ describe('CalculationStoryDisplay', () => {
     expect(screen.queryByText('Umgestellt')).toBeNull()
   })
 })
+
+
+it('renders overview before the spine, semantic collapsed optional sections, boxed payloads, and parent alternatives', () => {
+  const story = {
+    mode: 'complete' as const,
+    story: {
+      route: 'test', title: 'Kette', consumedSteps: [], unconsumedPrimarySteps: [], rows,
+      overview: { model: 'Test model', givens: ['T_1'], scope: 'specific', signs: ['q_{in}>0'], route: ['state 1'] },
+      sections: [
+        { id: 'overview', title: 'Überblick', tier: 'main' as const, rows: [] },
+        { id: 'optional', title: 'Optional', tier: 'optional' as const, defaultOpen: false, rows: [rows[0]] },
+      ],
+      alternatives: [{ parentRowId: 'start', title: 'Alternative', rows: [rows[1]] }],
+    },
+  }
+  const { container } = render(<CalculationStoryDisplay story={story} />)
+  expect(container.querySelector('.calculation-story-overview')).toBeTruthy()
+  const optional = container.querySelector('details[data-story-tier="optional"]')
+  expect(optional).toBeTruthy()
+  expect(optional?.hasAttribute('open')).toBe(false)
+  expect(container.querySelector('[data-story-parent-alternative="start"]')).toBeTruthy()
+  expect(container.querySelector('.story-equation-display')).toBeTruthy()
+})

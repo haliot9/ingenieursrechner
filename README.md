@@ -85,12 +85,13 @@ user values → validation → route planning → fixed-point solver
 - `src/modules/carnot/` — Carnot variables, formulas, preset, and diagram adapter
 - `src/modules/diesel/` — ideal air-standard Diesel variables, formulas, preset, and diagram adapter
 - `src/modules/otto/` — ideal air-standard Otto variables, formulas, preset, and diagram adapter
+- `src/modules/joule/` — static ideal Joule/Brayton variables, formulas, preset, diagram adapter, and bounded calculation-story recipe
 - `src/store/` — UI/solver integration, unit boundary, and isolated optional story composition
 - `src/components/` — responsive inputs, results, diagrams, legacy derivations, and the bounded calculation-story renderer
 - `tests/` — unit, property-based, robustness, store, and component regression tests
 - `docs/` — architecture, decisions, and testing guidance
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), and [src/modules/otto/README.md](src/modules/otto/README.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), [src/modules/otto/README.md](src/modules/otto/README.md), and [src/modules/joule/README.md](src/modules/joule/README.md) for details.
 
 ## For coding agents and contributors
 

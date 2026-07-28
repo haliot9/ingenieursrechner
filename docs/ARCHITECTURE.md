@@ -49,7 +49,7 @@ Jedes Modul definiert ein abgeschlossenes Rechengebiet.
 - `formulas.ts` - Formeln mit `solveFor` (pre-solved Expressions) + `latexSteps`
 - `index.ts` - Export als `CalculatorModule`
 
-**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel- und Otto-Prozesse (Thermodynamik)
+**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel-, Otto- und statische ideale Joule-/Brayton-Prozesse (Thermodynamik)
 **Geplant:** Weitere Module (Kinematik, Stroemungsmechanik, etc.)
 
 ### 3. State Management (`src/store/`)

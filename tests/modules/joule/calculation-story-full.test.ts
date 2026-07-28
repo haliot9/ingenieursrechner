@@ -3,7 +3,8 @@ import { FormulaRegistry } from '../../../src/core/formula-registry'
 import { solve } from '../../../src/core/solver'
 import { compileSolveDirections } from '../../../src/core/solve-directions'
 import type { VariableState } from '../../../src/core/types'
-import { composeJouleCalculationStory, JOULE_STORY_RECIPES } from '../../../src/modules/joule/calculation-story'
+import { composeJouleCalculationStory } from '../../../src/modules/joule/calculation-story'
+import { JOULE_STORY_FAMILIES, JOULE_STORY_RECIPES } from '../../../src/modules/joule/calculation-story-recipes'
 import { ALL_VARIABLES, JOULE_DIRECTION_POLICIES } from '../../../src/modules/joule/config'
 import { JOULE_FORMULAS } from '../../../src/modules/joule/formulas'
 import { jouleModule } from '../../../src/modules/joule'
@@ -19,8 +20,14 @@ function referenceResult() {
   }, [], { plannedExecution: jouleModule.plannedExecution })
 }
 
+const familyIds = [
+  'material-properties', 'ideal-gas-state', 'relative-entropy', 'pressure-ratio',
+  'isobaric-pressure', 'isentropic-temperature', 'isentropic-entropy', 'component-work',
+  'net-work', 'isobaric-heat', 'ideal-efficiency', 'performance-ratios',
+]
+
 describe('full Joule calculation-story contract', () => {
-  it('covers every registered derive direction with a finite recipe and leaves only ideal-gas Rs as checks', () => {
+  it('reconciles an explicit independent 12-family authority to the live direction inventory', () => {
     const directions = compileSolveDirections(JOULE_FORMULAS, ALL_VARIABLES.map(variable => variable.id), JOULE_DIRECTION_POLICIES)
     const deriveIds = directions.filter(direction => direction.mode === 'derive').map(direction => direction.id).sort()
     const validateIds = directions.filter(direction => direction.mode === 'validate-only').map(direction => direction.id).sort()
@@ -28,19 +35,15 @@ describe('full Joule calculation-story contract', () => {
     expect(directions).toHaveLength(48)
     expect(deriveIds).toHaveLength(44)
     expect(validateIds).toEqual(['ideal_gas_1:Rs', 'ideal_gas_2:Rs', 'ideal_gas_3:Rs', 'ideal_gas_4:Rs'])
+    expect(JOULE_STORY_FAMILIES.map(family => family.id)).toEqual(familyIds)
     expect(Object.keys(JOULE_STORY_RECIPES).sort()).toEqual(deriveIds)
-    for (const recipe of Object.values(JOULE_STORY_RECIPES)) {
-      expect(recipe).toMatchObject({ directionId: expect.any(String), entryPointLatex: expect.any(String) })
-      expect(recipe.conditions).toBeInstanceOf(Array)
-      expect(recipe.transitions.length).toBeGreaterThan(0)
-    }
+    expect(Object.values(JOULE_STORY_RECIPES).every(recipe => recipe.familyId && recipe.entryPointLatex && recipe.transitions.length > 0)).toBe(true)
+    expect(Object.keys(JOULE_STORY_RECIPES)).not.toContain('ideal_gas_1:Rs')
   })
 
-  it('consumes the full reference primary route exactly once with semantic continuation rows', () => {
+  it('consumes the full reference primary route in eight Golden sections with family-specific bridge rows', () => {
     const result = referenceResult()
-    const story = composeJouleCalculationStory({
-      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
-    })
+    const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
 
     expect(story.mode).toBe('complete')
     if (story.mode !== 'complete') throw new Error('expected full story')
@@ -50,11 +53,19 @@ describe('full Joule calculation-story contract', () => {
     expect(consumed).toHaveLength(22)
     expect(new Set(consumed).size).toBe(consumed.length)
     expect(story.story.unconsumedPrimarySteps).toEqual([])
-
-    const continuation = story.story.rows.find(row => row.rowRole === 'continuation')
-    expect(continuation).toBeTruthy()
-    expect(continuation?.equation.lhsLatex).toBeUndefined()
-    expect(continuation?.operation?.latex).toMatch(/^\\xrightarrow\{/)
+    expect(story.story.sections.map(section => section.id)).toEqual([
+      'material-properties', 'reusable-thermodynamic-relations', 'state-1', 'compression-1-2',
+      'heat-input-2-3', 'expansion-3-4', 'heat-rejection-4-1', 'cycle-balance-performance',
+    ])
+    expect(story.story.rows.some(row => row.equationLatex === 'ds = c_p \\frac{dT}{T} - R_s \\frac{dp}{p}')).toBe(true)
+    expect(story.story.rows.some(row => row.equationLatex === 'w_{comp} = h_2 - h_1')).toBe(true)
+    expect(story.story.rows.some(row => row.equationLatex === 'q_{in} = h_3 - h_2')).toBe(true)
+    expect(story.story.rows.some(row => row.operation?.latex.includes('p_2/p_1=r_p'))).toBe(true)
+    expect(story.story.rows.some(row => row.operation?.latex.includes('raise both sides'))).toBe(false)
     expect(story.story.rows.some(row => row.rowRole === 'check')).toBe(true)
+    expect(story.story.rows.filter(row => row.rowRole === 'numeric').every(row => row.equation?.lhsLatex === undefined)).toBe(true)
+    expect(story.story.rows.some(row => row.equation?.bridgeLatex === '\\Longleftrightarrow')).toBe(true)
+    expect(story.story.rows.some(row => row.operation?.latex.startsWith('\\xrightarrow'))).toBe(true)
+    expect(story.story.rows.some(row => row.note === 'Aus der registrierten, ausgewählten Richtung.')).toBe(false)
   })
 })

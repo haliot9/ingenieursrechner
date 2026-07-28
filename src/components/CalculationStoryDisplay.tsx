@@ -3,24 +3,10 @@ import { renderLatex } from '../utils/latex'
 
 type DisplayStory = Exclude<CalculationStoryState, { mode: 'not-applicable' }>
 
-function safeLatex(latex: string): string {
-  return latex.replaceAll('κ', '\\kappa').replaceAll('η', '\\eta').replaceAll('−', '-')
-}
-
-function fallbackEquation(row: CalculationStoryRow): StoryEquation {
-  const [lhs, ...rhsParts] = row.equationLatex.split('=')
-  return { lhsLatex: lhs.trim(), relationLatex: '=', rhsLatex: rhsParts.join('=').trim() || row.equationLatex }
-}
-
-function operationLatex(operation: CalculationStoryRow['operation']): string | undefined {
-  if (!operation) return undefined
-  if (typeof operation === 'string') return `\\text{${operation}}`
-  return (operation as StoryOperation).latex
-}
-
-function MathFragment({ latex }: { latex: string }) {
-  return <span dangerouslySetInnerHTML={{ __html: renderLatex(safeLatex(latex), false) }} />
-}
+function safeLatex(latex: string): string { return latex.replaceAll('κ', '\\kappa').replaceAll('η', '\\eta').replaceAll('−', '-') }
+function fallbackEquation(row: CalculationStoryRow): StoryEquation { const [lhs, ...rhsParts] = row.equationLatex.split('='); return { lhsLatex: lhs.trim(), relationLatex: '=', rhsLatex: rhsParts.join('=').trim() || row.equationLatex } }
+function operationLatex(operation: CalculationStoryRow['operation']): string | undefined { if (!operation) return undefined; return typeof operation === 'string' ? `\\text{${operation}}` : (operation as StoryOperation).latex }
+function MathFragment({ latex }: { latex: string }) { return <span dangerouslySetInnerHTML={{ __html: renderLatex(safeLatex(latex), false) }} /> }
 
 function EquationRow({ row, index }: { row: CalculationStoryRow; index: number }) {
   const equation = row.equation ?? fallbackEquation(row)
@@ -41,8 +27,10 @@ function EquationRow({ row, index }: { row: CalculationStoryRow; index: number }
 
 export function CalculationStoryDisplay({ story }: { story: DisplayStory }) {
   if (story.mode === 'unavailable') return <section className="calculation-story calculation-story-unavailable" role="alert"><p className="eyebrow">Herleitung</p><h2>Herleitung nicht verfügbar</h2><p>{story.reason}</p></section>
+  const sections = story.story.sections ?? [{ id: 'story', title: undefined, rows: story.story.rows }]
+  let index = 0
   return <section className="calculation-story" aria-labelledby="calculation-story-title">
     <header className="calculation-story-heading"><p className="eyebrow">Herleitung</p><h2 id="calculation-story-title">{story.story.title}</h2><p>Die Rechenwerte stammen unverändert aus dem Solver. Beziehungen, Umformungen und Prüfungen bleiben als nachvollziehbare Rechenkette getrennt.</p></header>
-    <div className="calculation-story-spine" role="region" aria-label="Herleitung: Gleichungszeilen" tabIndex={0}>{story.story.rows.map((row, index) => <EquationRow row={row} index={index} key={row.id} />)}</div>
+    <div className="calculation-story-spine" role="region" aria-label="Herleitung: Gleichungszeilen" tabIndex={0}>{sections.map(section => <section className="calculation-story-section" key={section.id} data-story-section={section.id}>{section.title && <h3>{section.title}</h3>}{section.rows.map(row => <EquationRow row={row} index={index++} key={row.id} />)}</section>)}</div>
   </section>
 }

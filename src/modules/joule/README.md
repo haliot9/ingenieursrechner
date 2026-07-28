@@ -25,3 +25,9 @@ Ideal gas with constant Rs, cp, cv, and kappa. The module validates the heat-eng
 ## Evidence
 
 `tests/modules/joule/calculation-story-full.test.ts` reconciles the live 48-direction inventory (44 derive, four validate-only) and reference consumption. `tests/modules/joule/calculation-story.test.ts` covers provenance rejection, semantic material chains, and atomic full-story filtering. `tests/components/calculation-story-display.test.tsx` covers the semantic DOM grid, KaTeX operation rendering, and local scroller contract.
+
+## Semantic-family authority
+
+The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+
+The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

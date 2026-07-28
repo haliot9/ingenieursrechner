@@ -6,7 +6,7 @@ The Joule/Brayton module uses a full finite calculation-story composer. This sup
 
 ## Recipe contract
 
-The recipe registry is generated from the live Joule formula inventory and explicitly excludes only the four validate-only `ideal_gas_n:Rs` checks. Each derive direction has:
+The recipe registry is an explicit 12-family module authority; the live Joule formula inventory is reconciled independently and does not generate recipe authority. Each derive direction has:
 
 - an exact `formulaId:targetId` identity;
 - a governing formula entry point from the registered module formula;
@@ -36,3 +36,9 @@ Alternatives, contradictions, diagnostics, and blocked facts remain in their exi
 - `tests/components/app-metadata.test.tsx`: reference UI has a complete story and zero primary `.step-card` elements.
 
 The high-severity dependency audit finding is pre-existing and unchanged; no dependency or lockfile change is part of this feature.
+
+## Semantic-family authority
+
+The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+
+The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

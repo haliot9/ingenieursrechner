@@ -118,3 +118,9 @@ Licensed under the [MIT License](LICENSE).
 ## Joule / Brayton
 
 The calculator includes a static ideal four-state Joule/Brayton module with an inspectable reference preset, component work, heat balances, efficiency, back-work ratio, and p-v/T-s diagrams. It intentionally excludes staging, recuperation, losses, and optimisation.
+
+## Semantic-family authority
+
+The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+
+The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

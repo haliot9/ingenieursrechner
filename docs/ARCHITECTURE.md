@@ -101,3 +101,9 @@ The Joule implementation is a full finite recipe registry over all 44 registered
 ## Static Joule / Brayton module
 
 src/modules/joule owns the ideal four-state Joule/Brayton configuration, formula registry, cross-variable validation, and diagram adapter. It registers through the existing module registry and generic result/store/renderer seams; no solver, store, renderer, or UI special case is introduced.
+
+## Semantic-family authority
+
+The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+
+The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

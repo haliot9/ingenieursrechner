@@ -2,6 +2,10 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CalculationStoryDisplay } from '../../src/components/CalculationStoryDisplay'
+import { FormulaRegistry } from '../../src/core/formula-registry'
+import { solve } from '../../src/core/solver'
+import { composeJouleCalculationStory } from '../../src/modules/joule/calculation-story'
+import { jouleModule } from '../../src/modules/joule'
 
 const rows = [
   { id: 'start', kind: 'governing' as const, rowRole: 'start' as const, equationLatex: '\\kappa = \\frac{c_p}{c_v}', equation: { lhsLatex: '\\kappa', relationLatex: '=', rhsLatex: '\\frac{c_p}{c_v}' } },
@@ -77,4 +81,25 @@ it('renders story math in display mode, one equation core, milestones, and uniqu
   expect(container.querySelectorAll('[data-story-parent-alternative="other"]')).toHaveLength(0)
   expect(container.querySelector('.story-result-core')).toBeTruthy()
   expect(container.querySelector('.story-milestone')?.textContent).toContain('Zustand 1 vollständig')
+})
+
+it('renders final Joule annotations with substitutions, subjects, one result box, and canonical alternative deduplication', () => {
+  const input = (value: number, unit = '') => ({ value, unit, isUserInput: true, isComputed: false })
+  const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
+    T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10), T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+  }, [], { plannedExecution: jouleModule.plannedExecution })
+  const composed = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
+  if (composed.mode !== 'complete') throw new Error('expected complete story')
+  const duplicate = composed.story.alternatives?.find(alternative => alternative.parentRowId === 'entropy_abs_3:s3:numeric')
+  const story = { ...composed.story, alternatives: [...(composed.story.alternatives ?? []), { ...duplicate!, rows: [{ ...duplicate!.rows[0], id: 'same-rendered-payload' }] }] }
+  const { container } = render(<CalculationStoryDisplay story={{ mode: 'complete', story }} />)
+  const visible = container.textContent ?? ''
+  const annotations = Array.from(container.querySelectorAll('.katex annotation')).map(annotation => annotation.textContent ?? '')
+  expect(visible).toMatch(/287.*J.*kg.*K/)
+  expect(visible).toMatch(/100000.*Pa.*10/)
+  expect(annotations.some(annotation => annotation.includes('287') && annotation.includes('100000'))).toBe(true)
+  expect(visible).toContain('e')
+  expect(container.querySelectorAll('.story-result-core')).not.toHaveLength(0)
+  expect(container.querySelector('.story-result-core')?.parentElement?.classList.contains('is-reachable')).toBe(false)
+  expect(container.querySelectorAll('[data-story-parent-alternative="entropy_abs_3:s3:numeric"]')).toHaveLength(1)
 })

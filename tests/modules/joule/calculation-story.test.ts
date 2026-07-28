@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { FormulaRegistry } from '../../../src/core/formula-registry'
 import { solve } from '../../../src/core/solver'
 import type { VariableState } from '../../../src/core/types'
-import { composeJouleCalculationStory } from '../../../src/modules/joule/calculation-story'
+import { composeJouleCalculationStory, formatStoryNumberLatex } from '../../../src/modules/joule/calculation-story'
 import { jouleModule } from '../../../src/modules/joule'
 
 function input(value: number, unit = ''): VariableState { return { value, unit, isUserInput: true, isComputed: false } }
@@ -73,5 +73,48 @@ describe('Joule learning story Golden v0.2', () => {
       const index = story.rows.indexOf(row)
       return story.rows[index - 1]?.id.includes('substitution')
     })).toBe(true)
+  })
+
+  it('keeps primary substitutions mathematical, explicit, and numerically grounded', () => {
+    const { story } = referenceStory()
+    const substitutions = [
+      ['ideal_gas_1:v1:substitution', '287'], ['pressure_ratio:p2:substitution', '100000'],
+      ['compressor_temperature:T2:substitution', '300'], ['ideal_gas_2:v2:substitution', '287'],
+      ['high_pressure_isobar:p3:substitution', '100000'], ['heat_input:q_in:substitution', '1004.5'],
+      ['ideal_gas_3:v3:substitution', '287'], ['low_pressure_isobar:p4:substitution', '100000'],
+      ['turbine_temperature:T4:substitution', '1400'], ['ideal_gas_4:v4:substitution', '287'],
+      ['compressor_work:w_comp:substitution', '1004.5'], ['turbine_work:w_turb:substitution', '1004.5'],
+      ['heat_rejection:q_out:substitution', '1004.5'], ['net_work:w_netto:substitution', '+'],
+      ['efficiency:eta:substitution', '-'],
+    ]
+    for (const [id, operand] of substitutions) {
+      const row = story.rows.find(candidate => candidate.id === id)
+      expect(row?.equation?.rhsLatex, id).toContain(operand)
+      expect(row?.equation?.rhsLatex, id).toMatch(/\\mathrm|[0-9]/)
+    }
+  })
+
+  it('preserves significant terminal integer zeros in story-local numerical values and agrees with solver facts', () => {
+    const { result, story } = referenceStory()
+    expect(formatStoryNumberLatex(427040)).toBe('427040')
+    expect(formatStoryNumberLatex(-677910)).toBe('-677910')
+    for (const id of ['turbine_work:w_turb:numeric', 'heat_rejection:q_out:numeric', 'net_work:w_netto:numeric']) {
+      const target = id.split(':')[1]
+      expect(story.rows.find(row => row.id === id)?.equation?.rhsLatex).toContain(formatStoryNumberLatex(result.values[target]?.value ?? NaN))
+    }
+  })
+
+  it('uses explicit subjects, equation-only exponential rows, no immediate generic ideal-gas duplicate, and an explicit state-4 dependency cue', () => {
+    const { story } = referenceStory()
+    expect(story.rows.find(row => row.id === 'high_pressure_isobar:p3:dp')?.rowRole).toBe('subject-change')
+    expect(story.rows.find(row => row.id === 'high_pressure_isobar:p3:dp')?.equationLatex).toBe('dp=0')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-ke')?.rowRole).toBe('subject-change')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-ke')?.equationLatex).toBe('\\Delta ke=0')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.rowRole).toBe('subject-change')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.equationLatex).toBe('\\Delta pe=0')
+    expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.operation).toBe('wende e^(·) auf beide Seiten an')
+    expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.equationLatex).toBe('e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}')
+    expect(story.rows.find(row => row.id === 'shared:ideal-gas')).toBeUndefined()
+    expect(story.rows.find(row => row.id === 'expansion:state-4-pressure-dependency')?.label).toContain('p₄ fehlt')
   })
 })

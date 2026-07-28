@@ -12,11 +12,12 @@ function EquationRow({ row, index, alternatives }: { row: CalculationStoryRow; i
   if (row.kind === 'milestone') return <div className="story-milestone" data-story-role="milestone">✓ {row.label ?? row.equationLatex}</div>
   const equation = row.equation ?? fallbackEquation(row)
   const operation = operationLatex(row.operation)
-  const attached = alternatives.filter(alternative => alternative.parentRowId === row.id).filter((alternative, alternativeIndex, all) => all.findIndex(candidate => candidate.rows.map(row => row.id).join('|') === alternative.rows.map(row => row.id).join('|')) === alternativeIndex)
+  const attachedPayload = (alternative: CalculationStoryAlternative) => `${alternative.parentRowId}|${alternative.rows.map(candidate => { const candidateEquation = candidate.equation ?? fallbackEquation(candidate); return `${candidateEquation.lhsLatex ?? ''}|${candidateEquation.relationLatex}|${candidateEquation.rhsLatex}|${candidate.note ?? ''}` }).join('||')}`
+  const attached = alternatives.filter(alternative => alternative.parentRowId === row.id).filter((alternative, alternativeIndex, all) => all.findIndex(candidate => attachedPayload(candidate) === attachedPayload(alternative)) === alternativeIndex)
   return <>
     <div className={`story-row story-spacing-${row.spacing ?? 'continuation'}`} data-story-row={row.kind} data-story-role={row.rowRole}>
       <div className="story-operation">{operation && <MathFragment latex={operation} />}</div>
-      <div className={`story-equation-scroller story-equation-display${row.state ? ` is-${row.state}` : ''}${row.kind === 'numeric' ? ' is-numeric' : ''}`} aria-label={`Gleichungszeile ${index + 1}`} tabIndex={0}>
+      <div className={`story-equation-scroller story-equation-display${row.state && row.box !== 'core' ? ` is-${row.state}` : ''}${row.kind === 'numeric' ? ' is-numeric' : ''}`} aria-label={`Gleichungszeile ${index + 1}`} tabIndex={0}>
         <div className="story-equation-line">
           <span className="story-bridge">{equation.bridgeLatex && <MathFragment latex={equation.bridgeLatex} />}</span>
           <div className={`story-equation-grid${row.box === 'core' ? ' story-result-core' : ''}`} data-long-equation={row.equationLatex.length > 64 ? 'true' : undefined}>

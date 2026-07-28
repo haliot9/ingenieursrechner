@@ -121,7 +121,7 @@ function exponentFoundation(): CalculationStoryRow[] { return [
   row('shared:isentropic-substitute-a', 'transform', 'continuation', '\\ln\\left(\\frac{T_2}{T_1}\\right)=a\\ln\\left(\\frac{p_2}{p_1}\\right)'),
   row('shared:isentropic-log-power', 'governing', 'start', 'a\\ln(x)=\\ln(x^a),\\quad x>0'),
   row('shared:isentropic-power', 'transform', 'continuation', '\\ln\\left(\\frac{T_2}{T_1}\\right)=\\ln\\left[\\left(\\frac{p_2}{p_1}\\right)^a\\right]'),
-  row('shared:isentropic-apply-exponential', 'transform', 'start', 'e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}', { operation: 'wende e^(·) auf beide Seiten an' }),
+  row('shared:isentropic-apply-exponential', 'transform', 'start', 'e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}', { operation: { kind: 'exponentiate', latex: '\\text{wende }e^{(\\cdot)}\\text{ auf beide Seiten an}' } }),
 
   row('shared:isentropic-inverse-exponential', 'governing', 'start', 'e^{\\ln y}=y,\\quad y>0'),
   row('shared:isentropic-temperature-ratio', 'result', 'subject-change', '\\frac{T_2}{T_1}=\\left(\\frac{p_2}{p_1}\\right)^a', { box: 'core' }),

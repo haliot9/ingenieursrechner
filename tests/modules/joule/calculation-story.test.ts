@@ -112,7 +112,7 @@ describe('Joule learning story Golden v0.2', () => {
     expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-ke')?.equationLatex).toBe('\\Delta ke=0')
     expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.rowRole).toBe('subject-change')
     expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.equationLatex).toBe('\\Delta pe=0')
-    expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.operation).toBe('wende e^(·) auf beide Seiten an')
+    expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.operation).toMatchObject({ kind: 'exponentiate', latex: '\\text{wende }e^{(\\cdot)}\\text{ auf beide Seiten an}' })
     expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.equationLatex).toBe('e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}')
     expect(story.rows.find(row => row.id === 'shared:ideal-gas')).toBeUndefined()
     expect(story.rows.find(row => row.id === 'expansion:state-4-pressure-dependency')?.label).toContain('p₄ fehlt')

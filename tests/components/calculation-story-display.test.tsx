@@ -54,3 +54,25 @@ it('renders overview before the spine, semantic collapsed optional sections, box
   expect(container.querySelector('[data-story-parent-alternative="start"]')).toBeTruthy()
   expect(container.querySelector('.story-equation-display')).toBeTruthy()
 })
+
+it('renders story math in display mode, one equation core, milestones, and unique parent alternatives', () => {
+  const story = {
+    mode: 'complete' as const,
+    story: {
+      route: 'test', title: 'Kette', consumedSteps: [], unconsumedPrimarySteps: [], rows,
+      sections: [{ id: 'main', title: 'Main', rows: [
+        { ...rows[0], id: 'boxed', box: 'core', equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: 'c_p', relationLatex: '=', rhsLatex: '\\kappa c_v' } },
+        { id: 'done', kind: 'milestone', rowRole: 'milestone', equationLatex: 'Zustand 1 vollständig', label: 'Zustand 1 vollständig' },
+      ] }],
+      alternatives: [
+        { parentRowId: 'boxed', title: 'Alternative', rows: [rows[1]] },
+        { parentRowId: 'boxed', title: 'Alternative', rows: [rows[1]] },
+      ],
+    },
+  }
+  const { container } = render(<CalculationStoryDisplay story={story as never} />)
+  expect(container.querySelector('.story-equation-display .katex-display')).toBeTruthy()
+  expect(container.querySelectorAll('[data-story-parent-alternative="boxed"]')).toHaveLength(1)
+  expect(container.querySelector('.story-result-core')).toBeTruthy()
+  expect(container.querySelector('.story-milestone')?.textContent).toContain('Zustand 1 vollständig')
+})

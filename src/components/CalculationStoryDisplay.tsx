@@ -6,26 +6,29 @@ type DisplayStory = Exclude<CalculationStoryState, { mode: 'not-applicable' }>
 function safeLatex(latex: string): string { return latex.replaceAll('κ', '\\kappa').replaceAll('η', '\\eta').replaceAll('−', '-') }
 function fallbackEquation(row: CalculationStoryRow): StoryEquation { const [lhs, ...rhsParts] = row.equationLatex.split('='); return { lhsLatex: lhs.trim(), relationLatex: '=', rhsLatex: rhsParts.join('=').trim() || row.equationLatex } }
 function operationLatex(operation: CalculationStoryRow['operation']): string | undefined { if (!operation) return undefined; return typeof operation === 'string' ? `\\text{${operation}}` : (operation as StoryOperation).latex }
-function MathFragment({ latex }: { latex: string }) { return <span dangerouslySetInnerHTML={{ __html: renderLatex(safeLatex(latex), false) }} /> }
+function MathFragment({ latex }: { latex: string }) { return <span dangerouslySetInnerHTML={{ __html: renderLatex(safeLatex(latex), true) }} /> }
 
 function EquationRow({ row, index, alternatives }: { row: CalculationStoryRow; index: number; alternatives: readonly CalculationStoryAlternative[] }) {
+  if (row.kind === 'milestone') return <div className="story-milestone" data-story-role="milestone">✓ {row.label ?? row.equationLatex}</div>
   const equation = row.equation ?? fallbackEquation(row)
   const operation = operationLatex(row.operation)
-  const attached = alternatives.filter(alternative => alternative.parentRowId === row.id)
+  const attached = alternatives.filter((alternative, alternativeIndex, all) => all.findIndex(candidate => candidate.parentRowId === alternative.parentRowId && candidate.rows.map(row => row.id).join('|') === alternative.rows.map(row => row.id).join('|')) === alternativeIndex)
   return <>
     <div className={`story-row story-spacing-${row.spacing ?? 'continuation'}`} data-story-row={row.kind} data-story-role={row.rowRole}>
       <div className="story-operation">{operation && <MathFragment latex={operation} />}</div>
       <div className={`story-equation-scroller story-equation-display${row.state ? ` is-${row.state}` : ''}${row.kind === 'numeric' ? ' is-numeric' : ''}`} aria-label={`Gleichungszeile ${index + 1}`} tabIndex={0}>
-        <div className="story-equation-grid" data-long-equation={row.equationLatex.length > 64 ? 'true' : undefined}>
+        <div className="story-equation-line">
           <span className="story-bridge">{equation.bridgeLatex && <MathFragment latex={equation.bridgeLatex} />}</span>
-          <span className="story-lhs">{equation.lhsLatex && <MathFragment latex={equation.lhsLatex} />}</span>
-          <span className="story-relation"><MathFragment latex={equation.relationLatex} /></span>
-          <span className="story-rhs"><MathFragment latex={equation.rhsLatex} /></span>
+          <div className={`story-equation-grid${row.box === 'core' ? ' story-result-core' : ''}`} data-long-equation={row.equationLatex.length > 64 ? 'true' : undefined}>
+            <span className="story-lhs">{equation.lhsLatex && <MathFragment latex={equation.lhsLatex} />}</span>
+            <span className="story-relation"><MathFragment latex={equation.relationLatex} /></span>
+            <span className="story-rhs"><MathFragment latex={equation.rhsLatex} /></span>
+          </div>
         </div>
       </div>
       <p className="story-note">{row.note ?? ''}</p>
     </div>
-    {attached.map(alternative => <details className="story-parent-alternative" data-story-parent-alternative={row.id} key={`${row.id}-${alternative.title}`}><summary>{alternative.title}</summary>{alternative.rows.map((alternativeRow, alternativeIndex) => <EquationRow key={alternativeRow.id} row={alternativeRow} index={index + alternativeIndex + 1} alternatives={[]} />)}</details>)}
+    {attached.map(alternative => <details className="story-parent-alternative" data-story-parent-alternative={row.id} key={`${row.id}-${alternative.rows.map(row => row.id).join('|')}`}><summary>{alternative.title}</summary>{alternative.rows.map((alternativeRow, alternativeIndex) => <EquationRow key={alternativeRow.id} row={alternativeRow} index={index + alternativeIndex + 1} alternatives={[]} />)}</details>)}
   </>
 }
 
@@ -38,12 +41,12 @@ function StorySection({ section, index, alternatives }: { section: CalculationSt
 
 export function CalculationStoryDisplay({ story }: { story: DisplayStory }) {
   if (story.mode === 'unavailable') return <section className="calculation-story calculation-story-unavailable" role="alert"><p className="eyebrow">Herleitung</p><h2>Herleitung nicht verfügbar</h2><p>{story.reason}</p></section>
-  const sections = story.story.sections ?? [{ id: 'story', title: 'Herleitung', rows: story.story.rows }]
+  const sections = (story.story.sections ?? [{ id: 'story', title: 'Herleitung', rows: story.story.rows }]).filter(section => section.rows.length > 0)
   const alternatives = story.story.alternatives ?? []
   const sectionIndices = sections.map((_, sectionIndex) => sections.slice(0, sectionIndex).reduce((count, previous) => count + previous.rows.length, 0))
   return <section className="calculation-story" aria-labelledby="calculation-story-title">
     <header className="calculation-story-heading"><p className="eyebrow">Herleitung</p><h2 id="calculation-story-title">{story.story.title}</h2><p>Die Rechenwerte stammen unverändert aus dem Solver. Der sichtbare Weg zeigt Modell, Bedingungen und Rechenschritte getrennt.</p></header>
-    {story.story.overview && <section className="calculation-story-overview" aria-label="Rechenüberblick"><h3>Rechenüberblick</h3><p>{story.story.overview.model}</p><dl><div><dt>Gegeben</dt><dd>{story.story.overview.givens.join(', ')}</dd></div><div><dt>Geltung</dt><dd>{story.story.overview.scope}</dd></div><div><dt>Vorzeichen</dt><dd>{story.story.overview.signs.join(', ')}</dd></div><div><dt>Route</dt><dd>{story.story.overview.route.join(' → ')}</dd></div></dl></section>}
+    {story.story.overview && <section className="calculation-story-overview" aria-label="Rechenüberblick"><h3>Rechenüberblick</h3><p>{story.story.overview.model}</p><dl><div><dt>Gegeben</dt><dd>{story.story.overview.givens.map((given, index) => <MathFragment key={index} latex={given} />)}</dd></div><div><dt>Geltung</dt><dd>{story.story.overview.scope}</dd></div><div><dt>Vorzeichen</dt><dd>{story.story.overview.signs.map((sign, index) => <MathFragment key={index} latex={sign} />)}</dd></div><div><dt>Route</dt><dd>{story.story.overview.route.join(' → ')}</dd></div></dl></section>}
     <div className="calculation-story-spine" role="region" aria-label="Herleitung: Gleichungszeilen" tabIndex={0}>{sections.map((section, sectionIndex) => <StorySection key={section.id} section={section} index={sectionIndices[sectionIndex]} alternatives={alternatives} />)}</div>
   </section>
 }

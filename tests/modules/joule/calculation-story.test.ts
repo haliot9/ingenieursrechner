@@ -10,9 +10,9 @@ function referenceResult() { return solve(FormulaRegistry.fromModule(jouleModule
 function referenceStory() { const result = referenceResult(); const story = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables }); if (story.mode !== 'complete') throw new Error('expected complete story'); return { result, story: story.story } }
 
 describe('Joule learning story Golden v0.2', () => {
-  it('keeps accepted solver evidence unchanged while composing the nine-tier learning hierarchy', () => {
+  it('keeps accepted solver evidence unchanged while composing the learning hierarchy', () => {
     const { result, story } = referenceStory()
-    expect(story.sections?.map(section => section.id)).toEqual(['overview', 'material-properties', 'state-1', 'compression-1-2', 'heat-input-2-3', 'expansion-3-4', 'heat-rejection-4-1', 'cycle-balance-performance', 'optional-entropy'])
+    expect(story.sections?.map(section => section.id)).toEqual(['material-properties', 'state-1', 'compression-1-2', 'heat-input-2-3', 'expansion-3-4', 'heat-rejection-4-1', 'cycle-balance-performance', 'optional-entropy'])
     expect(story.sections?.find(section => section.id === 'optional-entropy')).toMatchObject({ tier: 'optional', defaultOpen: false })
     expect(story.consumedSteps.map(step => step.directionId).sort()).toEqual([...result.plan!.primaryByTarget.values()].map(step => step.directionId).sort())
     expect(story.consumedSteps).toHaveLength(22)
@@ -39,7 +39,7 @@ describe('Joule learning story Golden v0.2', () => {
 
   it('keeps result payload boxes separate from bridges, shows dimensional substitution, and removes telemetry notes', () => {
     const { story } = referenceStory()
-    expect(story.rows.find(row => row.id === 'material:cp')?.equation).toMatchObject({ bridgeLatex: '\\Longleftrightarrow', lhsLatex: 'c_p', rhsLatex: '\\boxed{c_p=\\kappa c_v}' })
+    expect(story.rows.find(row => row.id === 'material:cp')?.equation).toMatchObject({ bridgeLatex: '\\Longleftrightarrow', lhsLatex: 'c_p', rhsLatex: '\\kappa c_v' })
     expect(story.rows.find(row => row.id === 'material:cv-substitution')?.equationLatex).toContain('\\frac{\\mathrm J}{\\mathrm{kg}\\,\\mathrm K}')
     expect(story.rows.some(row => /Solverwert|Bereits hergeleitete|Wiederverwendbare äquivalente/.test(row.note ?? ''))).toBe(false)
   })
@@ -50,5 +50,27 @@ describe('Joule learning story Golden v0.2', () => {
     expect(composed.mode).toBe('complete'); if (composed.mode !== 'complete') throw new Error('expected complete story')
     expect(composed.story.alternatives?.every(alternative => alternative.parentRowId.endsWith(':numeric') && alternative.rows.length === 1)).toBe(true)
     expect(JSON.stringify(result.values)).toBe(values); expect(JSON.stringify(result.steps)).toBe(steps)
+  })
+
+  it('composes the reference route as explicit, target-consistent teaching steps', () => {
+    const { story } = referenceStory()
+    const byId = (id: string) => story.rows.find(row => row.id === id)
+
+    expect(story.sections?.map(section => section.id)).not.toContain('overview')
+    expect(byId('material:memory')).toBeUndefined()
+    expect(byId('material:cp')?.equation?.rhsLatex).toBe('\\kappa c_v')
+    expect(byId('material:cp')?.equation?.bridgeLatex).toBe('\\Longleftrightarrow')
+    expect(byId('material:cv-resolved')?.equation?.rhsLatex).toBe('\\frac{R_s}{\\kappa-1}')
+    expect(byId('ideal_gas_1:v1:result')?.equation?.lhsLatex).toBe('v_1')
+    expect(byId('high_pressure_isobar:p3:dp')?.equationLatex).toBe('dp=0')
+    expect(byId('shared:isentropic-apply-exponential')?.equationLatex).toContain('e^{')
+    expect(byId('shared:isentropic-inverse-exponential')?.equationLatex).toContain('e^{\\ln y}=y')
+    expect(byId('heat_input:q_in:steady-flow')?.equationLatex).toContain('q-w_s=h_{out}-h_{in}')
+    expect(byId('state-1:complete')?.rowRole as string).toBe('milestone')
+    expect(byId('state-1:complete')?.equationLatex).not.toContain('=')
+    expect(story.rows.filter(row => row.id.endsWith(':numeric')).every((row) => {
+      const index = story.rows.indexOf(row)
+      return story.rows[index - 1]?.id.includes('substitution')
+    })).toBe(true)
   })
 })

@@ -10,9 +10,9 @@ Static deterministic educational model of the ideal four-state Joule/Brayton hea
 
 The Joule story is a presentation-only composition over accepted solver provenance. It begins with the model, givens, scope, signs, and dependency route; then follows state 1 → 2 → 3 → 4 before cycle performance. It models a simple ideal steady-flow cycle per unit mass: `v` is specific volume, while mass flow, total power, and transient piston systems are explicitly outside the module.
 
-Rows carry typed semantic equations, spacing roles, section tiers, and optional collapse state. Reusable first-use relations are proven once and boxed without their bridge glyph; subsequent process rows reuse that proof. The optional relative-entropy datum is collapsed by default and contains the full finite micro-step integration sequence. The main spine does not require it.
+Rows carry typed semantic equations, explicit result-core box semantics, milestones, spacing roles, section tiers, and optional collapse state. Reusable first-use relations are proven once; their bridge remains outside one boxed equation core, and subsequent process rows reuse that proof. State completion is a non-equation checkpoint. The optional relative-entropy datum is collapsed by default and contains the full finite micro-step integration sequence. The main spine does not require it.
 
-`CalculationStoryDisplay` uses display-sized KaTeX with local keyboard-focusable equation scrolling. Numeric story substitutions use controlled stacked units for the required specific-energy, specific-heat, and specific-volume forms.
+`CalculationStoryDisplay` renders every equation fragment with KaTeX display math and keeps local keyboard-focusable equation scrolling. Numeric story substitutions come from solver-recorded substitutions and retain the required specific-energy, specific-heat, and specific-volume units.
 
 ## Authority boundary
 

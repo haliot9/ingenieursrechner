@@ -31,7 +31,7 @@ Alternatives, contradictions, diagnostics, and blocked facts remain in their exi
 ## Coverage and verification
 
 - `tests/modules/joule/calculation-story-full.test.ts`: live inventory reconciliation, all 44 recipe keys, four validate-only checks, 22/22 reference consumption, semantic continuation/check rows.
-- `tests/modules/joule/calculation-story.test.ts`: material chain, direct cp route, provenance failure, full-card removal, no solver mutation.
+- `tests/modules/joule/calculation-story.test.ts`: material chain, direct `cp` route, all four reverse-heat targets, GR-02/GR-03 alternate solver routes, entropy consequence rows, cycle-check semantics, provenance rejection, full-card removal, and solver immutability.
 - `tests/components/calculation-story-display.test.tsx`: semantic DOM grid, KaTeX operations, keyboard-focusable local scrollers.
 - `tests/components/app-metadata.test.tsx`: reference UI has a complete story and zero primary `.step-card` elements.
 

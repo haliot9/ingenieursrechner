@@ -92,7 +92,7 @@ user values → validation → route planning → fixed-point solver
 - `tests/` — unit, property-based, robustness, store, and component regression tests
 - `docs/` — architecture, decisions, and testing guidance
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md (full Joule story contract; supersedes the former pilot)](docs/CALCULATION_STORY_PILOT.md (full Joule story contract; supersedes the former pilot)), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), [src/modules/otto/README.md](src/modules/otto/README.md), and [src/modules/joule/README.md](src/modules/joule/README.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md) (the filename is retained for link continuity; it now documents the full Joule story contract), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), [src/modules/otto/README.md](src/modules/otto/README.md), and [src/modules/joule/README.md](src/modules/joule/README.md) for details.
 
 ## For coding agents and contributors
 

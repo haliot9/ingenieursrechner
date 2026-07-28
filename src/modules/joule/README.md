@@ -24,7 +24,7 @@ Ideal gas with constant Rs, cp, cv, and kappa. The module validates the heat-eng
 
 ## Evidence
 
-`tests/modules/joule/calculation-story-full.test.ts` reconciles the live 48-direction inventory (44 derive, four validate-only) and reference consumption. `tests/modules/joule/calculation-story.test.ts` covers provenance rejection, semantic material chains, and atomic full-story filtering. `tests/components/calculation-story-display.test.tsx` covers the semantic DOM grid, KaTeX operation rendering, and local scroller contract.
+`tests/modules/joule/calculation-story-full.test.ts` reconciles the live 48-direction inventory (44 derive, four validate-only) and reference consumption. `tests/modules/joule/calculation-story.test.ts` covers provenance rejection, semantic material chains, all four reverse-heat targets, GR-02/GR-03 alternate solver routes, entropy consequence rows, cycle-check semantics, and atomic full-story filtering. `tests/components/calculation-story-display.test.tsx` covers the semantic DOM grid, KaTeX operation rendering, and local scroller contract.
 
 ## Semantic-family authority
 

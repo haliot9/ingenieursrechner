@@ -67,5 +67,22 @@ describe('full Joule calculation-story contract', () => {
     expect(story.story.rows.some(row => row.equation?.bridgeLatex === '\\Longleftrightarrow')).toBe(true)
     expect(story.story.rows.some(row => row.operation?.latex.startsWith('\\xrightarrow'))).toBe(true)
     expect(story.story.rows.some(row => row.note === 'Aus der registrierten, ausgewählten Richtung.')).toBe(false)
+    expect(story.story.sections.map(section => section.title)).toEqual([
+      'Stoffeigenschaften', 'Wiederverwendbare thermodynamische Beziehungen', 'Zustand 1', '1 → 2 Isentrope Verdichtung',
+      '2 → 3 Isobare Wärmezufuhr', '3 → 4 Isentrope Expansion', '4 → 1 Isobare Wärmeabfuhr', 'Kreisprozessbilanz und Kennzahlen',
+    ])
+    const directDirections = ['entropy_abs_1:s1', 'high_pressure_isobar:p3', 'compressor_work:w_comp', 'net_work:w_netto', 'heat_input:q_in', 'ideal_efficiency:eta', 'efficiency:eta']
+    expect(story.story.rows.filter(row => directDirections.some(directionId => row.id === `${directionId}:result`))).toEqual([])
+    const normalize = (latex: string) => latex.replace(/\s+/g, '')
+    for (let index = 1; index < story.story.rows.length; index += 1) {
+      const previous = story.story.rows[index - 1]
+      const current = story.story.rows[index]
+      if (previous.rowRole !== 'check' && current.rowRole !== 'check') expect(normalize(previous.equationLatex)).not.toBe(normalize(current.equationLatex))
+    }
+    expect(story.story.rows.map(row => row.equationLatex)).toEqual(expect.arrayContaining([
+      'w_{comp} = h_2 - h_1', 'w_{turb} = h_4 - h_3', 'q_{in} = h_3 - h_2', 'q_{out} = h_1 - h_4',
+      'p_3 = p_2', 'p_4 = p_1', '\\frac{T_2}{T_1} = \\left(\\frac{p_2}{p_1}\\right)^a', '\\frac{T_4}{T_3} = \\left(\\frac{p_4}{p_3}\\right)^a',
+      '\\eta = \\frac{-w_{netto}}{q_{in}}', 'BWR = \\frac{w_{comp}}{-w_{turb}}',
+    ]))
   })
 })

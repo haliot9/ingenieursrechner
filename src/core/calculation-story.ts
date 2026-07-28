@@ -5,7 +5,7 @@ export type CalculationStoryRowKind = 'governing' | 'transform' | 'result' | 'nu
 export type CalculationStoryFactState = 'derived' | 'reachable'
 export type StoryRelation = 'equals' | 'equivalent' | 'implies'
 export type StoryRowRole = 'start' | 'continuation' | 'subject-change' | 'reuse' | 'numeric' | 'check'
-export type StoryOperationKind = 'substitute' | 'equate' | 'isolate' | 'factor' | 'divide' | 'multiply' | 'exponentiate' | 'root' | 'logarithm' | 'integrate' | 'reuse'
+export type StoryOperationKind = 'substitute' | 'equate' | 'isolate' | 'factor' | 'divide' | 'multiply' | 'add' | 'subtract' | 'exponentiate' | 'root' | 'logarithm' | 'integrate' | 'reuse'
 
 export interface StoryEquation { bridgeLatex?: string; lhsLatex?: string; relationLatex: string; rhsLatex: string }
 export interface StoryOperation { kind: StoryOperationKind; latex: string }

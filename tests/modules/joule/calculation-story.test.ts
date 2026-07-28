@@ -30,7 +30,7 @@ describe('Joule learning story Golden v0.2', () => {
     const { story } = referenceStory(); const ids = story.rows.map(row => row.id); const position = (id: string) => ids.indexOf(id)
     expect(position('shared:isentropic-exponent-definition')).toBeLessThan(position('compressor_temperature:T2:ratio'))
     expect(['high_pressure_isobar:p3:condition', 'high_pressure_isobar:p3:dp', 'high_pressure_isobar:p3:result'].map(position)).toEqual([...['high_pressure_isobar:p3:condition', 'high_pressure_isobar:p3:dp', 'high_pressure_isobar:p3:result'].map(position)].sort((a, b) => a - b))
-    expect(story.rows.find(row => row.id === 'heat_input:q_in:conditions')?.note).toContain('Stationär')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:reuse-steady-flow')?.note).toContain('wiederverwendet')
     expect(story.rows.find(row => row.id === 'heat_rejection:q_out:reuse')?.equationLatex).toContain('c_p(T_1-T_4)')
     expect(story.rows.find(row => row.id === 'compressor_work:w_comp:family')?.equationLatex).toContain('c_p(T_2-T_1)')
     expect(story.rows.find(row => row.id === 'turbine_work:w_turb:reuse')?.equationLatex).toContain('c_p(T_4-T_3)')
@@ -66,7 +66,7 @@ describe('Joule learning story Golden v0.2', () => {
     expect(byId('high_pressure_isobar:p3:dp')?.equationLatex).toBe('dp=0')
     expect(byId('shared:isentropic-apply-exponential')?.equationLatex).toContain('e^{')
     expect(byId('shared:isentropic-inverse-exponential')?.equationLatex).toContain('e^{\\ln y}=y')
-    expect(byId('heat_input:q_in:steady-flow')?.equationLatex).toContain('q-w_s=h_{out}-h_{in}')
+    expect(byId('heat_input:q_in:reuse-steady-flow')?.equationLatex).toContain('q-w_s=h_{out}-h_{in}')
     expect(byId('state-1:complete')?.rowRole as string).toBe('milestone')
     expect(byId('state-1:complete')?.equationLatex).not.toContain('=')
     expect(story.rows.filter(row => row.id.endsWith(':numeric')).every((row) => {
@@ -108,13 +108,75 @@ describe('Joule learning story Golden v0.2', () => {
     const { story } = referenceStory()
     expect(story.rows.find(row => row.id === 'high_pressure_isobar:p3:dp')?.rowRole).toBe('subject-change')
     expect(story.rows.find(row => row.id === 'high_pressure_isobar:p3:dp')?.equationLatex).toBe('dp=0')
-    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-ke')?.rowRole).toBe('subject-change')
-    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-ke')?.equationLatex).toBe('\\Delta ke=0')
-    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.rowRole).toBe('subject-change')
-    expect(story.rows.find(row => row.id === 'heat_input:q_in:delta-pe')?.equationLatex).toBe('\\Delta pe=0')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:reuse-steady-flow')?.note).toContain('wiederverwendet')
+    expect(story.rows.find(row => row.id === 'heat_input:q_in:without-work')?.equationLatex).toBe('w_s=0')
     expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.operation).toMatchObject({ kind: 'exponentiate', latex: '\\text{wende }e^{(\\cdot)}\\text{ auf beide Seiten an}' })
     expect(story.rows.find(row => row.id === 'shared:isentropic-apply-exponential')?.equationLatex).toBe('e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}')
     expect(story.rows.find(row => row.id === 'shared:ideal-gas')).toBeUndefined()
     expect(story.rows.find(row => row.id === 'expansion:state-4-pressure-dependency')?.label).toContain('p₄ fehlt')
+  })
+})
+
+
+describe('Joule SFEE first-use continuity', () => {
+  it('reduces the compressor balance one physical assumption at a time before the repository work convention', () => {
+    const { story } = referenceStory()
+    const ids = [
+      'compressor_work:w_comp:steady-flow',
+      'compressor_work:w_comp:delta-ke',
+      'compressor_work:w_comp:without-ke',
+      'compressor_work:w_comp:delta-pe',
+      'compressor_work:w_comp:without-pe',
+      'compressor_work:w_comp:adiabatic',
+      'compressor_work:w_comp:without-heat',
+      'compressor_work:w_comp:convention',
+      'compressor_work:w_comp:enthalpy',
+      'compressor_work:w_comp:integral',
+      'compressor_work:w_comp:constant-cp',
+      'compressor_work:w_comp:primitive',
+      'compressor_work:w_comp:family',
+    ]
+    expect(ids.map(id => story.rows.find(row => row.id === id)?.equationLatex)).toEqual([
+      'q-w_s=(h_{out}-h_{in})+\\Delta ke+\\Delta pe',
+      '\\Delta ke=0',
+      'q-w_s=(h_{out}-h_{in})+\\Delta pe',
+      '\\Delta pe=0',
+      'q-w_s=h_{out}-h_{in}',
+      'q=0',
+      '-w_s=h_2-h_1',
+      'w_{comp}:=-w_s',
+      'w_{comp}=h_2-h_1',
+      '=\\int_{T_1}^{T_2}c_p\\,dT',
+      '=c_p\\int_{T_1}^{T_2}dT',
+      '=c_p[T]_{T_1}^{T_2}',
+      'w_{comp}=c_p(T_2-T_1)>0',
+    ])
+  })
+
+  it('reuses the proven reduced balance before specializing the heater heat chain', () => {
+    const { story } = referenceStory()
+    const ids = [
+      'heat_input:q_in:reuse-steady-flow',
+      'heat_input:q_in:without-work',
+      'heat_input:q_in:enthalpy',
+      'heat_input:q_in:endpoint',
+      'heat_input:q_in:integral',
+      'heat_input:q_in:constant-cp',
+      'heat_input:q_in:primitive',
+      'heat_input:q_in:bounds',
+      'heat_input:q_in:family',
+    ]
+    expect(ids.map(id => story.rows.find(row => row.id === id)?.equationLatex)).toEqual([
+      'q-w_s=h_{out}-h_{in}',
+      'w_s=0',
+      'q=h_{out}-h_{in}',
+      'q_{in}=h_3-h_2',
+      '=\\int_{T_2}^{T_3}c_p\\,dT',
+      '=c_p\\int_{T_2}^{T_3}\\,dT',
+      '=c_p[T]_{T_2}^{T_3}',
+      '=c_p(T_3-T_2)',
+      'q_{in}=c_p(T_3-T_2)',
+    ])
+    expect(story.rows.some(row => row.id === 'heat_input:q_in:delta-ke' || row.id === 'heat_input:q_in:delta-pe')).toBe(false)
   })
 })

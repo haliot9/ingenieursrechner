@@ -94,7 +94,7 @@ it('renders final Joule annotations with substitutions, subjects, one result box
   const story = { ...composed.story, alternatives: [...(composed.story.alternatives ?? []), { ...duplicate!, rows: [{ ...duplicate!.rows[0], id: 'same-rendered-payload' }] }] }
   const { container } = render(<CalculationStoryDisplay story={{ mode: 'complete', story }} />)
   const visible = container.textContent ?? ''
-  const annotations = Array.from(container.querySelectorAll('.katex annotation')).map(annotation => annotation.textContent ?? '')
+  const annotations = Array.from(container.querySelectorAll('.story-equation-grid')).map(grid => Array.from(grid.querySelectorAll('.katex annotation')).map(annotation => annotation.textContent ?? '').join(''))
   expect(visible).toMatch(/287.*J.*kg.*K/)
   expect(visible).toMatch(/100000.*Pa.*10/)
   expect(annotations.some(annotation => annotation.includes('287') && annotation.includes('100000'))).toBe(true)
@@ -102,4 +102,36 @@ it('renders final Joule annotations with substitutions, subjects, one result box
   expect(container.querySelectorAll('.story-result-core')).not.toHaveLength(0)
   expect(container.querySelector('.story-result-core')?.parentElement?.classList.contains('is-reachable')).toBe(false)
   expect(container.querySelectorAll('[data-story-parent-alternative="entropy_abs_3:s3:numeric"]')).toHaveLength(1)
+})
+
+
+it('renders the complete compressor and heater SFEE annotation chains in learner-visible order', () => {
+  const input = (value: number, unit = '') => ({ value, unit, isUserInput: true, isComputed: false })
+  const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
+    T1: input(300, 'K'), p1: input(100_000, 'Pa'), pressureRatio: input(10), T3: input(1400, 'K'), kappa: input(1.4), Rs: input(287, 'J/(kg*K)'),
+  }, [], { plannedExecution: jouleModule.plannedExecution })
+  const composed = composeJouleCalculationStory({ plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables })
+  if (composed.mode !== 'complete') throw new Error('expected complete story')
+  const { container } = render(<CalculationStoryDisplay story={composed} />)
+  const annotations = Array.from(container.querySelectorAll('.story-equation-grid')).map(grid => Array.from(grid.querySelectorAll('.katex annotation')).map(annotation => annotation.textContent ?? '').join(''))
+  const expected = [
+    'q-w_s=(h_{out}-h_{in})+\\Delta ke+\\Delta pe',
+    '\\Delta ke=0',
+    'q-w_s=(h_{out}-h_{in})+\\Delta pe',
+    '\\Delta pe=0',
+    'q-w_s=h_{out}-h_{in}',
+    'q=0',
+    '-w_s=h_2-h_1',
+    'w_{comp}:=-w_s',
+    'w_{comp}=h_2-h_1',
+    'q-w_s=h_{out}-h_{in}',
+    'w_s=0',
+    'q=h_{out}-h_{in}',
+    'q_{in}=h_3-h_2',
+  ]
+  let cursor = -1
+  for (const payload of expected) {
+    cursor = annotations.findIndex((annotation, index) => index > cursor && annotation === payload)
+    expect(cursor, `missing or out-of-order learner-visible annotation: ${payload}`).toBeGreaterThan(-1)
+  }
 })

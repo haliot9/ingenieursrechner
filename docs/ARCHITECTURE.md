@@ -96,7 +96,7 @@ React function components with Tailwind CSS v4 plus an original light industrial
 
 `CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving has completed. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; the store catches adapter failure without altering accepted numeric state.
 
-The first implementation is intentionally finite and Joule-owned. It matches only two material-property route signatures and renders semantic rows through the existing KaTeX utility. It does not parse arbitrary formulas, recompute values, mutate the route planner, or create a generic CAS. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md).
+The first implementation is intentionally finite and Joule-owned. It matches only two material-property route signatures and renders semantic rows through the existing KaTeX utility. A complete story declares the exact solver directions it consumes (`formulaId`, target variable, and direction identity). The UI renders that story once and filters only matching primary cards before passing the remaining `PresentationPlan` to `StepDisplay`; alternatives, blocked relations, and contradictions remain legacy truth surfaces. It does not parse arbitrary formulas, recompute values, mutate the route planner, or create a generic CAS. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md).
 
 ## Static Joule / Brayton module
 

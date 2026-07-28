@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { FormulaRegistry } from '../../../src/core/formula-registry'
 import { solve } from '../../../src/core/solver'
-import type { VariableState } from '.././.../src/core/types'
+import type { VariableState } from '../../../src/core/types'
+import { removeConsumedStorySteps } from '../../../src/core/calculation-story'
 import { composeJouleCalculationStory } from '../../../src/modules/joule/calculation-story'
 import { jouleModule } from '../../../src/modules/joule'
 
@@ -41,6 +42,26 @@ describe('Joule calculation-story recipes', () => {
     expect(story.story.rows.find(row => row.id === 'cp-numeric')?.equationLatex)
       .toContain('1004.5')
     expect(story.story.rows.find(row => row.id === 'cp-reuse')).toMatchObject({ kind: 'reuse', state: 'reachable' })
+  })
+
+  it('keeps non-consumed Joule plan steps while filtering story-owned cv and cp cards', () => {
+    const result = referenceResult()
+    const story = composeJouleCalculationStory({
+      plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
+    })
+
+    expect(story.mode).toBe('complete')
+    if (story.mode !== 'complete') throw new Error('expected a complete story')
+    const hybridPlan = removeConsumedStorySteps({ primarySteps: result.steps, alternatives: [], blocked: [] }, story.story)
+
+    expect(story.story.consumedSteps).toEqual([
+      { formulaId: 'cv_from_Rs_kappa', targetVariable: 'cv', directionId: 'cv_from_Rs_kappa:cv' },
+      { formulaId: 'cp_from_kappa_cv', targetVariable: 'cp', directionId: 'cp_from_kappa_cv:cp' },
+    ])
+    expect(result.steps.map(step => step.targetVariable)).toContain('T2')
+    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).toContain('T2')
+    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).not.toContain('cv')
+    expect(hybridPlan.primarySteps.map(step => step.targetVariable)).not.toContain('cp')
   })
 
   it('uses the direct c_v + kappa -> c_p route without an unnecessary Rs elimination', () => {

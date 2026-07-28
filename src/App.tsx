@@ -8,6 +8,7 @@ import { StepDisplay } from './components/StepDisplay'
 import { ErrorDisplay } from './components/ErrorDisplay'
 import { DiagramPanel } from './components/diagrams/DiagramPanel'
 import { CalculationStoryDisplay } from './components/CalculationStoryDisplay'
+import { isConsumedStoryStep, removeConsumedStorySteps } from './core/calculation-story'
 
 function App() {
   const { module, steps, errors, values, presentation, story } = useCalculatorStore()
@@ -19,6 +20,13 @@ function App() {
   const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
     .filter(error => !presentation || error.type !== 'contradiction')
   const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
+  const completeStory = story?.mode === 'complete' ? story.story : undefined
+  const legacySteps = completeStory ? steps.filter(step => !isConsumedStoryStep(completeStory, step)) : steps
+  const legacyPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
+  const hasLegacyContent = legacySteps.length > 0
+    || (legacyPresentation?.alternatives.length ?? 0) > 0
+    || (legacyPresentation?.blocked.length ?? 0) > 0
+    || presentationContradictions.length > 0
 
   return (
     <div className="app-shell">
@@ -70,9 +78,8 @@ function App() {
                 <ResultSummary />
                 <ErrorDisplay errors={visibleErrors} />
                 <DiagramPanel />
-                {displayStory
-                  ? <CalculationStoryDisplay story={displayStory} />
-                  : <StepDisplay steps={steps} presentation={presentation} contradictions={presentationContradictions} />}
+                {displayStory && <CalculationStoryDisplay story={displayStory} />}
+                {hasLegacyContent && <StepDisplay steps={legacySteps} presentation={legacyPresentation} contradictions={presentationContradictions} />}
               </aside>
             </div>
           </>

@@ -1,8 +1,15 @@
 import { numberToLatex } from '../../utils/latex'
-import type { CalculationStory, CalculationStoryCompositionInput, CalculationStoryRow, CalculationStoryState } from '../../core/calculation-story'
+import type { CalculationStory, CalculationStoryCompositionInput, CalculationStoryConsumedStep, CalculationStoryRow, CalculationStoryState } from '../../core/calculation-story'
 
 const CV_DIRECTION = 'cv_from_Rs_kappa:cv'
 const CP_DIRECTION = 'cp_from_kappa_cv:cp'
+
+const CV_CONSUMED_STEP: CalculationStoryConsumedStep = {
+  formulaId: 'cv_from_Rs_kappa', targetVariable: 'cv', directionId: CV_DIRECTION,
+}
+const CP_CONSUMED_STEP: CalculationStoryConsumedStep = {
+  formulaId: 'cp_from_kappa_cv', targetVariable: 'cp', directionId: CP_DIRECTION,
+}
 
 function selectedDirection(input: CalculationStoryCompositionInput, targetId: string): string | undefined {
   return input.plan?.primaryByTarget.get(targetId)?.directionId
@@ -50,7 +57,7 @@ function referenceStory(input: CalculationStoryCompositionInput): CalculationSto
     { id: 'cp-reuse', kind: 'reuse', equationLatex: `${cp} = ${kappa} ${cv}`, operation: `${cv} wiederverwenden`, note: 'Die bereits bewiesene Beziehung wird jetzt mit dem erreichten cᵥ verwendet.', state: 'reachable' },
     { id: 'cp-numeric', kind: 'numeric', equationLatex: cpNumeric, note: 'Numerischer Solverwert; die Wertetabelle bleibt die Ergebnisoberfläche.' },
   ]
-  const story: CalculationStory = { route: 'rs-kappa-to-cv-cp', title: 'Stoffeigenschaften: Rₛ + κ → cᵥ → cₚ', rows }
+  const story: CalculationStory = { route: 'rs-kappa-to-cv-cp', title: 'Stoffeigenschaften: Rₛ + κ → cᵥ → cₚ', rows, consumedSteps: [CV_CONSUMED_STEP, CP_CONSUMED_STEP] }
   return { mode: 'complete', story }
 }
 
@@ -64,6 +71,7 @@ function directCpStory(input: CalculationStoryCompositionInput): CalculationStor
   const story: CalculationStory = {
     route: 'cv-kappa-to-cp',
     title: 'Stoffeigenschaften: cᵥ + κ → cₚ',
+    consumedSteps: [CP_CONSUMED_STEP],
     rows: [
       { id: 'kappa-governing', kind: 'governing', equationLatex: `${kappa} = \\frac{${cp}}{${cv}}`, note: 'Freigegebene Grundbeziehung.' },
       { id: 'cp-resolved', kind: 'result', equationLatex: `${cp} = ${kappa} ${cv}`, operation: 'äquivalent umstellen', note: 'Vollständig erreichbar, weil cᵥ und κ bekannt sind.', state: 'reachable' },

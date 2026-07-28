@@ -2,12 +2,12 @@
 
 ## Status and scope
 
-This is a bounded learner-facing pilot for the Joule/Brayton material-property branch. It replaces legacy per-step cards only when one of its two finite, evidenced route signatures is selected:
+This is a bounded learner-facing pilot for the Joule/Brayton material-property branch. It supplements the legacy presentation plan when one of its two finite, evidenced route signatures is selected:
 
 1. `R_s + kappa -> c_v -> c_p`
 2. `c_v + kappa -> c_p`
 
-All other Joule paths remain on the existing presentation plan and `StepDisplay`. The pilot never changes solver selection, formulas, accepted values, units, diagrams, summaries, or validation.
+A complete story declares its exact consumed solver directions (`formulaId`, target variable, and direction identity). The UI renders that continuous story once, removes only the matching legacy primary cards, and keeps every other primary step plus alternatives, blocked relations, and contradictions. All other Joule paths remain on the existing presentation plan and `StepDisplay`. The pilot never changes solver selection, formulas, accepted values, units, diagrams, summaries, or validation.
 
 ## Semantic row contract
 
@@ -73,7 +73,8 @@ Add a route only when its planner direction identity, source relations, conditio
 | REQ-CS-03: story cannot mutate solver state; stale output clears | `tests/store/calculator-store.test.ts` |
 | REQ-CS-04: equations render through KaTeX | `tests/modules/joule/rendering.test.ts`, `tests/components/calculation-story-display.test.tsx` |
 | REQ-CS-05: local labelled keyboard scroller and explicit unavailable state | `tests/components/calculation-story-display.test.tsx` |
-| REQ-CS-06: existing calculator gates remain intact | `npm run verify` and pull-request checks |
+| REQ-CS-06: hybrid story preserves non-consumed legacy cards and filters only cv/cp | `tests/modules/joule/calculation-story.test.ts` |
+| REQ-CS-07: existing calculator gates remain intact | `npm run verify` and pull-request checks |
 
 ## Implementation observations
 

@@ -32,7 +32,7 @@ The dispatch packet, QM matrix, target HTML, annotated rationale, agenda, delta 
 | REQ-JHR-007 main-only | DVPR-JHR-007 | Component test preserves 62 main rows while hiding/restoring all 26 supports. | pass |
 | REQ-JHR-008 responsive semantics | DVPR-JHR-008 | CSS implements desktop attached track and narrow semantic stacking; deterministic component coverage passed. Exact-head 390px browser gate remains Toka-owned. | partial |
 | REQ-JHR-009 focus | DVPR-JHR-009 | Existing App focus test passed with value-state preservation before/after focus toggle. | pass |
-| REQ-JHR-010 regression containment | DVPR-JHR-011 | Full test, lint, production build, allowed/protected path checks, and source-hash recheck passed. | pass |
+| REQ-JHR-010 regression containment | DVPR-JHR-011 | Full test, lint, production build, protected path checks, and source-hash recheck passed. The repository `npm audit --audit-level=high` gate remains blocked by five pre-existing transitive high findings; no dependency mutation is authorized. | partial |
 
 ## FMEA action evidence
 
@@ -53,10 +53,12 @@ The dispatch packet, QM matrix, target HTML, annotated rationale, agenda, delta 
 - Production build: `npm run build` — passed; Vite reported only its chunk-size warning for the existing 1.26 MB JavaScript output.
 - `git diff --check` — passed.
 - Allowed-path diff — eight implementation/test paths only before this checkpoint; protected-path diff empty.
+- `npm run verify` — tests, lint, and production build passed; `npm audit --audit-level=high` failed with five high-severity transitive `brace-expansion` findings through `minimatch`/ESLint. The offered remediation is `npm audit fix --force` and upgrades ESLint to 10, a breaking dependency/lockfile mutation outside the authorized paths.
 
 ## Residuals and gate status
 
 - No product PASS, merge, release, or human screenshot request is made here.
 - DVPR-JHR-008 needs Toka's exact-head desktop and 390px browser gate after publication/transfer.
 - DVPR-JHR-010 needs Yuna's pedagogical review; G4 needs Juri's independent exact-head audit. Nested dispatch was forbidden and no dispatch occurred.
+- The repository audit gate is blocked by five high-severity transitive dependency findings. The available automatic fix requires an unauthorized breaking ESLint/lockfile change; this run did not apply it.
 - This implementation is locally committed only; no push, merge, deploy, rebase, reset, or force-push occurred.

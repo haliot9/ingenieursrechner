@@ -20,7 +20,7 @@ describe('App calculation-story focus mode', () => {
     expect(container.querySelector('.input-panel')?.hasAttribute('hidden')).toBe(true)
     expect(useCalculatorStore.getState().values.eta?.value).toBe(etaBefore)
     const leaveButton = container.querySelector<HTMLButtonElement>('[data-calculation-story-focus-control]')
-    expect(leaveButton?.getAttribute('aria-label')).toBe('Leave calculation story focus')
+    expect(leaveButton?.getAttribute('aria-label')).toBe('Rechenweg-Fokus verlassen')
     fireEvent.click(leaveButton!)
     expect(container.querySelector('.workspace-grid')?.classList.contains('is-story-focused')).toBe(false)
     expect(container.querySelector('.input-panel')?.hasAttribute('hidden')).toBe(false)

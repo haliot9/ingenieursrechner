@@ -54,3 +54,17 @@ failed as intended because the renderer did not emit `data-story-row-id` for a s
 - No browser/integrated visual review has been performed here; Toka owns that exact-head gate after publication.
 - Next owner: Toka.
 - Phase 2 Joule recomposition was not started.
+
+## Pre-publication revision
+
+- Toka pre-push findings: R1 required German visible and accessible labels for the story controls; R2 required restoring readable baseline-style multi-line `App.tsx` JSX without changing Phase 1 behavior.
+- Revision parent: `d7946dd1a08df3f5813acdf2e27fb3c30b8b71d1`.
+- Revision paths: `src/App.tsx`, `src/components/CalculationStoryDisplay.tsx`, `tests/components/app-calculation-story-focus.test.tsx`, `tests/components/calculation-story-display.test.tsx`, and this checkpoint.
+- Focused focus/support component tests: passed — 2 files, 8 tests.
+- Full `npm test`: passed — 39 files, 216 tests. The existing KaTeX Unicode warnings remain non-failing.
+- `npm run lint`: passed.
+- `npm run build`: passed; Vite retained its non-failing >500 kB chunk-size warning.
+- `git diff --check`: passed.
+- Changed-path check from `d7946dd1a08df3f5813acdf2e27fb3c30b8b71d1` and protected-path check from baseline `b4d85fa01ae5a595662f5a98d848ceef6b020758`: pending final post-commit proof.
+- Final unpublished head/tree/parent: recorded in the execution return after the single child commit; this checkpoint cannot truthfully embed its own commit object ID.
+- Publication owner remains Toka; no publication or browser verification was attempted.

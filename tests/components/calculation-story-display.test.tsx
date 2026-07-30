@@ -155,7 +155,7 @@ it('keeps typed support attached to its parent row and independently hides only 
   const support = container.querySelector('[data-story-support="ideal-gas-foundation"]')
   expect(support?.getAttribute('data-story-parent-row')).toBe('main-with-support')
   expect(support?.querySelector('.story-support-row .story-operation .katex')).toBeTruthy()
-  const mainOnly = screen.getByRole('button', { name: 'Main path only' })
+  const mainOnly = screen.getByRole('button', { name: 'Nur Hauptpfad' })
   expect(mainOnly.getAttribute('aria-pressed')).toBe('false')
   fireEvent.click(mainOnly)
   expect(container.querySelector('[data-story-support="ideal-gas-foundation"]')).toBeNull()

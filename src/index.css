@@ -328,8 +328,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .story-support-rows { padding: 0 0 6px; }
 .story-support-row { grid-template-columns: minmax(80px, .5fr) minmax(0, 1.5fr) !important; gap: 8px; padding-block: 4px; }
 .story-support-row .story-note { display: none; }
-.workspace-grid.is-story-focused { grid-template-columns: minmax(0, 1fr); }
-.workspace-grid.is-story-focused .analysis-panel { width: 100%; }
 @media (max-width: 760px) { .calculation-story-heading { display: block; } .calculation-story-controls { margin-top: 14px; } .story-row.has-story-support { grid-template-columns: minmax(68px, max-content) minmax(0, 1fr); } .story-row.has-story-support .story-support { grid-column: 2; grid-row: auto; margin-top: 4px; } }
 
 /* Joule human-reference grammar: formula-local states and attached support. */
@@ -355,7 +353,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .story-row[data-story-role='continuation'] .story-lhs, .story-row[data-story-role='numeric'] .story-lhs { visibility: hidden; }
 .story-row[data-story-role='numeric'] .story-equation-grid { color: var(--text-secondary); font-size: 13px; }
 .story-note:empty { display: none; }
-.workspace-grid.is-story-focused .analysis-panel { max-width: none; }
 
 @media (max-width: 960px) {
   .story-row.has-story-support { grid-template-columns: minmax(6.5rem, .42fr) minmax(0, 1.58fr) minmax(13rem, .8fr); }
@@ -377,3 +374,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .story-support-row > .story-equation-scroller { grid-column: 1; }
   .story-fact-outline, .story-fact-ready { max-width: 100%; }
 }
+
+/* Desktop contract: input + plot occupy the upper workspace; the learner-facing
+   calculation story starts below a visible separator and owns the full page width. */
+.calculation-story-area { margin-top: 36px; padding-top: 28px; border-top: 2px solid var(--border-strong); }
+.calculation-story-separator { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; color: var(--text-secondary); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.calculation-story-separator::before, .calculation-story-separator::after { content: ''; height: 1px; flex: 1; background: var(--border-strong); }
+.calculation-story-separator span { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .calculation-story-area { margin-top: 28px; padding-top: 20px; }
+  .calculation-story-separator { margin-bottom: 12px; }
+}
+

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { useCalculatorStore } from './store/calculator-store'
 import { ModuleSelector } from './components/ModuleSelector'
 import { CalculatorTable } from './components/CalculatorTable'
@@ -12,22 +12,9 @@ import { isConsumedStoryStep, removeConsumedStorySteps } from './core/calculatio
 
 function App() {
   const { module, steps, errors, values, presentation, story } = useCalculatorStore()
-  const [storyFocusModuleId, setStoryFocusModuleId] = useState<string | null>(null)
-  const focusControlRef = useRef<HTMLButtonElement>(null)
-  const wasStoryFocused = useRef(false)
-
   useEffect(() => {
     if (module) document.title = `Ingenieursrechner · ${module.name}`
   }, [module])
-
-  const storyFocused = storyFocusModuleId === module?.id
-
-  useEffect(() => {
-    if (wasStoryFocused.current && !storyFocused) {
-      focusControlRef.current?.focus()
-    }
-    wasStoryFocused.current = storyFocused
-  }, [storyFocused])
 
   const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
   const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
@@ -77,8 +64,8 @@ function App() {
 
             <CalculatorControls />
 
-            <div className={`workspace-grid${storyFocused ? ' is-story-focused' : ''}`}>
-              <section className="input-panel" aria-labelledby="input-title" hidden={storyFocused}>
+            <div className="workspace-grid">
+              <section className="input-panel" aria-labelledby="input-title">
                 <div className="section-heading">
                   <div>
                     <p className="eyebrow">Eingaben & Zustände</p>
@@ -90,22 +77,10 @@ function App() {
               </section>
 
               <aside className="analysis-panel" aria-label="Ergebnisse und Diagramme">
-                {!storyFocused && (
-                  <>
-                    <ResultSummary />
-                    <ErrorDisplay errors={visibleErrors} />
-                    <DiagramPanel />
-                  </>
-                )}
-                {displayStory && (
-                  <CalculationStoryDisplay
-                    story={displayStory}
-                    focused={storyFocused}
-                    onToggleFocus={() => setStoryFocusModuleId(value => value === module?.id ? null : module?.id ?? null)}
-                    focusControlRef={focusControlRef}
-                  />
-                )}
-                {!storyFocused && hasLegacyContent && (
+                <ResultSummary />
+                <ErrorDisplay errors={visibleErrors} />
+                <DiagramPanel />
+                {hasLegacyContent && (
                   <StepDisplay
                     steps={legacySteps}
                     presentation={legacyPresentation}
@@ -114,6 +89,14 @@ function App() {
                 )}
               </aside>
             </div>
+            {displayStory && (
+              <section className="calculation-story-area" aria-label="Vollständiger Rechenweg">
+                <div className="calculation-story-separator" role="separator" aria-label="Beginn des vollständigen Rechenwegs">
+                  <span>Vollständiger Rechenweg</span>
+                </div>
+                <CalculationStoryDisplay story={displayStory} />
+              </section>
+            )}
           </>
         )}
       </main>

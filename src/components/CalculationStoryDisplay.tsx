@@ -1,4 +1,4 @@
-import { useState, type Ref } from 'react'
+import { useState } from 'react'
 import type { CalculationStoryAlternative, CalculationStoryRow, CalculationStorySection, CalculationStoryState, StoryEquation, StoryOperation, StorySupportRow } from '../core/calculation-story'
 import { renderLatex } from '../utils/latex'
 
@@ -78,12 +78,7 @@ function StorySection({ section, index, alternatives, mainPathOnly }: {
   return <section className="calculation-story-section" data-story-section={section.id} data-story-tier={tier}><h3>{section.title}</h3>{rows}</section>
 }
 
-export function CalculationStoryDisplay({ story, focused = false, onToggleFocus, focusControlRef }: {
-  story: DisplayStory
-  focused?: boolean
-  onToggleFocus?: () => void
-  focusControlRef?: Ref<HTMLButtonElement>
-}) {
+export function CalculationStoryDisplay({ story }: { story: DisplayStory }) {
   const [mainPathOnly, setMainPathOnly] = useState(false)
   if (story.mode === 'unavailable') return <section className="calculation-story calculation-story-unavailable" role="alert"><p className="eyebrow">Herleitung</p><h2>Herleitung nicht verfügbar</h2><p>{story.reason}</p></section>
   const sections = (story.story.sections ?? [{ id: 'story', title: 'Herleitung', rows: story.story.rows }]).filter(section => section.rows.length > 0)
@@ -94,7 +89,6 @@ export function CalculationStoryDisplay({ story, focused = false, onToggleFocus,
       <div><p className="eyebrow">Herleitung</p><h2 id="calculation-story-title">{story.story.title}</h2><p>Modell, Bedingungen, strategische Rechenoperationen und ihre Begründungen bleiben am jeweiligen Rechenschritt sichtbar.</p></div>
       <div className="calculation-story-controls">
         <button type="button" aria-pressed={mainPathOnly} onClick={() => setMainPathOnly(value => !value)}>Nur Hauptpfad</button>
-        {onToggleFocus && <button type="button" ref={focusControlRef} data-calculation-story-focus-control aria-label={focused ? 'Rechenweg-Fokus verlassen' : 'Rechenweg fokussieren'} aria-pressed={focused} onClick={onToggleFocus}>{focused ? 'Fokus verlassen' : 'Rechenweg fokussieren'}</button>}
       </div>
     </header>
     {story.story.overview && <section className="calculation-story-overview" aria-label="Rechenüberblick"><h3>Rechenüberblick</h3><p>{story.story.overview.model}</p><dl><div><dt>Gegeben</dt><dd>{story.story.overview.givens.map((given, index) => <MathFragment key={index} latex={given} />)}</dd></div><div><dt>Geltung</dt><dd>{story.story.overview.scope}</dd></div><div><dt>Vorzeichen</dt><dd>{story.story.overview.signs.map((sign, index) => <MathFragment key={index} latex={sign} />)}</dd></div></dl></section>}

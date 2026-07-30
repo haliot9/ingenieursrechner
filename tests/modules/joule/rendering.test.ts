@@ -27,11 +27,14 @@ describe('Joule human-reference math rendering', () => {
   it('renders every main and attached proof row through the real KaTeX path', () => {
     const story = completeStory()
     const rows = [...story.rows, ...story.rows.flatMap(row => row.support?.rows ?? [])]
-    const failures = rows.flatMap(row => [row.equationLatex, typeof row.operation === 'object' ? row.operation.latex : '']).filter(Boolean).filter(latex => {
+    const latexPayloads = rows.flatMap(row => [row.equationLatex, typeof row.operation === 'object' ? row.operation.latex : '']).filter(Boolean)
+    const failures = latexPayloads.filter(latex => {
       const html = renderLatex(latex.replaceAll('κ', '\\kappa').replaceAll('η', '\\eta').replaceAll('→', '\\to').replaceAll('−', '-'), false)
-      return html.includes('katex-error') || html.includes('LaTeX Error')
+      return html.includes('katex-error') || html.includes('LaTeX Error') || html.includes('#cc0000')
     })
     expect(failures).toEqual([])
+    const latexSource = latexPayloads.join('\n')
+    for (const forbidden of ['\\xLongrightarrow', '\\cancelto', '\\kappac', '\\to']) expect(latexSource).not.toContain(forbidden)
     expect(story.rows).toHaveLength(62)
   })
 })

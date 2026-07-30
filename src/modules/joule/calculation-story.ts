@@ -41,8 +41,8 @@ function equation(latex: string, role: StoryRowRole): StoryEquation {
 }
 
 function operation(kind: StoryOperationKind, label: string, arrow: ArrowKind = 'operation') {
-  const command = arrow === 'equivalent' ? '\\xleftrightarrow' : arrow === 'implies' ? '\\xLongrightarrow' : '\\xrightarrow'
-  const safeLabel = label.replaceAll('_', '\\_').replaceAll('Δ', 'delta')
+  const command = arrow === 'equivalent' ? '\\xleftrightarrow' : arrow === 'implies' ? '\\xRightarrow' : '\\xrightarrow'
+  const safeLabel = label.replaceAll('_', '\\_').replaceAll('Δ', 'delta').replaceAll('κ', 'kappa ').replaceAll('→', 'to')
   return { kind, latex: `${command}{\\text{${safeLabel}}}` }
 }
 
@@ -172,7 +172,7 @@ function energyRows(input: CalculationStoryCompositionInput): CalculationStoryRo
     row('energy:rates', '\\dot Q+\\dot W_t=\\dot m(e_j-e_i)', 'subject-change', { operation: operation('isolate', 'solve for rates', 'equivalent') }),
     row('energy:specific', '\\frac{\\dot Q}{\\dot m}+\\frac{\\dot W_t}{\\dot m}=e_j-e_i', 'subject-change', { operation: operation('divide', 'divide by ṁ', 'equivalent'), support: support('energy-specific-transfer', 'Definition · spezifische Übertragung', 'foundation', [supportRow('energy-q-definition', 'q:=\\frac{\\dot Q}{\\dot m}'), supportRow('energy-w-definition', 'w_t:=\\frac{\\dot W_t}{\\dot m}')]) }),
     row('energy:definitions', 'q_{ij}+w_{t,ij}=(h_j-h_i)+\\Delta e_{kin}+\\Delta e_{pot}', 'subject-change', { operation: operation('substitute', 'substitute definitions'), support: support('energy-specific-energy', 'Grundlage · spezifische Energie', 'foundation', [supportRow('energy-e-definition', 'e=h+\\frac{\\mathrm v^2}{2}+g(z-z_0)')]) }),
-    row('energy:model-reduction', 'q_{ij}+w_{t,ij}=h_j-h_i+\\cancelto{0}{\\Delta e_{kin}}+\\cancelto{0}{\\Delta e_{pot}}', 'subject-change', { support: support('energy-model-condition', 'Modell · Änderungen vernachlässigbar', 'condition', [supportRow('energy-negligible', '\\Delta e_{kin}\\approx0,\\;\\Delta e_{pot}\\approx0')]) }),
+    row('energy:model-reduction', 'q_{ij}+w_{t,ij}=h_j-h_i+\\underbrace{\\Delta e_{kin}}_{\\approx0}+\\underbrace{\\Delta e_{pot}}_{\\approx0}', 'subject-change', { support: support('energy-model-condition', 'Modell · Änderungen vernachlässigbar', 'condition', [supportRow('energy-negligible', '\\Delta e_{kin}\\approx0,\\;\\Delta e_{pot}\\approx0')]) }),
     row('energy:reduced', 'q_{ij}+w_{t,ij}=h_j-h_i', 'subject-change', { box: 'outline', state: 'derived', operation: operation('substitute', 'reduce model', 'implies') }),
     row('energy:enthalpy', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', { box: 'outline', state: 'derived', support: support('energy-enthalpy-proof', 'Herleitung · IGG → Enthalpieänderung', 'foundation', [supportRow('energy-dh', 'dh=\\left(\\frac{\\partial h}{\\partial T}\\right)_p dT+\\left(\\frac{\\partial h}{\\partial p}\\right)_T dp'), supportRow('energy-cp-definition', 'c_p:=\\left(\\frac{\\partial h}{\\partial T}\\right)_p'), supportRow('energy-dh-cp', 'dh=c_p\\,dT', 'subject-change', operation('substitute', 'ideales Gas')), supportRow('energy-integrated-h', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', operation('integrate', 'c_p = const.'))]) }),
     row('energy:wcomp', 'w_{comp}=h_2-h_1=c_p(T_2-T_1)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'q_{12}=0'), support: support('energy-compressor-reuse', 'Reuse · reduzierte Energiebilanz', 'reuse', [supportRow('energy-compressor-balance', 'q_{ij}+w_{t,ij}=h_j-h_i')]) }),

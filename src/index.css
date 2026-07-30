@@ -341,6 +341,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .story-row.has-story-support .story-support { grid-column: 4; grid-row: 1; margin: 0; border-left: 1px solid var(--border-strong); background: #f8fafc; padding: 0 .7rem; }
 .story-equation-scroller { border-color: transparent; background: transparent; }
 .story-equation-grid { max-width: 100%; }
+.story-bridge:empty { display: none; }
 .story-fact-outline { padding: 6px 9px; border: 1.5px solid var(--border-strong); border-radius: .3rem; background: #fff; }
 .story-fact-ready { padding: 6px 9px; border: 1.5px solid var(--success); border-radius: .3rem; background: #edf8f2; }
 .story-equation-grid[data-story-fact='outline'], .story-equation-grid[data-story-fact='ready'] { width: max-content; }
@@ -363,13 +364,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 
 @media (max-width: 760px) {
   .calculation-story-heading { padding-inline: 16px; }
-  .story-row, .story-row.has-story-support { grid-template-columns: minmax(5.2rem, max-content) minmax(0, 1fr); gap: .35rem .6rem; }
+  .story-row, .story-row.has-story-support { grid-template-columns: 5rem minmax(0, 1fr); gap: .35rem .6rem; }
+  .story-row > .story-operation:empty { display: none; }
+  .story-row:has(> .story-operation:empty) { grid-template-columns: minmax(0, 1fr); }
+  .story-row:has(> .story-operation:empty) > .story-equation-scroller { grid-column: 1; }
   .story-operation { overflow-wrap: anywhere; font-size: 10px; }
   .story-equation-scroller { grid-column: 2; padding-inline: .1rem; }
   .story-equation-line, .story-equation-grid { min-width: max-content; }
-  .story-row.has-story-support .story-support { grid-column: 2; grid-row: auto; margin: .25rem 0 0; min-width: 0; padding-left: .55rem; }
-  .story-support-row { grid-template-columns: minmax(4.7rem, max-content) minmax(0, 1fr) !important; }
-  .story-support-row .story-operation { grid-column: 1; }
-  .story-support-row .story-equation-scroller { grid-column: 2; }
+  .story-row.has-story-support > .story-support { grid-column: 1 / -1; grid-row: auto; margin: .25rem 0 0; min-width: 0; padding-left: .55rem; }
+  .story-support-row { grid-template-columns: minmax(0, 1fr) !important; }
+  .story-support-row > .story-operation { grid-column: 1; padding-top: 0; text-align: left; }
+  .story-support-row > .story-equation-scroller { grid-column: 1; }
   .story-fact-outline, .story-fact-ready { max-width: 100%; }
 }

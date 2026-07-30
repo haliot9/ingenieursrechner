@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CalculationStoryDisplay } from '../../src/components/CalculationStoryDisplay'
 import { FormulaRegistry } from '../../src/core/formula-registry'
@@ -134,4 +134,32 @@ it('renders the complete compressor and heater SFEE annotation chains in learner
     cursor = annotations.findIndex((annotation, index) => index > cursor && annotation === payload)
     expect(cursor, `missing or out-of-order learner-visible annotation: ${payload}`).toBeGreaterThan(-1)
   }
+})
+
+
+it('keeps typed support attached to its parent row and independently hides only support', () => {
+  const supportStory = {
+    mode: 'complete' as const,
+    story: {
+      route: 'support-test', title: 'Support seam', consumedSteps: [], unconsumedPrimarySteps: [], rows: [{
+        ...rows[0], id: 'main-with-support',
+        support: {
+          id: 'ideal-gas-foundation', kind: 'foundation', title: 'Ideal gas relation', defaultOpen: true,
+          rows: [{ ...rows[1], id: 'support-proof', operation: { kind: 'substitute' as const, latex: '\\xrightarrow{\\text{substitute}}' } }],
+        },
+      }],
+    },
+  }
+  const { container } = render(<CalculationStoryDisplay story={supportStory} />)
+  expect(container.querySelector('[data-story-row-id="main-with-support"]')).toBeTruthy()
+  const support = container.querySelector('[data-story-support="ideal-gas-foundation"]')
+  expect(support?.getAttribute('data-story-parent-row')).toBe('main-with-support')
+  expect(support?.querySelector('.story-support-row .story-operation .katex')).toBeTruthy()
+  const mainOnly = screen.getByRole('button', { name: 'Main path only' })
+  expect(mainOnly.getAttribute('aria-pressed')).toBe('false')
+  fireEvent.click(mainOnly)
+  expect(container.querySelector('[data-story-support="ideal-gas-foundation"]')).toBeNull()
+  expect(container.querySelector('[data-story-row-id="main-with-support"]')).toBeTruthy()
+  fireEvent.click(mainOnly)
+  expect(container.querySelector('[data-story-support="ideal-gas-foundation"]')).toBeTruthy()
 })

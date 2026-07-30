@@ -7,10 +7,13 @@ export type StoryRelation = 'equals' | 'equivalent' | 'implies'
 export type StoryRowRole = 'start' | 'continuation' | 'subject-change' | 'reuse' | 'numeric' | 'check' | 'milestone'
 export type StoryOperationKind = 'substitute' | 'equate' | 'isolate' | 'factor' | 'divide' | 'multiply' | 'add' | 'subtract' | 'exponentiate' | 'root' | 'logarithm' | 'integrate' | 'reuse'
 export type CalculationStorySectionTier = 'main' | 'foundation' | 'optional' | 'check' | 'alternative'
+export type StorySupportKind = 'foundation' | 'condition' | 'unit' | 'reuse'
 
 export interface StoryEquation { bridgeLatex?: string; lhsLatex?: string; relationLatex: string; rhsLatex: string }
 export interface StoryOperation { kind: StoryOperationKind; latex: string }
-export interface CalculationStoryRow { id: string; kind: CalculationStoryRowKind; chainId?: string; rowRole?: StoryRowRole; equationLatex: string; equation?: StoryEquation; operation?: StoryOperation | string; note?: string; label?: string; box?: 'core'; state?: CalculationStoryFactState; spacing?: 'continuation' | 'nested' | 'result' | 'chain' }
+export interface StorySupportRow { id: string; kind: CalculationStoryRowKind; chainId?: string; rowRole?: StoryRowRole; equationLatex: string; equation?: StoryEquation; operation?: StoryOperation | string; note?: string; label?: string; box?: 'core'; state?: CalculationStoryFactState; spacing?: 'continuation' | 'nested' | 'result' | 'chain' }
+export interface CalculationStorySupport { id: string; title: string; kind: StorySupportKind; defaultOpen?: boolean; rows: readonly StorySupportRow[] }
+export interface CalculationStoryRow extends StorySupportRow { support?: CalculationStorySupport }
 export interface CalculationStoryConsumedStep { formulaId: string; targetVariable: string; directionId: string }
 export interface CalculationStorySection { id: string; title: string; rows: readonly CalculationStoryRow[]; tier?: CalculationStorySectionTier; defaultOpen?: boolean }
 export interface CalculationStoryOverview { model: string; givens: readonly string[]; scope: string; signs: readonly string[]; route: readonly string[] }

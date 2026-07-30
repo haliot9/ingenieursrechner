@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCalculatorStore } from './store/calculator-store'
 import { ModuleSelector } from './components/ModuleSelector'
 import { CalculatorTable } from './components/CalculatorTable'
@@ -12,89 +12,34 @@ import { isConsumedStoryStep, removeConsumedStorySteps } from './core/calculatio
 
 function App() {
   const { module, steps, errors, values, presentation, story } = useCalculatorStore()
-  useEffect(() => {
-    if (module) document.title = `Ingenieursrechner · ${module.name}`
-  }, [module])
+  const [storyFocusModuleId, setStoryFocusModuleId] = useState<string | null>(null)
+  const focusControlRef = useRef<HTMLButtonElement>(null)
+  const wasStoryFocused = useRef(false)
+  useEffect(() => { if (module) document.title = `Ingenieursrechner · ${module.name}` }, [module])
+  const storyFocused = storyFocusModuleId === module?.id
+  useEffect(() => { if (wasStoryFocused.current && !storyFocused) focusControlRef.current?.focus(); wasStoryFocused.current = storyFocused }, [storyFocused])
   const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
   const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
-  const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
-    .filter(error => !presentation || error.type !== 'contradiction')
+  const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors).filter(error => !presentation || error.type !== 'contradiction')
   const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
   const completeStory = story?.mode === 'complete' ? story.story : undefined
   const legacySteps = completeStory ? steps.filter(step => !isConsumedStoryStep(completeStory, step)) : steps
   const filteredPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
   const legacyPresentation = completeStory?.route === 'joule-learning-story-v0.2' && filteredPresentation ? { ...filteredPresentation, alternatives: [] } : filteredPresentation
-  const hasLegacyContent = legacySteps.length > 0
-    || (legacyPresentation?.alternatives.length ?? 0) > 0
-    || (legacyPresentation?.blocked.length ?? 0) > 0
-    || presentationContradictions.length > 0
+  const hasLegacyContent = legacySteps.length > 0 || (legacyPresentation?.alternatives.length ?? 0) > 0 || (legacyPresentation?.blocked.length ?? 0) > 0 || presentationContradictions.length > 0
 
-  return (
-    <div className="app-shell">
-      <header className="site-header">
-        <div className="page-width header-inner">
-          <a className="brand" href="#top" aria-label="Ingenieursrechner Startseite">
-            <span className="brand-mark" aria-hidden="true">IR</span>
-            <span>
-              <strong>Ingenieursrechner</strong>
-              <small>Deterministische Rechenwege</small>
-            </span>
-          </a>
-          <ModuleSelector />
+  return <div className="app-shell">
+    <header className="site-header"><div className="page-width header-inner"><a className="brand" href="#top" aria-label="Ingenieursrechner Startseite"><span className="brand-mark" aria-hidden="true">IR</span><span><strong>Ingenieursrechner</strong><small>Deterministische Rechenwege</small></span></a><ModuleSelector /></div></header>
+    <main id="top" className="page-width main-content">
+      {module && <><section className="hero" aria-labelledby="module-title"><div><p className="eyebrow">Thermodynamik · Kreisprozesse</p><h1 id="module-title">{module.name}</h1><p className="hero-copy">{module.description}</p></div><div className="hero-facts" aria-label="Modellannahmen"><span>Ideales Gas</span><span>κ konstant</span><span>SI intern</span><span>Rechenweg sichtbar</span></div></section><CalculatorControls />
+        <div className={`workspace-grid${storyFocused ? ' is-story-focused' : ''}`}>
+          <section className="input-panel" aria-labelledby="input-title" hidden={storyFocused}><div className="section-heading"><div><p className="eyebrow">Eingaben & Zustände</p><h2 id="input-title">Bekannte Größen</h2></div><p>Nur vorhandene Werte eintragen. Alle übrigen Felder werden automatisch berechnet.</p></div><CalculatorTable /></section>
+          <aside className="analysis-panel" aria-label="Ergebnisse und Diagramme">{!storyFocused && <><ResultSummary /><ErrorDisplay errors={visibleErrors} /><DiagramPanel /></>}{displayStory && <CalculationStoryDisplay story={displayStory} focused={storyFocused} onToggleFocus={() => setStoryFocusModuleId(value => value === module?.id ? null : module?.id ?? null)} focusControlRef={focusControlRef} />}{!storyFocused && hasLegacyContent && <StepDisplay steps={legacySteps} presentation={legacyPresentation} contradictions={presentationContradictions} />}</aside>
         </div>
-      </header>
-
-      <main id="top" className="page-width main-content">
-        {module && (
-          <>
-            <section className="hero" aria-labelledby="module-title">
-              <div>
-                <p className="eyebrow">Thermodynamik · Kreisprozesse</p>
-                <h1 id="module-title">{module.name}</h1>
-                <p className="hero-copy">{module.description}</p>
-              </div>
-              <div className="hero-facts" aria-label="Modellannahmen">
-                <span>Ideales Gas</span>
-                <span>κ konstant</span>
-                <span>SI intern</span>
-                <span>Rechenweg sichtbar</span>
-              </div>
-            </section>
-
-            <CalculatorControls />
-
-            <div className="workspace-grid">
-              <section className="input-panel" aria-labelledby="input-title">
-                <div className="section-heading">
-                  <div>
-                    <p className="eyebrow">Eingaben & Zustände</p>
-                    <h2 id="input-title">Bekannte Größen</h2>
-                  </div>
-                  <p>Nur vorhandene Werte eintragen. Alle übrigen Felder werden automatisch berechnet.</p>
-                </div>
-                <CalculatorTable />
-              </section>
-
-              <aside className="analysis-panel" aria-label="Ergebnisse und Diagramme">
-                <ResultSummary />
-                <ErrorDisplay errors={visibleErrors} />
-                <DiagramPanel />
-                {displayStory && <CalculationStoryDisplay story={displayStory} />}
-                {hasLegacyContent && <StepDisplay steps={legacySteps} presentation={legacyPresentation} contradictions={presentationContradictions} />}
-              </aside>
-            </div>
-          </>
-        )}
-      </main>
-
-      <footer className="site-footer">
-        <div className="page-width footer-inner">
-          <p><strong>Ingenieursrechner</strong> · {module?.name ?? 'Rechenmodule'}</p>
-          <p>Idealisiertes Lehrmodell. Ergebnisse immer mit Aufgabenstellung und Stoffmodell abgleichen.</p>
-        </div>
-      </footer>
-    </div>
-  )
+      </>}
+    </main>
+    <footer className="site-footer"><div className="page-width footer-inner"><p><strong>Ingenieursrechner</strong> · {module?.name ?? 'Rechenmodule'}</p><p>Idealisiertes Lehrmodell. Ergebnisse immer mit Aufgabenstellung und Stoffmodell abgleichen.</p></div></footer>
+  </div>
 }
 
 export default App

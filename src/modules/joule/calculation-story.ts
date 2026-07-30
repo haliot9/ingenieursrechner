@@ -1,179 +1,239 @@
-import type { CalculationStoryAlternative, CalculationStoryCompositionInput, CalculationStoryConsumedStep, CalculationStoryRow, CalculationStorySection, CalculationStoryState, StoryOperationKind } from '../../core/calculation-story'
-import { JOULE_STORY_RECIPES } from './calculation-story-recipes'
+import type {
+  CalculationStoryCompositionInput,
+  CalculationStoryConsumedStep,
+  CalculationStoryRow,
+  CalculationStorySection,
+  CalculationStoryState,
+  CalculationStorySupport,
+  StoryEquation,
+  StoryOperationKind,
+  StoryRowRole,
+  StorySupportRow,
+} from '../../core/calculation-story'
 
-const SECTION_ORDER = [
-
-  ['material-properties', 'Stoffeigenschaften', 'foundation'],
-  ['state-1', 'Zustand 1', 'main'],
-  ['compression-1-2', '1 → 2 Isentrope Verdichtung', 'main'],
-  ['heat-input-2-3', '2 → 3 Isobare Wärmezufuhr', 'main'],
-  ['expansion-3-4', '3 → 4 Isentrope Expansion', 'main'],
-  ['heat-rejection-4-1', '4 → 1 Isobare Wärmeabfuhr', 'main'],
-  ['cycle-balance-performance', 'Kreisprozessbilanz und Kennzahlen', 'main'],
-  ['optional-entropy', 'Optional: relativer Entropiebezug', 'optional'],
+const SECTION_TITLES = [
+  ['material-properties', 'Stoffeigenschaften'],
+  ['state-1', 'Zustand 1'],
+  ['compression-1-2', '1 → 2 · isentrope Verdichtung'],
+  ['heat-input-2-3', '2 → 3 · isobare Wärmezufuhr'],
+  ['expansion-3-4', '3 → 4 · isentrope Expansion'],
+  ['energy-path', 'Energiepfad'],
+  ['cycle-balance-performance', 'Kreisbilanz und Kennwerte'],
 ] as const
 
-type SectionId = typeof SECTION_ORDER[number][0]
+type ArrowKind = 'operation' | 'equivalent' | 'implies'
 
-function latexFor(input: CalculationStoryCompositionInput, id: string): string { return input.variables.find(variable => variable.id === id)?.latex ?? id }
-function unitLatex(unit: string): string {
-  const units: Record<string, string> = {
-    'J/(kg*K)': '\\frac{\\mathrm J}{\\mathrm{kg}\\,\\mathrm K}', 'J/kg': '\\frac{\\mathrm J}{\\mathrm{kg}}', 'm^3/kg': '\\frac{\\mathrm{m^3}}{\\mathrm{kg}}',
-    K: '\\mathrm K', Pa: '\\mathrm{Pa}', bar: '\\mathrm{bar}', '': '',
-  }
-  return units[unit] ?? `\\mathrm{${unit}}`
-}
 export function formatStoryNumberLatex(value: number): string {
   if (!Number.isFinite(value)) return '\\text{undefined}'
   const rounded = Math.round(value * 1e10) / 1e10
   if (Number.isInteger(rounded)) return String(rounded)
   return rounded.toPrecision(6).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
 }
-function valueLatex(input: CalculationStoryCompositionInput, id: string): string {
-  const state = input.values[id]; const variable = input.variables.find(candidate => candidate.id === id)
-  if (!state || state.value === null || !Number.isFinite(state.value)) throw new Error(`missing accepted ${id} value`)
-  const unit = unitLatex(variable?.defaultUnit ?? state.unit)
-  return `${formatStoryNumberLatex(state.value)}${unit ? `\\;${unit}` : ''}`
-}
-function equation(latex: string, continuation = false) { const [lhs, ...right] = latex.split('='); return { lhsLatex: continuation ? undefined : lhs.trim(), relationLatex: '=', rhsLatex: right.join('=').trim() || latex.trim() } }
-function operation(kind: StoryOperationKind, latex: string) { return { kind, latex: `\\xrightarrow{\\text{${latex}}}` } }
-function row(id: string, kind: CalculationStoryRow['kind'], rowRole: NonNullable<CalculationStoryRow['rowRole']>, equationLatex: string, options: Partial<CalculationStoryRow> = {}): CalculationStoryRow {
-  return { id, kind, rowRole, chainId: id.split(':')[0], equationLatex, equation: equation(equationLatex, rowRole === 'continuation' || rowRole === 'numeric'), spacing: rowRole === 'subject-change' ? 'result' : rowRole === 'start' ? 'chain' : 'continuation', ...options }
-}
-function consumed(directionId: string): CalculationStoryConsumedStep { const [formulaId, targetVariable] = directionId.split(':'); return { formulaId, targetVariable, directionId } }
-function stepFor(input: CalculationStoryCompositionInput, directionId: string) { const step = input.steps.find(candidate => `${candidate.formulaId}:${candidate.targetVariable}` === directionId); if (!step) throw new Error(`missing recipe evidence for ${directionId}`); return step }
-function exponentLatex(input: CalculationStoryCompositionInput): string {
-  const kappa = input.values.kappa?.value
-  if (kappa === null || kappa === undefined || !Number.isFinite(kappa)) throw new Error('missing accepted kappa value')
-  return formatStoryNumberLatex((kappa - 1) / kappa)
-}
-function substitutionLatex(input: CalculationStoryCompositionInput, directionId: string): string {
-  const value = (id: string) => valueLatex(input, id)
-  const exponent = exponentLatex(input)
-  const substitutions: Record<string, string> = {
-    'ideal_gas_1:v1': `\\frac{${value('Rs')}\\cdot${value('T1')}}{${value('p1')}}`,
-    'pressure_ratio:p2': `${value('p1')}\\cdot${value('pressureRatio')}`,
-    'compressor_temperature:T2': `${value('T1')}\\cdot${value('pressureRatio')}^{${exponent}}`,
-    'ideal_gas_2:v2': `\\frac{${value('Rs')}\\cdot${value('T2')}}{${value('p2')}}`,
-    'high_pressure_isobar:p3': `${value('p2')}`,
-    'heat_input:q_in': `${value('cp')}\\cdot(${value('T3')}-${value('T2')})`,
-    'ideal_gas_3:v3': `\\frac{${value('Rs')}\\cdot${value('T3')}}{${value('p3')}}`,
-    'low_pressure_isobar:p4': `${value('p1')}`,
-    'turbine_temperature:T4': `\\frac{${value('T3')}}{${value('pressureRatio')}^{${exponent}}}`,
-    'ideal_gas_4:v4': `\\frac{${value('Rs')}\\cdot${value('T4')}}{${value('p4')}}`,
-    'compressor_work:w_comp': `${value('cp')}\\cdot(${value('T2')}-${value('T1')})`,
-    'turbine_work:w_turb': `${value('cp')}\\cdot(${value('T4')}-${value('T3')})`,
-    'heat_rejection:q_out': `${value('cp')}\\cdot(${value('T1')}-${value('T4')})`,
-    'net_work:w_netto': `${value('w_comp')}+${value('w_turb')}`,
-    'efficiency:eta': `\\frac{-${value('w_netto')}}{${value('q_in')}}`,
+
+function equation(latex: string, role: StoryRowRole): StoryEquation {
+  const equalsIndex = latex.indexOf('=')
+  if (equalsIndex < 0) return { relationLatex: '', rhsLatex: latex }
+  return {
+    lhsLatex: role === 'continuation' || role === 'numeric' ? undefined : latex.slice(0, equalsIndex).trim(),
+    relationLatex: '=',
+    rhsLatex: latex.slice(equalsIndex + 1).trim(),
   }
-  return substitutions[directionId] ?? stepFor(input, directionId).substitutedLatex
 }
-function numericRows(input: CalculationStoryCompositionInput, directionId: string): CalculationStoryRow[] {
-  const target = directionId.split(':')[1]
-  const substitution = substitutionLatex(input, directionId)
+
+function operation(kind: StoryOperationKind, label: string, arrow: ArrowKind = 'operation') {
+  const command = arrow === 'equivalent' ? '\\xleftrightarrow' : arrow === 'implies' ? '\\xLongrightarrow' : '\\xrightarrow'
+  const safeLabel = label.replaceAll('_', '\\_').replaceAll('Δ', 'delta')
+  return { kind, latex: `${command}{\\text{${safeLabel}}}` }
+}
+
+function supportRow(id: string, equationLatex: string, role: StoryRowRole = 'start', op?: ReturnType<typeof operation>): StorySupportRow {
+  return { id, kind: 'governing', rowRole: role, equationLatex, equation: equation(equationLatex, role), operation: op, spacing: role === 'continuation' ? 'continuation' : 'nested' }
+}
+
+function support(id: string, title: string, kind: CalculationStorySupport['kind'], rows: readonly StorySupportRow[], defaultOpen = true): CalculationStorySupport {
+  return { id, title, kind, rows, defaultOpen }
+}
+
+function row(
+  id: string,
+  equationLatex: string,
+  role: StoryRowRole,
+  options: Omit<Partial<CalculationStoryRow>, 'id' | 'equationLatex' | 'equation' | 'rowRole'> = {},
+): CalculationStoryRow {
+  return {
+    id,
+    kind: role === 'numeric' ? 'numeric' : role === 'reuse' ? 'reuse' : options.box ? 'result' : 'governing',
+    rowRole: role,
+    chainId: id.split(':')[0],
+    equationLatex,
+    equation: equation(equationLatex, role),
+    spacing: role === 'subject-change' ? 'result' : role === 'start' ? 'chain' : 'continuation',
+    ...options,
+  }
+}
+
+function number(input: CalculationStoryCompositionInput, id: string): number {
+  const value = input.values[id]?.value
+  if (value === null || value === undefined || !Number.isFinite(value)) throw new Error(`missing live solver value: ${id}`)
+  return value
+}
+
+function display(input: CalculationStoryCompositionInput, id: string): string {
+  const value = number(input, id)
+  if (id === 'pressureRatio' || id === 'kappa' || id === 'eta' || id === 'back_work_ratio') return formatStoryNumberLatex(value)
+  if (id.startsWith('p')) return `${formatStoryNumberLatex(value / 1000)}\\;\\mathrm{kPa}`
+  if (id === 'Rs' || id === 'cp' || id === 'cv' || id.startsWith('s')) return `${formatStoryNumberLatex(value / 1000)}\\;\\frac{\\mathrm{kJ}}{\\mathrm{kg}\\,\\mathrm K}`
+  if (id.startsWith('q_') || id.startsWith('w_')) return `${formatStoryNumberLatex(value / 1000)}\\;\\frac{\\mathrm{kJ}}{\\mathrm{kg}}`
+  if (id.startsWith('T')) return `${formatStoryNumberLatex(value)}\\;\\mathrm K`
+  return formatStoryNumberLatex(value)
+}
+
+function consumed(input: CalculationStoryCompositionInput): CalculationStoryConsumedStep[] {
+  return [...(input.plan?.primaryByTarget.values() ?? [])].map(step => {
+    const [formulaId, targetVariable] = step.directionId.split(':')
+    return { formulaId, targetVariable, directionId: step.directionId }
+  })
+}
+
+function materialRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const Rs = display(input, 'Rs'); const kappa = display(input, 'kappa'); const cv = display(input, 'cv'); const cp = display(input, 'cp')
   return [
-    row(`${directionId}:substitution`, 'numeric', 'numeric', `${latexFor(input, target)}=${substitution}`, { equation: { lhsLatex: latexFor(input, target), relationLatex: '=', rhsLatex: substitution }, note: 'Werte mit Einheiten eingesetzt.' }),
-    row(`${directionId}:numeric`, 'numeric', 'numeric', `${latexFor(input, target)}=${valueLatex(input, target)}`, { equation: { lhsLatex: latexFor(input, target), relationLatex: '=', rhsLatex: valueLatex(input, target) }, note: 'Numerisches Ergebnis in der Zielgröße.' }),
+    row('material:kappa', '\\kappa=\\frac{c_p}{c_v}', 'start', { support: support('material-relations', 'Grundlage · Beziehungen', 'foundation', [supportRow('material-relations-rs', 'R_s=c_p-c_v'), supportRow('material-relations-kappa', '\\kappa=\\frac{c_p}{c_v}')]) }),
+    row('material:cp-outline', 'c_p=\\kappa c_v', 'subject-change', { box: 'outline', state: 'derived', operation: operation('isolate', 'solve for c_p', 'equivalent') }),
+    row('material:rs', 'R_s=c_p-c_v', 'start'),
+    row('material:substitute', '=\\kappa c_v-c_v', 'continuation', { operation: operation('substitute', 'substitute c_p with κc_v') }),
+    row('material:factor', '=c_v(\\kappa-1)', 'continuation'),
+    row('material:cv-ready', 'c_v=\\frac{R_s}{\\kappa-1}', 'subject-change', { box: 'ready', state: 'reachable' }),
+    row('material:cv-numeric', `=\\frac{${Rs}}{${kappa}-1}=${cv}`, 'numeric'),
+    row('material:cp-ready', 'c_p=\\kappa c_v', 'reuse', { box: 'ready', state: 'reachable', operation: operation('reuse', 'insert c_v'), support: support('material-cv-reuse', 'Reuse · c_v', 'reuse', [supportRow('material-cv-reuse-value', `c_v=${cv}`)]) }),
+    row('material:cp-numeric', `=${kappa}\\cdot${cv}=${cp}`, 'numeric'),
   ]
 }
-function targetRow(input: CalculationStoryCompositionInput, directionId: string, latex: string, note?: string): CalculationStoryRow[] { return [row(`${directionId}:result`, 'result', 'subject-change', latex, { equation: { ...equation(latex), bridgeLatex: '\\Longleftrightarrow' }, state: 'reachable', note }), ...numericRows(input, directionId)] }
-function sectionFor(directionId: string): SectionId {
-  if (directionId.startsWith('ideal_gas_1')) return 'state-1'
-  if (directionId.startsWith('ideal_gas_2') || directionId.startsWith('compressor_') || directionId.startsWith('isentropic_entropy_12') || directionId.startsWith('pressure_ratio')) return 'compression-1-2'
-  if (directionId.startsWith('ideal_gas_3') || directionId.startsWith('high_pressure_isobar') || directionId.startsWith('heat_input')) return 'heat-input-2-3'
-  if (directionId.startsWith('ideal_gas_4') || directionId.startsWith('turbine_') || directionId.startsWith('isentropic_entropy_34') || directionId.startsWith('low_pressure_isobar')) return 'expansion-3-4'
-  if (directionId.startsWith('heat_rejection')) return 'heat-rejection-4-1'
-  return 'cycle-balance-performance'
-}
 
-function materialRows(input: CalculationStoryCompositionInput, selected: Set<string>): CalculationStoryRow[] {
-  if (!selected.has('cv_from_Rs_kappa:cv') && !selected.has('cp_from_kappa_cv:cp')) return []
-  const cp = latexFor(input, 'cp'); const cv = latexFor(input, 'cv'); const rs = latexFor(input, 'Rs'); const kappa = latexFor(input, 'kappa')
-  const rows: CalculationStoryRow[] = [row('material:kappa', 'governing', 'start', `κ = \\frac{${cp}}{${cv}}`), row('material:rs', 'governing', 'start', `${rs} = ${cp} - ${cv}`)]
-  if (selected.has('cv_from_Rs_kappa:cv')) rows.push(
-    row('material:cp', 'result', 'subject-change', `${cp}=\\kappa ${cv}`, { equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: cp, relationLatex: '=', rhsLatex: `\\kappa ${cv}` }, box: 'core' }),
-    row('material:substitute-cp', 'transform', 'continuation', `=${kappa} ${cv}-${cv}`),
-    row('material:factor', 'transform', 'continuation', `=${cv}(\\kappa-1)`),
-    row('material:cv-resolved', 'result', 'subject-change', `${cv}=\\frac{${rs}}{\\kappa-1}`, { equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: cv, relationLatex: '=', rhsLatex: `\\frac{${rs}}{\\kappa-1}` }, box: 'core', state: 'reachable' }),
-    row('material:cv-substitution', 'numeric', 'numeric', `=\\frac{${valueLatex(input, 'Rs')}}{${valueLatex(input, 'kappa')}-1}`, { equation: { relationLatex: '=', rhsLatex: `\\frac{${valueLatex(input, 'Rs')}}{${valueLatex(input, 'kappa')}-1}` } }),
-    row('material:cv-numeric', 'numeric', 'numeric', `=${valueLatex(input, 'cv')}`, { equation: { relationLatex: '=', rhsLatex: valueLatex(input, 'cv') } }),
-  )
-  if (selected.has('cp_from_kappa_cv:cp')) rows.push(
-    row('material:cp-reuse', 'reuse', 'reuse', `${cp}=\\kappa ${cv}`, { equation: { lhsLatex: cp, relationLatex: '=', rhsLatex: `\\kappa ${cv}` }, box: 'core' }),
-    row('material:cp-substitution', 'numeric', 'numeric', `=${valueLatex(input, 'kappa')}\\cdot${valueLatex(input, 'cv')}`, { equation: { relationLatex: '=', rhsLatex: `${valueLatex(input, 'kappa')}\\cdot${valueLatex(input, 'cv')}` } }),
-    row('cp_from_kappa_cv:cp:numeric', 'numeric', 'numeric', `=${valueLatex(input, 'cp')}`, { equation: { relationLatex: '=', rhsLatex: valueLatex(input, 'cp') } }),
-  )
-  return rows
-}
-
-function exponentFoundation(): CalculationStoryRow[] { return [
-  row('shared:isentropic-entropy-change', 'governing', 'start', 's_2-s_1=c_p\\ln\\left(\\frac{T_2}{T_1}\\right)-R_s\\ln\\left(\\frac{p_2}{p_1}\\right)', { note: 'Relative Entropieänderung für ideales Gas mit konstanten Stoffwerten.' }),
-  row('shared:isentropic-condition', 'governing', 'start', 's_2-s_1=0', { note: 'Reversibel adiabatisch bedeutet isentrop.' }),
-  row('shared:isentropic-substitute', 'transform', 'continuation', '=c_p\\ln\\left(\\frac{T_2}{T_1}\\right)-R_s\\ln\\left(\\frac{p_2}{p_1}\\right)'),
-  row('shared:isentropic-move-pressure', 'transform', 'continuation', 'c_p\\ln\\left(\\frac{T_2}{T_1}\\right)=R_s\\ln\\left(\\frac{p_2}{p_1}\\right)'),
-  row('shared:isentropic-divide-cp', 'transform', 'continuation', '\\ln\\left(\\frac{T_2}{T_1}\\right)=\\frac{R_s}{c_p}\\ln\\left(\\frac{p_2}{p_1}\\right)'),
-  row('shared:isentropic-property-start', 'transform', 'start', '\\frac{R_s}{c_p}=\\frac{c_p-c_v}{c_p}'),
-  row('shared:isentropic-property-one', 'transform', 'continuation', '=1-\\frac{c_v}{c_p}'),
-  row('shared:isentropic-property-two', 'transform', 'continuation', '=1-\\frac{1}{\\kappa}'),
-  row('shared:isentropic-property-three', 'transform', 'continuation', '=\\frac{\\kappa-1}{\\kappa}'),
-  row('shared:isentropic-exponent-definition', 'result', 'subject-change', 'a=\\frac{\\kappa-1}{\\kappa}', { equation: { bridgeLatex: '\\Longleftrightarrow', lhsLatex: 'a', relationLatex: '=', rhsLatex: '\\frac{\\kappa-1}{\\kappa}' }, box: 'core', note: 'a ist nur die Kurzschreibweise des isentropen Exponenten.' }),
-  row('shared:isentropic-substitute-a', 'transform', 'continuation', '\\ln\\left(\\frac{T_2}{T_1}\\right)=a\\ln\\left(\\frac{p_2}{p_1}\\right)'),
-  row('shared:isentropic-log-power', 'governing', 'start', 'a\\ln(x)=\\ln(x^a),\\quad x>0'),
-  row('shared:isentropic-power', 'transform', 'continuation', '\\ln\\left(\\frac{T_2}{T_1}\\right)=\\ln\\left[\\left(\\frac{p_2}{p_1}\\right)^a\\right]'),
-  row('shared:isentropic-apply-exponential', 'transform', 'start', 'e^{\\ln(T_2/T_1)}=e^{\\ln((p_2/p_1)^a)}', { operation: { kind: 'exponentiate', latex: '\\text{wende }e^{(\\cdot)}\\text{ auf beide Seiten an}' } }),
-
-  row('shared:isentropic-inverse-exponential', 'governing', 'start', 'e^{\\ln y}=y,\\quad y>0'),
-  row('shared:isentropic-temperature-ratio', 'result', 'subject-change', '\\frac{T_2}{T_1}=\\left(\\frac{p_2}{p_1}\\right)^a', { box: 'core' }),
-] }
-function entropyFoundation(): CalculationStoryRow[] {
-  const sequence: Array<[string, string, CalculationStoryRow['kind'], StoryOperationKind?]> = [
-    ['derivative', '\\frac{d}{dx}\\ln x=\\frac1x,\\quad x>0', 'governing'], ['antiderivative', '\\int\\frac1x\\,dx=\\ln x+C', 'governing'], ['differential', 'ds=c_p\\frac{dT}{T}-R_s\\frac{dp}{p}', 'governing'], ['integrate-both', '\\int_{s_{ref}}^{s_i}ds=\\int_{T_{ref}}^{T_i}c_p\\frac{dT}{T}-\\int_{p_{ref}}^{p_i}R_s\\frac{dp}{p}', 'transform', 'integrate'], ['left-bounds', 's_i-s_{ref}=\\int_{T_{ref}}^{T_i}c_p\\frac{dT}{T}-\\int_{p_{ref}}^{p_i}R_s\\frac{dp}{p}', 'transform'], ['pull-cp', '=c_p\\int_{T_{ref}}^{T_i}\\frac{dT}{T}-\\int_{p_{ref}}^{p_i}R_s\\frac{dp}{p}', 'transform'], ['pull-rs', '=c_p\\int_{T_{ref}}^{T_i}\\frac{dT}{T}-R_s\\int_{p_{ref}}^{p_i}\\frac{dp}{p}', 'transform'], ['primitive-temperature', '=c_p[\\ln T]_{T_{ref}}^{T_i}-R_s\\int_{p_{ref}}^{p_i}\\frac{dp}{p}', 'transform'], ['primitive-pressure', '=c_p[\\ln T]_{T_{ref}}^{T_i}-R_s[\\ln p]_{p_{ref}}^{p_i}', 'transform'], ['temperature-bounds', '=c_p(\\ln T_i-\\ln T_{ref})-R_s[\\ln p]_{p_{ref}}^{p_i}', 'transform'], ['pressure-bounds', '=c_p(\\ln T_i-\\ln T_{ref})-R_s(\\ln p_i-\\ln p_{ref})', 'transform'], ['log-quotient', '\\ln A-\\ln B=\\ln\\left(\\frac AB\\right),\\quad A>0, B>0', 'governing'], ['quotient-temperature', '=c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s(\\ln p_i-\\ln p_{ref})', 'transform'], ['quotient-pressure', '=c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)', 'transform'], ['integrated', 's_i-s_{ref}=\\boxed{c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)}', 'result'], ['reference-temperature', 'T_{ref}:=273.15\\;\\mathrm K', 'governing'], ['reference-pressure', 'p_{ref}:=101325\\;\\mathrm{Pa}', 'governing'], ['reference-entropy', 's_{ref}:=0\\;\\frac{\\mathrm J}{\\mathrm{kg}\\,\\mathrm K}', 'governing'], ['substitute-reference-entropy', 's_i-0=c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)', 'transform'], ['simplify-left', 's_i=c_p\\ln\\left(\\frac{T_i}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)', 'transform'], ['substitute-reference-temperature', '=c_p\\ln\\left(\\frac{T_i}{273.15\\;\\mathrm K}\\right)-R_s\\ln\\left(\\frac{p_i}{p_{ref}}\\right)', 'transform'], ['substitute-reference-pressure', '=c_p\\ln\\left(\\frac{T_i}{273.15\\;\\mathrm K}\\right)-R_s\\ln\\left(\\frac{p_i}{101325\\;\\mathrm{Pa}}\\right)', 'transform'], ['datum', 's_i=\\boxed{c_p\\ln\\left(\\frac{T_i}{273.15\\;\\mathrm K}\\right)-R_s\\ln\\left(\\frac{p_i}{101325\\;\\mathrm{Pa}}\\right)}', 'result'],
+function stateOneRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const v1 = display(input, 'v1'); const s1 = display(input, 's1'); const Rs = display(input, 'Rs'); const T1 = display(input, 'T1'); const p1 = display(input, 'p1')
+  return [
+    row('state1:ideal-gas', 'p_1v_1=R_sT_1', 'start', { support: support('state1-ideal-gas', 'Grundlage · IGG', 'foundation', [supportRow('state1-igg-total', 'pV=mR_sT'), supportRow('state1-igg-specific', 'pv=R_sT', 'subject-change', operation('divide', 'divide by m', 'equivalent'))]) }),
+    row('state1:v-ready', 'v_1=\\frac{R_sT_1}{p_1}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('isolate', 'solve for v_1', 'equivalent'), support: support('state1-units', 'Einheit · Dimensionsweg', 'unit', [supportRow('state1-joule', '1\\;\\mathrm J=1\\;\\mathrm N\\,\\mathrm m'), supportRow('state1-pascal', '1\\;\\mathrm{Pa}=\\frac{1\\;\\mathrm N}{\\mathrm{m^2}}')], false) }),
+    row('state1:v-numeric', `=\\frac{${Rs}\\cdot${T1}}{${p1}}=${v1}`, 'numeric'),
+    row('state1:entropy-outline', 's_1-s_{ref}=c_p\\ln\\left(\\frac{T_1}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_1}{p_{ref}}\\right)', 'subject-change', { box: 'outline', state: 'derived', support: support('state1-entropy-proof', 'Herleitung · 1. HS + 2. HS', 'foundation', [supportRow('state1-gibbs', 'T\\,ds=dh-v\\,dp'), supportRow('state1-ideal-differential', 'ds=c_p\\frac{dT}{T}-R_s\\frac{dp}{p}', 'subject-change', operation('substitute', 'ideales Gas'))]) }),
+    row('state1:entropy-ready', 's_1=c_p\\ln\\left(\\frac{T_1}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_1}{p_{ref}}\\right)', 'subject-change', { box: 'ready', state: 'reachable', support: support('state1-reference-condition', 'Bedingung · Bezug', 'condition', [supportRow('state1-reference-values', 's_{ref}=0,\\;T_{ref}=273.15\\;\\mathrm K,\\;p_{ref}=101.325\\;\\mathrm{kPa}')]) }),
+    row('state1:entropy-numeric', `=${s1}`, 'numeric'),
   ]
-  return sequence.map(([id, latex, kind, op]) => row(`shared:entropy-${id}`, kind, latex.startsWith('=') ? 'continuation' : 'start', latex, { operation: op ? operation(op, 'integriere') : undefined, state: id === 'integrated' || id === 'datum' ? 'reachable' : undefined }))
 }
 
-function familyRows(input: CalculationStoryCompositionInput, directionId: string): CalculationStoryRow[] {
-  const recipe = JOULE_STORY_RECIPES[directionId]; if (!recipe) throw new Error(`missing explicit family authority for ${directionId}`)
-  const target = directionId.split(':')[1]
-  switch (recipe.familyId) {
-    case 'ideal-gas-state': { const state = directionId.match(/_(\d):/)?.[1] ?? 'i'; const p = `p_${state}`; const v = `v_${state}`; const t = `T_${state}`; const result = target === `p${state}` ? `${p}=\\frac{R_s${t}}{${v}}` : target === `v${state}` ? `${v}=\\frac{R_s${t}}{${p}}` : `${t}=\\frac{${p}${v}}{R_s}`; return [row(`${directionId}:governing`, 'reuse', 'reuse', `${p}${v}=R_s${t}`, { note: 'Spezifische ideale Gasgleichung; v ist spezifisches Volumen.' }), ...targetRow(input, directionId, result)] }
-    case 'pressure-ratio': { const result = target === 'p2' ? 'p_2=p_1r_p' : target === 'p1' ? 'p_1=\\frac{p_2}{r_p}' : 'r_p=\\frac{p_2}{p_1}'; return [row(`${directionId}:definition`, 'governing', 'start', 'r_p=\\frac{p_2}{p_1}', { note: 'Druckverhältnis.' }), ...targetRow(input, directionId, result)] }
-    case 'isobaric-pressure': { const high = directionId.startsWith('high_'); const left = high ? 'p_3' : 'p_4'; const right = high ? 'p_2' : 'p_1'; const result = `${left}=${right}`; return [row(`${directionId}:condition`, 'governing', 'start', 'p=\\mathrm{const.}', { note: 'Isobare Prozessbedingung.' }), row(`${directionId}:dp`, 'transform', 'subject-change', 'dp=0'), row(`${directionId}:result`, 'result', 'subject-change', result, { equation: { bridgeLatex: '\\Longrightarrow', lhsLatex: left, relationLatex: '=', rhsLatex: right }, state: 'reachable' }), ...numericRows(input, directionId)] }
-    case 'isentropic-temperature': { const compression = directionId.startsWith('compressor_'); const governing = compression ? '\\frac{T_2}{T_1}=\\left(\\frac{p_2}{p_1}\\right)^a' : '\\frac{T_4}{T_3}=\\left(\\frac{p_4}{p_3}\\right)^a'; const ratio = compression ? '=r_p^a' : '=\\left(\\frac1{r_p}\\right)^a'; const result = compression ? 'T_2=T_1r_p^a' : 'T_4=\\frac{T_3}{r_p^a}'; const dependency = compression ? [] : [row('expansion:state-4-pressure-dependency', 'governing', 'start', 'p_4=p_1', { label: 'p₄ fehlt: Die folgende Isobare 4→1 liefert p₄=p₁; danach kehrt die Herleitung zu 3→4 zurück.', note: 'p₄ fehlt: Die folgende Isobare 4→1 liefert p₄=p₁; danach kehrt die Herleitung zu 3→4 zurück.' })]; return [...dependency, row(`${directionId}:governing`, 'governing', 'start', governing, { note: 'Bewiesene isentrope Temperaturfamilie.' }), row(`${directionId}:ratio`, 'transform', 'continuation', ratio), ...targetRow(input, directionId, result)] }
-    case 'isentropic-entropy': { const pair = directionId.includes('_12') ? ['s_2', 's_1'] : ['s_4', 's_3']; const result = `${pair[0]}=${pair[1]}`; return [row(`${directionId}:ds`, 'governing', 'start', 'ds=0', { note: 'Intern reversibel und adiabatisch.' }), row(`${directionId}:integral`, 'transform', 'subject-change', `${pair[0]}-${pair[1]}=0`, { equation: { bridgeLatex: '\\Longrightarrow', lhsLatex: `${pair[0]}-${pair[1]}`, relationLatex: '=', rhsLatex: '0' }, operation: operation('integrate', 'integriere Eintritt zu Austritt') }), ...targetRow(input, directionId, result)] }
-    case 'component-work': { const comp = directionId.startsWith('compressor_'); const work = comp ? 'w_{comp}' : 'w_{turb}'; const h = comp ? 'h_2-h_1' : 'h_4-h_3'; const temp = comp ? 'c_p(T_2-T_1)' : 'c_p(T_4-T_3)'; if (comp) return [row(`${directionId}:steady-flow`, 'governing', 'start', 'q-w_s=(h_{out}-h_{in})+\\Delta ke+\\Delta pe', { note: 'Stationäre Ein- und Austrittsbilanz pro Masseneinheit.' }), row(`${directionId}:delta-ke`, 'governing', 'subject-change', '\\Delta ke=0', { note: 'Kinetische Energie ändert sich vernachlässigbar.' }), row(`${directionId}:without-ke`, 'transform', 'subject-change', 'q-w_s=(h_{out}-h_{in})+\\Delta pe'), row(`${directionId}:delta-pe`, 'governing', 'subject-change', '\\Delta pe=0', { note: 'Potentielle Energie ändert sich vernachlässigbar.' }), row(`${directionId}:without-pe`, 'transform', 'subject-change', 'q-w_s=h_{out}-h_{in}'), row(`${directionId}:adiabatic`, 'governing', 'subject-change', 'q=0', { note: 'Der Verdichter ist adiabatisch.' }), row(`${directionId}:without-heat`, 'transform', 'subject-change', '-w_s=h_2-h_1'), row(`${directionId}:convention`, 'governing', 'subject-change', 'w_{comp}:=-w_s', { note: 'Projektkonvention: Verdichterarbeit ist bei Arbeitseingang positiv.' }), row(`${directionId}:enthalpy`, 'transform', 'subject-change', `${work}=${h}`), row(`${directionId}:integral`, 'transform', 'continuation', `=\\int_{T_1}^{T_2}c_p\\,dT`), row(`${directionId}:constant-cp`, 'transform', 'continuation', '=c_p\\int_{T_1}^{T_2}dT'), row(`${directionId}:primitive`, 'transform', 'continuation', '=c_p[T]_{T_1}^{T_2}'), row(`${directionId}:family`, 'result', 'subject-change', `${work}=${temp}>0`, { box: 'core', state: 'reachable' }), ...numericRows(input, directionId)]; return [row(`${directionId}:reuse`, 'reuse', 'reuse', `${work}=${temp}<0`, { note: 'Die etablierte stationäre Komponentenarbeitsfamilie wird wiederverwendet.' }), ...numericRows(input, directionId)] }
-    case 'isobaric-heat': { const hot = directionId.startsWith('heat_input'); const q = hot ? 'q_{in}' : 'q_{out}'; const h = hot ? 'h_3-h_2' : 'h_1-h_4'; const integral = hot ? '\\int_{T_2}^{T_3}c_p\\,dT' : '\\int_{T_4}^{T_1}c_p\\,dT'; const temp = hot ? 'c_p(T_3-T_2)' : 'c_p(T_1-T_4)'; if (hot) return [row(`${directionId}:reuse-steady-flow`, 'reuse', 'reuse', 'q-w_s=h_{out}-h_{in}', { note: 'Die zuvor bewiesene stationäre Bilanz ohne Änderungen von kinetischer und potentieller Energie wird wiederverwendet.' }), row(`${directionId}:without-work`, 'governing', 'subject-change', 'w_s=0', { note: 'Im Heizer gibt es keine Wellenarbeit.' }), row(`${directionId}:enthalpy`, 'transform', 'subject-change', 'q=h_{out}-h_{in}'), row(`${directionId}:endpoint`, 'transform', 'subject-change', `${q}=${h}`), row(`${directionId}:integral`, 'transform', 'continuation', `=${integral}`), row(`${directionId}:constant-cp`, 'transform', 'continuation', `=c_p${integral.replace('c_p', '')}`), row(`${directionId}:primitive`, 'transform', 'continuation', '=c_p[T]_{T_2}^{T_3}'), row(`${directionId}:bounds`, 'transform', 'continuation', `=${temp}`), row(`${directionId}:family`, 'result', 'subject-change', `${q}=${temp}`, { box: 'core', state: 'reachable' }), ...numericRows(input, directionId)]; const result = target === 'q_out' ? `${q}=${temp}` : target === 'T1' ? 'T_1=T_4+\\frac{q_{out}}{c_p}' : 'T_4=T_1-\\frac{q_{out}}{c_p}'; return [row(`${directionId}:reuse`, 'reuse', 'reuse', `${q}=${temp}<0`, { note: 'Die etablierte Wärmefamilie wird mit der Vorzeichenkonvention wiederverwendet.' }), ...(target === 'q_out' ? [...numericRows(input, directionId)] : [row(`${directionId}:divide-cp`, 'transform', 'continuation', `\\frac{${q}}{c_p}=T_1-T_4`), ...targetRow(input, directionId, result)])] }
-    case 'relative-entropy': { const state = directionId.match(/_(\\d):/)?.[1] ?? 'i'; return [row(`${directionId}:reuse`, 'reuse', 'reuse', `s_${state}=c_p\\ln\\left(\\frac{T_${state}}{273.15\\;\\mathrm K}\\right)-R_s\\ln\\left(\\frac{p_${state}}{101325\\;\\mathrm{Pa}}\\right)`, { note: 'Relativer Referenzwert, keine universelle absolute Entropie.' }), ...numericRows(input, directionId)] }
-    case 'net-work': return [row(`${directionId}:governing`, 'governing', 'start', 'w_{netto}=w_{comp}+w_{turb}', { note: 'Vorzeichenbehaftete Kreisarbeitssumme.' }), ...numericRows(input, directionId), row(`${directionId}:check`, 'reuse', 'check', 'w_{netto}+(q_{in}+q_{out})\\approx0', { equation: { lhsLatex: 'w_{netto}+(q_{in}+q_{out})', relationLatex: '\\approx', rhsLatex: '0' }, note: 'Energiebilanzprüfung.' })]
-    case 'ideal-efficiency': return [row(`${directionId}:governing`, 'governing', 'start', '\\eta_{ideal}=1-r_p^{-a}', { note: 'Begrenztes ideales Joule-Modell.' }), ...numericRows(input, directionId)]
-    case 'performance-ratios': { const lhs = directionId.startsWith('efficiency') ? '\\eta' : 'BWR'; const rhs = directionId.startsWith('efficiency') ? '\\frac{-w_{netto}}{q_{in}}' : '\\frac{w_{comp}}{-w_{turb}}'; return [row(`${directionId}:definition`, 'governing', 'start', `${lhs}=${rhs}`, { note: 'Projektweite Vorzeichenkonvention.' }), ...numericRows(input, directionId)] }
-  }
-  throw new Error(`unhandled explicit family authority: ${recipe.familyId}`)
+function compressionRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const p2 = display(input, 'p2'); const T2 = display(input, 'T2'); const v2 = display(input, 'v2'); const s2 = display(input, 's2'); const T1 = display(input, 'T1'); const rp = display(input, 'pressureRatio')
+  return [
+    row('compression:p2-ready', 'p_2=p_1r_p', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('isolate', 'solve for p_2', 'equivalent'), support: support('compression-pressure-ratio', 'Grundlage · Druckverhältnis', 'foundation', [supportRow('compression-rp', 'r_p=\\frac{p_2}{p_1}'), supportRow('compression-p2', 'p_2=p_1r_p', 'subject-change', operation('isolate', 'solve for p_2', 'equivalent'))]) }),
+    row('compression:p2-numeric', `=${display(input, 'p1')}\\cdot${rp}=${p2}`, 'numeric'),
+    row('compression:isentropic-outline', '\\frac{T_2}{T_1}=\\left(\\frac{p_2}{p_1}\\right)^{\\frac{\\kappa-1}{\\kappa}}', 'subject-change', { box: 'outline', state: 'derived', support: support('compression-isentropy-proof', 'Herleitung · Isentropie', 'foundation', [supportRow('compression-delta-s', 's_2-s_1=0'), supportRow('compression-log-relation', '0=c_p\\ln\\left(\\frac{T_2}{T_1}\\right)-R_s\\ln\\left(\\frac{p_2}{p_1}\\right)', 'subject-change', operation('substitute', 'substitute Δs')), supportRow('compression-log-solve', '\\ln\\left(\\frac{T_2}{T_1}\\right)=\\frac{\\kappa-1}{\\kappa}\\ln\\left(\\frac{p_2}{p_1}\\right)', 'subject-change', operation('isolate', 'solve for ln(T_2/T_1)', 'equivalent'))]) }),
+    row('compression:t2-ready', 'T_2=T_1r_p^{\\frac{\\kappa-1}{\\kappa}}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('substitute', 'insert p_2/p_1 = r_p'), support: support('compression-isentrope-reuse', 'Reuse · Isentropenrelation', 'reuse', [supportRow('compression-ratio-reuse', '\\frac{R_s}{c_p}=\\frac{\\kappa-1}{\\kappa}')]) }),
+    row('compression:t2-numeric', `=${T1}\\cdot${rp}^{\\frac{${formatStoryNumberLatex(number(input, 'kappa') - 1)}}{${formatStoryNumberLatex(number(input, 'kappa'))}}}=${T2}`, 'numeric'),
+    row('compression:v2-ready', 'v_2=\\frac{R_sT_2}{p_2}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'reuse IGG') }),
+    row('compression:v2-numeric', `=\\frac{${display(input, 'Rs')}\\cdot${T2}}{${p2}}=${v2}`, 'numeric'),
+    row('compression:s2-ready', 's_2=s_1', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('implies' as StoryOperationKind, 'ds = 0', 'implies'), support: support('compression-ds-condition', 'Bedingung · isentrop', 'condition', [supportRow('compression-ds-zero', 'ds=0')]) }),
+    row('compression:s2-numeric', `=${s2}`, 'numeric'),
+  ]
+}
+
+function heatInputRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const p3 = display(input, 'p3'); const v3 = display(input, 'v3'); const s3 = display(input, 's3')
+  return [
+    row('heat:p3-ready', 'p_3=p_2', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'p = const.'), support: support('heat-isobaric-condition', 'Bedingung · isobar', 'condition', [supportRow('heat-dp', 'dp=0')]) }),
+    row('heat:p3-numeric', `=${p3}`, 'numeric'),
+    row('heat:v3-ready', 'v_3=\\frac{R_sT_3}{p_3}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'reuse IGG') }),
+    row('heat:v3-numeric', `=${v3}`, 'numeric'),
+    row('heat:s3-ready', 's_3=c_p\\ln\\left(\\frac{T_3}{T_{ref}}\\right)-R_s\\ln\\left(\\frac{p_3}{p_{ref}}\\right)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'reuse Entropiedatum'), support: support('heat-entropy-reuse', 'Reuse · Entropiedatum', 'reuse', [supportRow('heat-reference-entropy', 's_{ref}=0')]) }),
+    row('heat:s3-numeric', `=${s3}`, 'numeric'),
+  ]
+}
+
+function expansionRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const p4 = display(input, 'p4'); const T4 = display(input, 'T4'); const v4 = display(input, 'v4'); const s4 = display(input, 's4')
+  return [
+    row('expansion:p4-ready', 'p_4=p_1', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', '4 → 1: p = const.'), support: support('expansion-pressure-level', 'Bedingung · Druckniveau', 'condition', [supportRow('expansion-pressure-levels', 'p_3=p_2,\\;p_4=p_1')]) }),
+    row('expansion:p4-numeric', `=${p4}`, 'numeric'),
+    row('expansion:t4-ready', 'T_4=\\frac{T_3}{r_p^{\\frac{\\kappa-1}{\\kappa}}}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'reuse Isentropenrelation'), support: support('expansion-isentrope-reuse', 'Reuse · Isentropenrelation', 'reuse', [supportRow('expansion-temperature-ratio', '\\frac{T_4}{T_3}=\\left(\\frac{p_4}{p_3}\\right)^{\\frac{\\kappa-1}{\\kappa}}')]) }),
+    row('expansion:t4-numeric', `=${T4}`, 'numeric'),
+    row('expansion:v4-ready', 'v_4=\\frac{R_sT_4}{p_4}', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'reuse IGG') }),
+    row('expansion:v4-numeric', `=${v4}`, 'numeric'),
+    row('expansion:s4-ready', 's_4=s_3', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'ds = 0'), support: support('expansion-ds-condition', 'Bedingung · isentrop', 'condition', [supportRow('expansion-ds-zero', 'ds=0')]) }),
+    row('expansion:s4-numeric', `=${s4}`, 'numeric'),
+  ]
+}
+
+function energyRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const wComp = display(input, 'w_comp'); const wTurb = display(input, 'w_turb'); const qIn = display(input, 'q_in'); const qOut = display(input, 'q_out')
+  return [
+    row('energy:balance', '\\frac{dE_{CV}}{dt}=\\dot Q+\\dot W_t+\\dot m(e_i-e_j)', 'start', { support: support('energy-control-volume', 'Grundlage · Kontrollvolumen-Energie', 'foundation', [supportRow('energy-kinetic', 'E_{kin}=\\frac{m\\mathrm v^2}{2}'), supportRow('energy-specific-kinetic', 'e_{kin}:=\\frac{E_{kin}}m=\\frac{\\mathrm v^2}{2}', 'subject-change', operation('divide', 'divide by m')), supportRow('energy-potential', 'E_{pot}=mg(z-z_0)'), supportRow('energy-specific-potential', 'e_{pot}:=\\frac{E_{pot}}m=g(z-z_0)', 'subject-change', operation('divide', 'divide by m'))]) }),
+    row('energy:stationary', '\\frac{dE_{CV}}{dt}=0', 'subject-change', { operation: operation('substitute', 'stationär', 'implies'), support: support('energy-no-accumulation', 'Bedingung · keine Akkumulation', 'condition', [supportRow('energy-stored-not-zero', 'E_{CV}\\ne0,\\;\\frac{dE_{CV}}{dt}=0')]) }),
+    row('energy:mass', '0=\\dot Q+\\dot W_t+\\dot m(e_i-e_j)', 'subject-change', { support: support('energy-mass-flow', 'Bedingung · ein Ein- und Austritt', 'condition', [supportRow('energy-mass-balance', '\\dot m_i=\\dot m_j=\\dot m')]) }),
+    row('energy:rates', '\\dot Q+\\dot W_t=\\dot m(e_j-e_i)', 'subject-change', { operation: operation('isolate', 'solve for rates', 'equivalent') }),
+    row('energy:specific', '\\frac{\\dot Q}{\\dot m}+\\frac{\\dot W_t}{\\dot m}=e_j-e_i', 'subject-change', { operation: operation('divide', 'divide by ṁ', 'equivalent'), support: support('energy-specific-transfer', 'Definition · spezifische Übertragung', 'foundation', [supportRow('energy-q-definition', 'q:=\\frac{\\dot Q}{\\dot m}'), supportRow('energy-w-definition', 'w_t:=\\frac{\\dot W_t}{\\dot m}')]) }),
+    row('energy:definitions', 'q_{ij}+w_{t,ij}=(h_j-h_i)+\\Delta e_{kin}+\\Delta e_{pot}', 'subject-change', { operation: operation('substitute', 'substitute definitions'), support: support('energy-specific-energy', 'Grundlage · spezifische Energie', 'foundation', [supportRow('energy-e-definition', 'e=h+\\frac{\\mathrm v^2}{2}+g(z-z_0)')]) }),
+    row('energy:model-reduction', 'q_{ij}+w_{t,ij}=h_j-h_i+\\cancelto{0}{\\Delta e_{kin}}+\\cancelto{0}{\\Delta e_{pot}}', 'subject-change', { support: support('energy-model-condition', 'Modell · Änderungen vernachlässigbar', 'condition', [supportRow('energy-negligible', '\\Delta e_{kin}\\approx0,\\;\\Delta e_{pot}\\approx0')]) }),
+    row('energy:reduced', 'q_{ij}+w_{t,ij}=h_j-h_i', 'subject-change', { box: 'outline', state: 'derived', operation: operation('substitute', 'reduce model', 'implies') }),
+    row('energy:enthalpy', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', { box: 'outline', state: 'derived', support: support('energy-enthalpy-proof', 'Herleitung · IGG → Enthalpieänderung', 'foundation', [supportRow('energy-dh', 'dh=\\left(\\frac{\\partial h}{\\partial T}\\right)_p dT+\\left(\\frac{\\partial h}{\\partial p}\\right)_T dp'), supportRow('energy-cp-definition', 'c_p:=\\left(\\frac{\\partial h}{\\partial T}\\right)_p'), supportRow('energy-dh-cp', 'dh=c_p\\,dT', 'subject-change', operation('substitute', 'ideales Gas')), supportRow('energy-integrated-h', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', operation('integrate', 'c_p = const.'))]) }),
+    row('energy:wcomp', 'w_{comp}=h_2-h_1=c_p(T_2-T_1)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'q_{12}=0'), support: support('energy-compressor-reuse', 'Reuse · reduzierte Energiebilanz', 'reuse', [supportRow('energy-compressor-balance', 'q_{ij}+w_{t,ij}=h_j-h_i')]) }),
+    row('energy:wcomp:numeric', `=${wComp}`, 'numeric'),
+    row('energy:wturb', 'w_{turb}=h_4-h_3=c_p(T_4-T_3)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'q_{34}=0') }),
+    row('energy:wturb:numeric', `=${wTurb}`, 'numeric'),
+    row('energy:qin', 'q_{in}=h_3-h_2=c_p(T_3-T_2)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'w_{t,23}=0'), support: support('energy-heater-condition', 'Bedingung · Heizer', 'condition', [supportRow('energy-heater-work', 'w_{t,23}=0')]) }),
+    row('energy:qin:numeric', `=${qIn}`, 'numeric'),
+    row('energy:qout', 'q_{out}=h_1-h_4=c_p(T_1-T_4)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'w_{t,41}=0'), support: support('energy-cooler-condition', 'Bedingung · Kühler', 'condition', [supportRow('energy-cooler-work', 'w_{t,41}=0')]) }),
+    row('energy:qout:numeric', `=${qOut}`, 'numeric'),
+  ]
+}
+
+function cycleRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
+  const net = display(input, 'w_netto'); const eta = display(input, 'eta'); const bwr = display(input, 'back_work_ratio')
+  return [
+    row('cycle:netto', 'w_{netto}=w_{comp}+w_{turb}', 'subject-change', { box: 'ready', state: 'reachable' }),
+    row('cycle:netto-numeric', `=${net}`, 'numeric'),
+    row('cycle:eta', '\\eta=\\frac{-w_{netto}}{q_{in}}', 'subject-change', { box: 'ready', state: 'reachable' }),
+    row('cycle:eta-numeric', `=${eta}=${formatStoryNumberLatex(number(input, 'eta') * 100)}\\;\\%`, 'numeric'),
+    row('cycle:bwr', 'BWR=\\frac{w_{comp}}{-w_{turb}}', 'subject-change', { box: 'ready', state: 'reachable' }),
+    row('cycle:bwr-numeric', `=${bwr}=${formatStoryNumberLatex(number(input, 'back_work_ratio') * 100)}\\;\\%`, 'numeric'),
+    row('cycle:checks', 'q_{in}+q_{out}+w_{netto}=0', 'check', { support: support('cycle-checks', 'Kontrolle · Bilanz und Isentropie', 'condition', [supportRow('cycle-energy-check', 'q_{in}+q_{out}+w_{netto}=0'), supportRow('cycle-s12-check', 's_2-s_1=0'), supportRow('cycle-s34-check', 's_4-s_3=0')]) }),
+  ]
 }
 
 export function composeJouleCalculationStory(input: CalculationStoryCompositionInput): CalculationStoryState {
   if (!input.plan) return { mode: 'not-applicable' }
-  const selected = [...input.plan.primaryByTarget.values()].map(direction => direction.directionId)
-  if (selected.length === 0) return { mode: 'not-applicable' }
-  const unsupported = selected.filter(directionId => !JOULE_STORY_RECIPES[directionId])
-  if (unsupported.length || selected.some(directionId => !input.steps.some(step => `${step.formulaId}:${step.targetVariable}` === directionId))) return { mode: 'unavailable', reason: 'The selected Joule route could not be composed as evidenced calculation story.' }
   try {
-    const buckets = new Map<SectionId, CalculationStoryRow[]>(SECTION_ORDER.map(([id]) => [id, []]))
-    const append = (id: SectionId, rows: CalculationStoryRow[]) => buckets.get(id)?.push(...rows)
-    const selectedSet = new Set(selected)
-    append('material-properties', materialRows(input, selectedSet))
-
-    if (selected.some(id => id.startsWith('compressor_temperature') || id.startsWith('turbine_temperature'))) append('compression-1-2', exponentFoundation())
-    for (const directionId of selected) if (JOULE_STORY_RECIPES[directionId].familyId !== 'material-properties') append(JOULE_STORY_RECIPES[directionId].familyId === 'relative-entropy' ? 'optional-entropy' : sectionFor(directionId), familyRows(input, directionId))
-    for (const [sectionId, marker] of [['state-1', 'state-1:complete'], ['compression-1-2', 'state-2:complete'], ['heat-input-2-3', 'state-3:complete'], ['expansion-3-4', 'state-4:complete']] as const) append(sectionId, [row(marker, 'milestone', 'milestone', 'Zustand vollständig', { label: `Zustand ${marker[6]} vollständig`, note: 'Die für diesen Zustand benötigten Größen sind im aktuellen Modul bestimmt.' })])
-    if (selected.some(id => id.startsWith('entropy_abs_'))) buckets.set('optional-entropy', entropyFoundation().concat(buckets.get('optional-entropy') ?? []))
-
-    const alternatives = [...input.plan.alternativesByTarget.entries()].flatMap(([target, candidates]) => candidates.map(candidate => ({ parentRowId: `${input.plan!.primaryByTarget.get(target)?.directionId}:numeric`, title: `Alternative Herleitung für ${target}`, rows: [row(`alternative:${candidate.directionId}`, 'reuse', 'reuse', JOULE_STORY_RECIPES[candidate.directionId]?.entryPointLatex ?? candidate.directionId, { note: 'Alternative, gleichwertig erreichbare Route.' })] }))).filter((alternative, index, all) => {
-      const payload = (candidate: CalculationStoryAlternative) => `${candidate.parentRowId}|${candidate.rows.map(row => { const equationPayload = row.equation ?? equation(row.equationLatex); return `${equationPayload.lhsLatex ?? ''}|${equationPayload.relationLatex}|${equationPayload.rhsLatex}|${row.note ?? ''}` }).join('||')}`
-      return all.findIndex(candidate => payload(candidate) === payload(alternative)) === index
-    })
-    const sections: CalculationStorySection[] = SECTION_ORDER.map(([id, title, tier]) => ({ id, title, tier, defaultOpen: tier !== 'optional', rows: buckets.get(id) ?? [] }))
-    return { mode: 'complete', story: { route: 'joule-learning-story-v0.2', title: 'Joule-/Brayton-Rechengeschichte', overview: { model: 'Einfacher idealer stationärer Joule-/Brayton-Kreisprozess pro Masseneinheit.', givens: ['T_1', 'p_1', 'r_p', 'T_3', 'R_s', '\\kappa'], scope: 'Ideales Gas, konstante Stoffwerte; v ist spezifisches Volumen. Massenstrom, Gesamtleistung und instationäre Kolbenprozesse liegen außerhalb des Moduls.', signs: ['q_{in}>0', 'q_{out}<0', 'w_{comp}>0', 'w_{turb}<0', 'w_{netto}<0'], route: ['Stoffwerte', 'Zustand 1', '1→2', '2→3', '3→4', '4→1', 'Bilanz', 'optional'] }, rows: sections.flatMap(section => section.rows), sections, alternatives, consumedSteps: selected.map(consumed), unconsumedPrimarySteps: [] } }
-  } catch { return { mode: 'unavailable', reason: 'The selected Joule route could not be composed as an evidenced calculation story; accepted solver values remain unchanged.' } }
+    const required = ['T1', 'p1', 'pressureRatio', 'T3', 'kappa', 'Rs', 'cv', 'cp', 'v1', 's1', 'p2', 'T2', 'v2', 's2', 'p3', 'v3', 's3', 'p4', 'T4', 'v4', 's4', 'w_comp', 'w_turb', 'q_in', 'q_out', 'w_netto', 'eta', 'back_work_ratio']
+    required.forEach(id => number(input, id))
+    const sections: CalculationStorySection[] = [
+      { id: 'material-properties', title: 'Stoffeigenschaften', tier: 'main', rows: materialRows(input) },
+      { id: 'state-1', title: 'Zustand 1', tier: 'main', rows: stateOneRows(input) },
+      { id: 'compression-1-2', title: '1 → 2 · isentrope Verdichtung', tier: 'main', rows: compressionRows(input) },
+      { id: 'heat-input-2-3', title: '2 → 3 · isobare Wärmezufuhr', tier: 'main', rows: heatInputRows(input) },
+      { id: 'expansion-3-4', title: '3 → 4 · isentrope Expansion', tier: 'main', rows: expansionRows(input) },
+      { id: 'energy-path', title: 'Energiepfad', tier: 'main', rows: energyRows(input) },
+      { id: 'cycle-balance-performance', title: 'Kreisbilanz und Kennwerte', tier: 'main', rows: cycleRows(input) },
+    ]
+    const rows = sections.flatMap(section => section.rows)
+    if (rows.length !== 62 || rows.filter(candidate => candidate.support).length !== 26) throw new Error('reference recipe integrity failure')
+    return {
+      mode: 'complete',
+      story: {
+        route: 'joule-human-reference-v1',
+        title: 'Joule-/Brayton-Prozess · Rechenweg',
+        overview: {
+          model: 'Ideales Gas · konstante Stoffwerte · ideale Verdichtung und Expansion.',
+          givens: [`T_1=${display(input, 'T1')}`, `p_1=${display(input, 'p1')}`, `r_p=${display(input, 'pressureRatio')}`, `T_3=${display(input, 'T3')}`, `\\kappa=${display(input, 'kappa')}`, `R_s=${display(input, 'Rs')}`],
+          scope: 'Spezifische Größen; v ist spezifisches Volumen.',
+          signs: ['q_{in}>0', 'q_{out}<0', 'w_{comp}>0', 'w_{turb}<0', 'w_{netto}<0'],
+          route: SECTION_TITLES.map(([, title]) => title),
+        },
+        rows,
+        sections,
+        consumedSteps: consumed(input),
+        unconsumedPrimarySteps: [],
+      },
+    }
+  } catch {
+    return { mode: 'unavailable', reason: 'Der Rechenweg benötigt einen vollständig belegten Joule-Referenzzustand.' }
+  }
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CalculationStoryDisplay } from '../../src/components/CalculationStoryDisplay'
 import { FormulaRegistry } from '../../src/core/formula-registry'
 import { solve } from '../../src/core/solver'
@@ -20,6 +20,7 @@ function referenceStory() {
 describe('CalculationStoryDisplay human-reference rendering', () => {
 
   it('renders the approved continuous reference grammar instead of generic overview cards', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const { container } = render(<CalculationStoryDisplay story={referenceStory()} />)
 
     expect(container.querySelector('.calculation-story-overview')).toBeNull()
@@ -33,6 +34,13 @@ describe('CalculationStoryDisplay human-reference rendering', () => {
     expect(columnHeadings?.textContent).toContain('Hauptrechnung')
     expect(columnHeadings?.textContent).toContain('Grundlage · Herleitung · Bedingung')
     expect(container.querySelectorAll('[data-story-section-header]')).toHaveLength(7)
+    const sectionSideText = Array.from(container.querySelectorAll('.story-section-side')).map(node => node.textContent).join(' ')
+    expect(sectionSideText).toContain('gegeben')
+    expect(sectionSideText).toContain('const.')
+    expect(sectionSideText).toContain('mit Vorzeichen')
+    expect(sectionSideText).not.toContain('extgegeben')
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
 
     const mainRows = Array.from(container.querySelectorAll('.calculation-story-section > .story-row'))
     expect(mainRows).toHaveLength(62)

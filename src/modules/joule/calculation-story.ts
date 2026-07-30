@@ -42,7 +42,7 @@ function equation(latex: string, role: StoryRowRole): StoryEquation {
 
 function operation(kind: StoryOperationKind, label: string, arrow: ArrowKind = 'operation') {
   const command = arrow === 'equivalent' ? '\\xleftrightarrow' : arrow === 'implies' ? '\\xRightarrow' : '\\xrightarrow'
-  const safeLabel = label.replaceAll('_', '\\_').replaceAll('Δ', 'delta').replaceAll('κ', 'kappa ').replaceAll('→', 'to')
+  const safeLabel = label.replaceAll('_', '\\_').replaceAll('Δ', 'delta').replaceAll('δ', 'delta ').replaceAll('κ', 'kappa ').replaceAll('→', 'to')
   return { kind, latex: `${command}{\\text{${safeLabel}}}` }
 }
 
@@ -207,13 +207,13 @@ export function composeJouleCalculationStory(input: CalculationStoryCompositionI
     const required = ['T1', 'p1', 'pressureRatio', 'T3', 'kappa', 'Rs', 'cv', 'cp', 'v1', 's1', 'p2', 'T2', 'v2', 's2', 'p3', 'v3', 's3', 'p4', 'T4', 'v4', 's4', 'w_comp', 'w_turb', 'q_in', 'q_out', 'w_netto', 'eta', 'back_work_ratio']
     required.forEach(id => number(input, id))
     const sections: CalculationStorySection[] = [
-      { id: 'material-properties', title: 'Stoffeigenschaften', tier: 'main', sideLatex: 'R_s>0\;\text{;}\;1<\kappa\le2', rows: materialRows(input) },
-      { id: 'state-1', title: 'Zustand 1', tier: 'main', sideLatex: 'p_1,\;T_1\;\text{gegeben}', rows: stateOneRows(input) },
-      { id: 'compression-1-2', title: '1 → 2 · isentrope Verdichtung', tier: 'main', sideLatex: 'q_{12}=0\;\text{; rev.}', rows: compressionRows(input) },
-      { id: 'heat-input-2-3', title: '2 → 3 · isobare Wärmezufuhr', tier: 'main', sideLatex: 'p=\mathrm{const.}\;\text{;}\;T_3\;\text{gegeben}', rows: heatInputRows(input) },
-      { id: 'expansion-3-4', title: '3 → 4 · isentrope Expansion', tier: 'main', sideLatex: 'q_{34}=0\;\text{; rev.}', rows: expansionRows(input) },
-      { id: 'energy-path', title: 'Energiepfad', tier: 'main', sideLatex: 'q>0,\;w_t>0\;\text{ ins System}', rows: energyRows(input) },
-      { id: 'cycle-balance-performance', title: 'Kreisbilanz und Kennwerte', tier: 'main', sideLatex: '\text{mit Vorzeichen}', rows: cycleRows(input) },
+      { id: 'material-properties', title: 'Stoffeigenschaften', tier: 'main', sideLatex: 'R_s>0\\;\\text{;}\\;1<\\kappa\\le2', rows: materialRows(input) },
+      { id: 'state-1', title: 'Zustand 1', tier: 'main', sideLatex: 'p_1,\\;T_1\\;\\text{gegeben}', rows: stateOneRows(input) },
+      { id: 'compression-1-2', title: '1 → 2 · isentrope Verdichtung', tier: 'main', sideLatex: 'q_{12}=0\\;\\text{; rev.}', rows: compressionRows(input) },
+      { id: 'heat-input-2-3', title: '2 → 3 · isobare Wärmezufuhr', tier: 'main', sideLatex: 'p=\\mathrm{const.}\\;\\text{;}\\;T_3\\;\\text{gegeben}', rows: heatInputRows(input) },
+      { id: 'expansion-3-4', title: '3 → 4 · isentrope Expansion', tier: 'main', sideLatex: 'q_{34}=0\\;\\text{; rev.}', rows: expansionRows(input) },
+      { id: 'energy-path', title: 'Energiepfad', tier: 'main', sideLatex: 'q>0,\\;w_t>0\\;\\text{ ins System}', rows: energyRows(input) },
+      { id: 'cycle-balance-performance', title: 'Kreisbilanz und Kennwerte', tier: 'main', sideLatex: '\\text{mit Vorzeichen}', rows: cycleRows(input) },
     ]
     const rows = sections.flatMap(section => section.rows)
     if (rows.length !== 62 || rows.filter(candidate => candidate.support).length !== 26) throw new Error('reference recipe integrity failure')

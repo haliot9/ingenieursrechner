@@ -21,6 +21,8 @@ describe('App calculation-story desktop placement', () => {
     expect(workspace).toBeTruthy()
     expect(input?.hasAttribute('hidden')).toBe(false)
     expect(analysis?.querySelector('.calculation-story')).toBeNull()
+    expect(analysis?.querySelector('.steps-panel')).toBeNull()
+    expect(container.textContent).not.toContain('Alternative Herleitung für')
     expect(storyArea?.querySelector('.calculation-story')).toBeTruthy()
     expect(workspace?.nextElementSibling).toBe(storyArea)
     expect(container.querySelector('[data-calculation-story-focus-control]')).toBeNull()

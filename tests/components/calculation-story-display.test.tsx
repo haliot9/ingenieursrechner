@@ -18,6 +18,28 @@ function referenceStory() {
 }
 
 describe('CalculationStoryDisplay human-reference rendering', () => {
+
+  it('renders the approved continuous reference grammar instead of generic overview cards', () => {
+    const { container } = render(<CalculationStoryDisplay story={referenceStory()} />)
+
+    expect(container.querySelector('.calculation-story-overview')).toBeNull()
+    expect(container.querySelectorAll('[data-story-given]')).toHaveLength(6)
+    expect(container.querySelector('[data-story-fact-legend]')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Herleitungen öffnen' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Herleitungen schließen' })).toBeTruthy()
+
+    const columnHeadings = container.querySelector('[data-story-column-headings]')
+    expect(columnHeadings?.textContent).toContain('Operation')
+    expect(columnHeadings?.textContent).toContain('Hauptrechnung')
+    expect(columnHeadings?.textContent).toContain('Grundlage · Herleitung · Bedingung')
+    expect(container.querySelectorAll('[data-story-section-header]')).toHaveLength(7)
+
+    const mainRows = Array.from(container.querySelectorAll('.calculation-story-section > .story-row'))
+    expect(mainRows).toHaveLength(62)
+    expect(mainRows.every(row => row.querySelector(':scope > .story-operation'))).toBe(true)
+    expect(mainRows.every(row => row.querySelector(':scope > .story-main-equation'))).toBe(true)
+    expect(mainRows.every(row => row.querySelector(':scope > .story-side'))).toBe(true)
+  })
   it('renders the seven-section, 62-row story with formula-local states and attached support', () => {
     const { container } = render(<CalculationStoryDisplay story={referenceStory()} />)
     expect(container.querySelectorAll('[data-story-section]')).toHaveLength(7)

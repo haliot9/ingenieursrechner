@@ -16,7 +16,7 @@ export interface StorySupportRow { id: string; kind: CalculationStoryRowKind; ch
 export interface CalculationStorySupport { id: string; title: string; kind: StorySupportKind; defaultOpen?: boolean; rows: readonly StorySupportRow[] }
 export interface CalculationStoryRow extends StorySupportRow { support?: CalculationStorySupport }
 export interface CalculationStoryConsumedStep { formulaId: string; targetVariable: string; directionId: string }
-export interface CalculationStorySection { id: string; title: string; rows: readonly CalculationStoryRow[]; tier?: CalculationStorySectionTier; defaultOpen?: boolean }
+export interface CalculationStorySection { id: string; title: string; rows: readonly CalculationStoryRow[]; tier?: CalculationStorySectionTier; defaultOpen?: boolean; sideLatex?: string }
 export interface CalculationStoryOverview { model: string; givens: readonly string[]; scope: string; signs: readonly string[]; route: readonly string[] }
 export interface CalculationStoryAlternative { parentRowId: string; title: string; rows: readonly CalculationStoryRow[] }
 export interface CalculationStory {

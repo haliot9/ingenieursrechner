@@ -80,7 +80,7 @@ function App() {
                 <ResultSummary />
                 <ErrorDisplay errors={visibleErrors} />
                 <DiagramPanel />
-                {hasLegacyContent && (
+                {!displayStory && hasLegacyContent && (
                   <StepDisplay
                     steps={legacySteps}
                     presentation={legacyPresentation}

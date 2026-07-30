@@ -68,3 +68,13 @@ failed as intended because the renderer did not emit `data-story-row-id` for a s
 - Changed-path check from `d7946dd1a08df3f5813acdf2e27fb3c30b8b71d1` and protected-path check from baseline `b4d85fa01ae5a595662f5a98d848ceef6b020758`: pending final post-commit proof.
 - Final unpublished head/tree/parent: recorded in the execution return after the single child commit; this checkpoint cannot truthfully embed its own commit object ID.
 - Publication owner remains Toka; no publication or browser verification was attempted.
+
+## Mobile target browser revision
+
+- RED measurement at 390×844: focus button `36px`; main-path button `36px`; required minimum `44px`; global overflow `false`; runtime errors `[]`; focus behavior, state restoration, and German labels passed in the supplied exact-head Chrome evidence.
+- Exact parent: `abbfbb9dcfde2a19ff6f6793e9a9722acf3f6791` (tree `8142fda29e5636d779c25e6167dfc584d0bbf8f7`).
+- Changed paths: `src/index.css` and `docs/handoffs/2026-07-30-joule-human-reference-phase1-checkpoint.md` only.
+- Revision: `.calculation-story-controls button` minimum height changed from `36px` to `44px` in the base rule; no mobile-only exception.
+- Gates: focused focus/support component tests passed (`2` files, `8` tests); full `npm test` passed (`39` files, `216` tests; pre-existing KaTeX Unicode warnings remained non-failing); `npm run lint` passed; `npm run build` passed with the existing non-failing >500 kB chunk-size warning. Post-commit diff, revision changed-path, and original-baseline protected-path gates are recorded in the execution return after commit.
+- Final unpublished identity: this checkpoint is committed with the revision; exact child head/tree/parent are recorded in the execution return because a commit cannot truthfully contain its own object ID.
+- No publication, preview/browser run, Phase 2 work, merge, release, or force-push was performed.

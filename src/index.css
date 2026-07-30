@@ -320,7 +320,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 
 .calculation-story-heading { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
 .calculation-story-controls { display: flex; flex-wrap: wrap; gap: 8px; }
-.calculation-story-controls button { min-height: 36px; border: 1px solid var(--border-strong); background: #fff; color: var(--text-primary); padding: 0 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.calculation-story-controls button { min-height: 44px; border: 1px solid var(--border-strong); background: #fff; color: var(--text-primary); padding: 0 10px; font: inherit; font-size: 12px; cursor: pointer; }
 .calculation-story-controls button[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); background: #eef8fb; }
 .story-row.has-story-support { grid-template-columns: minmax(112px, .5fr) minmax(0, 1.35fr) minmax(130px, .55fr) minmax(220px, .9fr); align-items: start; }
 .story-row.has-story-support .story-support { grid-column: 4; grid-row: 1; min-width: 0; border-left: 2px solid var(--border-strong); background: #f8fafc; padding: 0 10px; }

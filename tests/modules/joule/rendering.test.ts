@@ -27,7 +27,7 @@ describe('Joule human-reference math rendering', () => {
   it('renders every main and attached proof row through the real KaTeX path', () => {
     const story = completeStory()
     const rows = [...story.rows, ...story.rows.flatMap(row => row.support?.rows ?? [])]
-    const latexPayloads = rows.flatMap(row => [row.equationLatex, typeof row.operation === 'object' ? row.operation.latex : '']).filter(Boolean)
+    const latexPayloads = rows.flatMap(row => [row.equationLatex, typeof row.operation === 'object' ? row.operation.latex : row.operation ?? '']).filter(Boolean)
     const failures = latexPayloads.filter(latex => {
       const html = renderLatex(latex.replaceAll('κ', '\\kappa').replaceAll('η', '\\eta').replaceAll('→', '\\to').replaceAll('−', '-'), false)
       return html.includes('katex-error') || html.includes('LaTeX Error') || html.includes('#cc0000')

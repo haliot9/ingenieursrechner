@@ -165,6 +165,7 @@ function expansionRows(input: CalculationStoryCompositionInput): CalculationStor
 
 function energyRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
   const wComp = display(input, 'w_comp'); const wTurb = display(input, 'w_turb'); const qIn = display(input, 'q_in'); const qOut = display(input, 'q_out')
+  const cp = display(input, 'cp'); const T1 = display(input, 'T1'); const T2 = display(input, 'T2'); const T3 = display(input, 'T3'); const T4 = display(input, 'T4')
   return [
     row('energy:balance', '\\frac{dE_{CV}}{dt}=\\dot Q+\\dot W_t+\\dot m(e_i-e_j)', 'start', { support: support('energy-control-volume', 'Grundlage · Kontrollvolumen-Energie', 'foundation', [supportRow('energy-kinetic', 'E_{kin}=\\frac{m\\mathrm v^2}{2}'), supportRow('energy-specific-kinetic', 'e_{kin}:=\\frac{E_{kin}}m=\\frac{\\mathrm v^2}{2}', 'subject-change', operation('divide', 'divide by m')), supportRow('energy-potential', 'E_{pot}=mg(z-z_0)'), supportRow('energy-specific-potential', 'e_{pot}:=\\frac{E_{pot}}m=g(z-z_0)', 'subject-change', operation('divide', 'divide by m'))]) }),
     row('energy:stationary', '\\frac{dE_{CV}}{dt}=0', 'subject-change', { operation: operation('substitute', 'stationär', 'implies'), support: support('energy-no-accumulation', 'Bedingung · keine Akkumulation', 'condition', [supportRow('energy-stored-not-zero', 'E_{CV}\\ne0,\\;\\frac{dE_{CV}}{dt}=0')]) }),
@@ -175,26 +176,27 @@ function energyRows(input: CalculationStoryCompositionInput): CalculationStoryRo
     row('energy:model-reduction', 'q_{ij}+w_{t,ij}=h_j-h_i+\\underbrace{\\Delta e_{kin}}_{\\approx0}+\\underbrace{\\Delta e_{pot}}_{\\approx0}', 'subject-change', { support: support('energy-model-condition', 'Modell · Änderungen vernachlässigbar', 'condition', [supportRow('energy-negligible', '\\Delta e_{kin}\\approx0,\\;\\Delta e_{pot}\\approx0')]) }),
     row('energy:reduced', 'q_{ij}+w_{t,ij}=h_j-h_i', 'subject-change', { box: 'outline', state: 'derived', operation: operation('substitute', 'reduce model', 'implies') }),
     row('energy:enthalpy', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', { box: 'outline', state: 'derived', support: support('energy-enthalpy-proof', 'Herleitung · IGG → Enthalpieänderung', 'foundation', [supportRow('energy-dh', 'dh=\\left(\\frac{\\partial h}{\\partial T}\\right)_p dT+\\left(\\frac{\\partial h}{\\partial p}\\right)_T dp'), supportRow('energy-cp-definition', 'c_p:=\\left(\\frac{\\partial h}{\\partial T}\\right)_p'), supportRow('energy-dh-cp', 'dh=c_p\\,dT', 'subject-change', operation('substitute', 'ideales Gas')), supportRow('energy-integrated-h', 'h_j-h_i=c_p(T_j-T_i)', 'subject-change', operation('integrate', 'c_p = const.'))]) }),
-    row('energy:wcomp', 'w_{comp}=h_2-h_1=c_p(T_2-T_1)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'q_{12}=0'), support: support('energy-compressor-reuse', 'Reuse · reduzierte Energiebilanz', 'reuse', [supportRow('energy-compressor-balance', 'q_{ij}+w_{t,ij}=h_j-h_i')]) }),
-    row('energy:wcomp:numeric', `=${wComp}`, 'numeric'),
-    row('energy:wturb', 'w_{turb}=h_4-h_3=c_p(T_4-T_3)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'q_{34}=0') }),
-    row('energy:wturb:numeric', `=${wTurb}`, 'numeric'),
-    row('energy:qin', 'q_{in}=h_3-h_2=c_p(T_3-T_2)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'w_{t,23}=0'), support: support('energy-heater-condition', 'Bedingung · Heizer', 'condition', [supportRow('energy-heater-work', 'w_{t,23}=0')]) }),
-    row('energy:qin:numeric', `=${qIn}`, 'numeric'),
-    row('energy:qout', 'q_{out}=h_1-h_4=c_p(T_1-T_4)', 'subject-change', { box: 'ready', state: 'reachable', operation: operation('reuse', 'w_{t,41}=0'), support: support('energy-cooler-condition', 'Bedingung · Kühler', 'condition', [supportRow('energy-cooler-work', 'w_{t,41}=0')]) }),
-    row('energy:qout:numeric', `=${qOut}`, 'numeric'),
+    row('energy:wcomp', 'w_{comp}=h_2-h_1=c_p(T_2-T_1)', 'subject-change', { box: 'ready', state: 'reachable', operation: 'q_{12}=0', support: support('energy-compressor-reuse', 'Reuse · reduzierte Energiebilanz', 'reuse', [supportRow('energy-compressor-balance', 'q_{ij}+w_{t,ij}=h_j-h_i')]) }),
+    row('energy:wcomp:numeric', `=${cp}\\cdot\\left(${T2}-${T1}\\right)=${wComp}`, 'numeric'),
+    row('energy:wturb', 'w_{turb}=h_4-h_3=c_p(T_4-T_3)', 'subject-change', { box: 'ready', state: 'reachable', operation: 'q_{34}=0' }),
+    row('energy:wturb:numeric', `=${cp}\\cdot\\left(${T4}-${T3}\\right)=${wTurb}`, 'numeric'),
+    row('energy:qin', 'q_{in}=h_3-h_2=c_p(T_3-T_2)', 'subject-change', { box: 'ready', state: 'reachable', operation: 'w_{t,23}=0', support: support('energy-heater-condition', 'Bedingung · Heizer', 'condition', [supportRow('energy-heater-work', 'w_{t,23}=0')]) }),
+    row('energy:qin:numeric', `=${cp}\\cdot\\left(${T3}-${T2}\\right)=${qIn}`, 'numeric'),
+    row('energy:qout', 'q_{out}=h_1-h_4=c_p(T_1-T_4)', 'subject-change', { box: 'ready', state: 'reachable', operation: 'w_{t,41}=0', support: support('energy-cooler-condition', 'Bedingung · Kühler', 'condition', [supportRow('energy-cooler-work', 'w_{t,41}=0')]) }),
+    row('energy:qout:numeric', `=${cp}\\cdot\\left(${T1}-${T4}\\right)=${qOut}`, 'numeric'),
   ]
 }
 
 function cycleRows(input: CalculationStoryCompositionInput): CalculationStoryRow[] {
   const net = display(input, 'w_netto'); const eta = display(input, 'eta'); const bwr = display(input, 'back_work_ratio')
+  const wComp = display(input, 'w_comp'); const wTurb = display(input, 'w_turb'); const qIn = display(input, 'q_in')
   return [
     row('cycle:netto', 'w_{netto}=w_{comp}+w_{turb}', 'subject-change', { box: 'ready', state: 'reachable' }),
-    row('cycle:netto-numeric', `=${net}`, 'numeric'),
+    row('cycle:netto-numeric', `=${wComp}+\\left(${wTurb}\\right)=${net}`, 'numeric'),
     row('cycle:eta', '\\eta=\\frac{-w_{netto}}{q_{in}}', 'subject-change', { box: 'ready', state: 'reachable' }),
-    row('cycle:eta-numeric', `=${eta}=${formatStoryNumberLatex(number(input, 'eta') * 100)}\\;\\%`, 'numeric'),
+    row('cycle:eta-numeric', `=\\frac{-\\left(${net}\\right)}{${qIn}}=${eta}=${formatStoryNumberLatex(number(input, 'eta') * 100)}\\;\\%`, 'numeric'),
     row('cycle:bwr', 'BWR=\\frac{w_{comp}}{-w_{turb}}', 'subject-change', { box: 'ready', state: 'reachable' }),
-    row('cycle:bwr-numeric', `=${bwr}=${formatStoryNumberLatex(number(input, 'back_work_ratio') * 100)}\\;\\%`, 'numeric'),
+    row('cycle:bwr-numeric', `=\\frac{${wComp}}{-\\left(${wTurb}\\right)}=${bwr}=${formatStoryNumberLatex(number(input, 'back_work_ratio') * 100)}\\;\\%`, 'numeric'),
     row('cycle:checks', 'q_{in}+q_{out}+w_{netto}=0', 'check', { support: support('cycle-checks', 'Kontrolle · Bilanz und Isentropie', 'condition', [supportRow('cycle-energy-check', 'q_{in}+q_{out}+w_{netto}=0'), supportRow('cycle-s12-check', 's_2-s_1=0'), supportRow('cycle-s34-check', 's_4-s_3=0')]) }),
   ]
 }

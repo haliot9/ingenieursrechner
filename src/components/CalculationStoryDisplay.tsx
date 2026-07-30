@@ -12,7 +12,7 @@ function fallbackEquation(row: DisplayRow): StoryEquation {
 }
 function operationLatex(operation: DisplayRow['operation']): string | undefined {
   if (!operation) return undefined
-  return typeof operation === 'string' ? `\\text{${operation}}` : (operation as StoryOperation).latex
+  return typeof operation === 'string' ? operation : (operation as StoryOperation).latex
 }
 function MathFragment({ latex }: { latex: string }) { return <span dangerouslySetInnerHTML={{ __html: renderLatex(safeLatex(latex), true) }} /> }
 

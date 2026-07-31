@@ -13,7 +13,7 @@ function input(value: number, unit = ''): VariableState {
   return { value, unit, isUserInput: true, isComputed: false }
 }
 
-function referenceStory(overrides: Partial<Record<string, VariableState>> = {}) {
+function composedStory(overrides: Partial<Record<string, VariableState>> = {}) {
   const result = solve(FormulaRegistry.fromModule(jouleModule), jouleModule.variables, {
     T1: input(300, 'K'),
     p1: input(100_000, 'Pa'),
@@ -26,6 +26,11 @@ function referenceStory(overrides: Partial<Record<string, VariableState>> = {}) 
   const composed = composeJouleCalculationStory({
     plan: result.plan!, steps: result.steps, values: result.values, variables: jouleModule.variables,
   })
+  return { result, composed }
+}
+
+function referenceStory() {
+  const { result, composed } = composedStory()
   if (composed.mode !== 'complete') throw new Error('expected complete story')
   return { result, story: composed.story }
 }
@@ -96,13 +101,11 @@ describe('full Joule calculation-story authority', () => {
     expect(story.rows.some(row => row.operation && typeof row.operation !== 'string' && row.operation.kind === 'substitute')).toBe(true)
   })
 
-  it('takes displayed reference and altered-case values from the live solver result rather than copied reference literals', () => {
+  it('takes displayed reference values from the live solver result rather than copied literals', () => {
     const baseline = referenceStory()
-    const altered = referenceStory({ T3: input(1500, 'K') })
     const rhs = (id: string) => baseline.story.rows.find(row => row.id === id)?.equation?.rhsLatex ?? ''
     const shown = (id: string, divisor = 1) => formatStoryNumberLatex((baseline.result.values[id]?.value ?? NaN) / divisor)
     const baselineHeat = rhs('energy:qin:numeric')
-    const alteredHeat = altered.story.rows.find(row => row.id === 'energy:qin:numeric')?.equation?.rhsLatex
     expect(rhs('energy:wcomp:numeric')).toContain(shown('cp', 1000))
     expect(rhs('energy:wcomp:numeric')).toContain(shown('T2'))
     expect(rhs('energy:wcomp:numeric')).toContain(shown('T1'))
@@ -120,8 +123,11 @@ describe('full Joule calculation-story authority', () => {
     expect(rhs('cycle:bwr-numeric')).toContain(shown('w_comp', 1000))
     expect(rhs('cycle:bwr-numeric')).toContain(shown('w_turb', 1000))
     expect(baselineHeat).toContain(formatStoryNumberLatex((baseline.result.values.q_in?.value ?? NaN) / 1000))
-    expect(alteredHeat).toContain(formatStoryNumberLatex((altered.result.values.q_in?.value ?? NaN) / 1000))
-    expect(alteredHeat).not.toBe(baselineHeat)
-    expect(altered.story.sections?.map(section => section.title)).toEqual(baseline.story.sections?.map(section => section.title))
+  })
+
+  it('does not claim the approved reference story for a complete altered scenario', () => {
+    const altered = composedStory({ T3: input(1500, 'K') })
+    expect(altered.result.plan).toBeTruthy()
+    expect(altered.composed).toEqual({ mode: 'not-applicable' })
   })
 })

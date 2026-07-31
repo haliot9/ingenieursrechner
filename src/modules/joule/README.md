@@ -16,12 +16,12 @@ Rows carry typed semantic equations, explicit result-core box semantics, milesto
 
 ## Authority boundary
 
-The finite recipe registry covers all 44 registered `derive` directions. The four `ideal_gas_n:Rs` directions remain validate-only. The story consumes each selected primary direction once, never changes formula expressions, values, solve directions, or policy, and returns unavailable if selected execution provenance is incomplete.
+The finite registry inventories all 44 registered `derive` directions; the four `ideal_gas_n:Rs` directions remain validate-only. Full Story activates only for the exact approved six-input reference preset and returns `not-applicable` for changed or additional inputs. The registry is not yet generalized runtime authority; solver expressions, values, directions, and policy remain unchanged.
 
 Joule alternatives are rendered as collapsed rows attached to their selected parent result. Legacy `StepDisplay` retains its behavior for non-Joule modules; it does not render a detached second alternative dialect for the complete Joule story.
 
 ## Evidence
 
 - `tests/modules/joule/calculation-story.test.ts`: Golden hierarchy, entropy micro-step IDs, first-use/reuse rules, state markers, boxed payloads, units, telemetry removal, alternatives, and solver immutability.
-- `tests/modules/joule/calculation-story-full.test.ts`: 44 derive / four validate-only registry reconciliation.
+- `tests/modules/joule/calculation-story-full.test.ts`: 44 derive / four validate-only inventory reconciliation plus exact reference activation and altered-scenario rejection.
 - `tests/components/calculation-story-display.test.tsx`: semantic grid, overview, collapsible tier, parent alternative, KaTeX rendering, and local scroll behavior.

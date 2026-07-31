@@ -62,3 +62,8 @@ The dispatch packet, QM matrix, target HTML, annotated rationale, agenda, delta 
 - DVPR-JHR-010 needs Yuna's pedagogical review; G4 needs Juri's independent exact-head audit. Nested dispatch was forbidden and no dispatch occurred.
 - The repository audit gate is blocked by five high-severity transitive dependency findings. The available automatic fix requires an unauthorized breaking ESLint/lockfile change; this run did not apply it.
 - This implementation is locally committed only; no push, merge, deploy, rebase, reset, or force-push occurred.
+
+
+## 2026-07-31 authority-boundary addendum
+
+The prior altered-`T3` acceptance row is superseded for product activation. Full Story is now hard-bound to the exact normalized six-input reference-air preset with no additional user inputs. Altered or additional inputs return `not-applicable`; the generic solver presentation remains authoritative. The 12-family/44-direction registry remains a future-expansion inventory, not current generalized runtime authority. No solver, store, renderer, dependency, lockfile, or workflow behavior changed.

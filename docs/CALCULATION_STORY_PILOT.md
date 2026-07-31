@@ -2,11 +2,11 @@
 
 ## Status
 
-The Joule/Brayton module uses a full finite calculation-story composer. This supersedes the former material-property pilot. It is a presentation adapter over selected solver provenance; it is not a second solver, a CAS, or a route-selection mechanism.
+The Joule/Brayton module currently uses a reference-only Calculation Story adapter. It is not a second solver, a CAS, a route-selection mechanism, or a claim that arbitrary complete scenarios already have an approved full derivation.
 
-## Recipe contract
+## Reference-scope contract
 
-The recipe registry is an explicit 12-family module authority; the live Joule formula inventory is reconciled independently and does not generate recipe authority. Each derive direction has:
+The recipe registry is a reconciled 12-family inventory for future expansion; the current runtime authority is the exact approved reference-air preset. The inventory records:
 
 - an exact `formulaId:targetId` identity;
 - a governing formula entry point from the registered module formula;
@@ -14,7 +14,7 @@ The recipe registry is an explicit 12-family module authority; the live Joule fo
 - a finite symbolic transformation role and accepted numeric `SolutionStep` evidence;
 - optional shared proof-node identity for material, ideal-gas, and entropy relations.
 
-If a selected direction is missing a recipe or an executed solver step, the adapter returns `unavailable`. Accepted numerical values, selected directions, validation, and planner policy are never mutated.
+Full Story activates only for normalized user inputs `T1=300 K`, `p1=100 kPa`, `pressureRatio=10`, `T3=1400 K`, `kappa=1.4`, and `Rs=287 J/(kg K)`, with no additional user inputs. Other scenarios return `not-applicable`; solver values, validation, planner policy, and the generic presentation remain unchanged.
 
 ## Chain IR and renderer
 
@@ -30,7 +30,7 @@ Alternatives, contradictions, diagnostics, and blocked facts remain in their exi
 
 ## Coverage and verification
 
-- `tests/modules/joule/calculation-story-full.test.ts`: live inventory reconciliation, all 44 recipe keys, four validate-only checks, 22/22 reference consumption, semantic continuation/check rows.
+- `tests/modules/joule/calculation-story-full.test.ts`: live inventory reconciliation, all 44 inventory keys, four validate-only checks, exact reference composition, semantic continuation/check rows, and altered-scenario rejection.
 - `tests/modules/joule/calculation-story.test.ts`: material chain, direct `cp` route, all four reverse-heat targets, GR-02/GR-03 alternate solver routes, entropy consequence rows, cycle-check semantics, provenance rejection, full-card removal, and solver immutability.
 - `tests/components/calculation-story-display.test.tsx`: semantic DOM grid, KaTeX operations, keyboard-focusable local scrollers.
 - `tests/components/app-metadata.test.tsx`: reference UI has a complete story and zero primary `.step-card` elements.
@@ -39,6 +39,6 @@ The high-severity dependency audit finding is pre-existing and unchanged; no dep
 
 ## Semantic-family authority
 
-The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+`calculation-story-recipes.ts` inventories 12 relation families, 44 derive directions, and four validate-only `Rs` checks. The current composer does not consume that inventory as generalized authority; it is constrained to the approved reference preset.
 
-The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.
+The approved reference journey renders seven visible sections: material properties; state 1; compression; heat input; expansion; energy path; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

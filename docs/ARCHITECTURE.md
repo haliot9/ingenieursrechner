@@ -96,7 +96,7 @@ React function components with Tailwind CSS v4 plus an original light industrial
 
 `CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; store-level exception handling never alters accepted numeric state.
 
-The Joule implementation is a full finite recipe registry over all 44 registered derive directions. Every recipe is keyed by exact direction identity and a complete story consumes each selected primary direction exactly once. The four `ideal_gas_n:Rs` directions remain validate-only checks. Rows carry semantic chain state (chain ID, row role, structured bridge/left/relation/right equation, and KaTeX operation) so rendering never infers algebraic continuity from raw strings. Checks and alternatives remain separate presentation states. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md), whose name is retained for link continuity although it now documents the full story.
+The Joule adapter exposes one full Story only for the exact approved six-input reference-air preset. Changed or additional user inputs return `not-applicable`, preserving the generic solver presentation. The 44-direction registry is a reconciled future-expansion inventory, not active generalized runtime authority. Rows carry semantic chain state (chain ID, row role, structured bridge/left/relation/right equation, and KaTeX operation) so rendering never infers algebraic continuity from raw strings. Checks and alternatives remain separate presentation states. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md), whose name is retained for link continuity although it now documents the full story.
 
 ## Static Joule / Brayton module
 
@@ -104,6 +104,6 @@ src/modules/joule owns the ideal four-state Joule/Brayton configuration, formula
 
 ## Semantic-family authority
 
-The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+The 12-family registry reconciles 48 registered directions into 44 derive directions and four validate-only `Rs` checks for future route expansion. Another scenario requires explicit recipe/provenance enforcement, negative tests, and product approval before Full Story may activate.
 
-The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.
+The reference journey groups rows into seven visible sections: material properties; state 1; compression; heat input; expansion; energy path; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

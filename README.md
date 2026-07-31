@@ -20,7 +20,7 @@ The public site is hosted by GitHub Pages; normal connection metadata is therefo
 - Ideal-gas, isothermal, adiabatic, entropy, energy-balance, and efficiency relations
 - Responsive p-v and T-s diagrams
 - Expandable KaTeX calculation steps
-- Full Joule calculation story across every registered derive direction
+- Human-approved full Joule calculation story for the exact reference-air preset; other scenarios retain the generic solver presentation
 - A validated reference-air preset
 - Input and computed-result constraint validation
 - Mobile-first cards and 44 px minimum interactive targets
@@ -86,7 +86,7 @@ user values → validation → route planning → fixed-point solver
 - `src/modules/carnot/` — Carnot variables, formulas, preset, and diagram adapter
 - `src/modules/diesel/` — ideal air-standard Diesel variables, formulas, preset, and diagram adapter
 - `src/modules/otto/` — ideal air-standard Otto variables, formulas, preset, and diagram adapter
-- `src/modules/joule/` — static ideal Joule/Brayton variables, formulas, preset, diagram adapter, and full finite calculation-story recipe registry
+- `src/modules/joule/` — static ideal Joule/Brayton variables, formulas, preset, diagram adapter, and reference-only Calculation Story plus a reconciled recipe inventory for future route expansion
 - `src/store/` — UI/solver integration, unit boundary, and isolated optional story composition
 - `src/components/` — responsive inputs, results, diagrams, legacy derivations, and the bounded calculation-story renderer
 - `tests/` — unit, property-based, robustness, store, and component regression tests
@@ -121,6 +121,6 @@ The calculator includes a static ideal four-state Joule/Brayton module with an i
 
 ## Semantic-family authority
 
-The current story is governed by exactly 12 module-owned families: material properties, ideal-gas state, relative entropy, pressure ratio, isobaric pressure, isentropic temperature, isentropic entropy, component work, net work, isobaric heat, ideal efficiency, and performance ratios. Their direction lists, governing entry points, conditions, process placement, and transformation shapes are explicit in `calculation-story-recipes.ts`. The live `solveFor` inventory is used only by tests to reconcile 48 registered directions into 44 derive directions and four validate-only `Rs` checks; it never auto-authorizes a new story.
+The full Story uses module-authored rows only for the exact approved six-input reference-air preset. `calculation-story-recipes.ts` retains a reconciled 12-family inventory of 44 derive directions and four validate-only `Rs` checks for future expansion; it is not current generalized runtime authority.
 
-The reference journey groups rows into eight Golden sections: Material properties; Reusable thermodynamic relations; State 1; compression; heat input; expansion; heat rejection; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.
+The reference journey groups rows into seven visible sections: material properties; state 1; compression; heat input; expansion; energy path; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

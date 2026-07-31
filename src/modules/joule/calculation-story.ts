@@ -72,6 +72,28 @@ function row(
   }
 }
 
+const APPROVED_REFERENCE_INPUTS = {
+  T1: 300,
+  p1: 100_000,
+  pressureRatio: 10,
+  T3: 1400,
+  kappa: 1.4,
+  Rs: 287,
+} as const
+
+function isApprovedReferenceCase(input: CalculationStoryCompositionInput): boolean {
+  const approvedIds = Object.keys(APPROVED_REFERENCE_INPUTS)
+  const userInputIds = Object.entries(input.values)
+    .filter(([, state]) => state.isUserInput)
+    .map(([id]) => id)
+  if (userInputIds.length !== approvedIds.length || userInputIds.some(id => !approvedIds.includes(id))) return false
+  return Object.entries(APPROVED_REFERENCE_INPUTS).every(([id, expected]) => {
+    const actual = input.values[id]?.value
+    const tolerance = Math.max(1, Math.abs(expected)) * 1e-9
+    return input.values[id]?.isUserInput === true && typeof actual === 'number' && Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance
+  })
+}
+
 function number(input: CalculationStoryCompositionInput, id: string): number {
   const value = input.values[id]?.value
   if (value === null || value === undefined || !Number.isFinite(value)) throw new Error(`missing live solver value: ${id}`)
@@ -202,7 +224,7 @@ function cycleRows(input: CalculationStoryCompositionInput): CalculationStoryRow
 }
 
 export function composeJouleCalculationStory(input: CalculationStoryCompositionInput): CalculationStoryState {
-  if (!input.plan) return { mode: 'not-applicable' }
+  if (!input.plan || !isApprovedReferenceCase(input)) return { mode: 'not-applicable' }
   try {
     const required = ['T1', 'p1', 'pressureRatio', 'T3', 'kappa', 'Rs', 'cv', 'cp', 'v1', 's1', 'p2', 'T2', 'v2', 's2', 'p3', 'v3', 's3', 'p4', 'T4', 'v4', 's4', 'w_comp', 'w_turb', 'q_in', 'q_out', 'w_netto', 'eta', 'back_work_ratio']
     required.forEach(id => number(input, id))

@@ -62,7 +62,7 @@ Quality gate:
 npm run verify
 ```
 
-This runs the complete test, lint, production-build, and high-severity dependency-audit bundle.
+This runs the complete test, lint, production-build, and high-severity **runtime** dependency-audit bundle. `npm run audit:development` reports development-tool findings separately; Dependabot tracks dependency updates weekly.
 
 ## Architecture
 

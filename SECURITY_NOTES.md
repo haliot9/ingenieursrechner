@@ -8,7 +8,7 @@ Last reviewed: 2026-07-13
 - Third-party actions are pinned to full commit SHAs; version comments remain for Dependabot maintenance.
 - Workflow permissions are least-privilege. Dependency installation and build jobs receive read-only repository access.
 - GitHub Pages write and OIDC permissions exist only on the deployment job, after the build job succeeds.
-- Pull requests run tests, lint, production build, a high-severity npm audit, and dependency review.
+- Pull requests run tests, lint, production build, a blocking high-severity runtime dependency audit, a visible non-blocking development dependency audit, and dependency review.
 - Dependabot monitors npm and GitHub Actions dependencies weekly.
 - `npm ci` restores the committed lockfile and verifies package integrity metadata.
 - Workflows do not consume repository secrets and do not use self-hosted runners.
@@ -28,4 +28,4 @@ The following refs were resolved through the public GitHub API on 2026-07-13:
 
 ## Limits
 
-These controls reduce known workflow and dependency risks; they do not prove that dependencies or generated artifacts are safe. Dependency updates still require review of lockfile changes, release notes, CI evidence, and relevant runtime behavior before merge.
+These controls reduce known workflow and dependency risks; they do not prove that dependencies or generated artifacts are safe. The runtime audit is release-blocking because those packages reach the browser artifact. Development-tool findings remain visible in CI but are non-blocking; they require separate triage through Dependabot and a deliberately reviewed dependency update. Dependency updates still require review of lockfile changes, release notes, CI evidence, and relevant runtime behavior before merge.

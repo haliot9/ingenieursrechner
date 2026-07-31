@@ -17,7 +17,11 @@ User-Input (Werte + Einheiten)
   Solver (solver.ts) <--- FormulaRegistry <--- CalculatorModule
         |                                           |
         v                                     config.ts + formulas.ts
-  SolverResult {values, steps, errors}
+  ReachabilityPlan + SolverResult {values, steps, errors, provenance}
+        |
+        +--> PresentationPlan --> legacy StepDisplay
+        |
+        +--> optional module calculation-story adapter --> CalculationStoryDisplay
         |
         v
   UI-Rendering (React Components + KaTeX)
@@ -45,7 +49,7 @@ Jedes Modul definiert ein abgeschlossenes Rechengebiet.
 - `formulas.ts` - Formeln mit `solveFor` (pre-solved Expressions) + `latexSteps`
 - `index.ts` - Export als `CalculatorModule`
 
-**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel- und Otto-Prozesse (Thermodynamik)
+**Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel-, Otto- und statische ideale Joule-/Brayton-Prozesse (Thermodynamik)
 **Geplant:** Weitere Module (Kinematik, Stroemungsmechanik, etc.)
 
 ### 3. State Management (`src/store/`)
@@ -61,7 +65,8 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - `CalculatorTable` - collapsible input groups; desktop table and mobile card layout
 - `ResultSummary` - cycle status, energy balance, efficiency, and process sequence
 - `DiagramPanel` - module-independent p-v and T-s visualizations
-- `StepDisplay` - expandable KaTeX derivation steps
+- `StepDisplay` - expandable KaTeX derivation steps for legacy/non-opted-in paths
+- `CalculationStoryDisplay` - continuous semantic proof spine for a module-owned opted-in story
 - `ValueInput` / `UnitSelector` - unit-aware inputs with mobile-size controls
 - `ModuleSelector` - accessible live-filtered module picker driven by the module registry
 
@@ -87,6 +92,18 @@ React function components with Tailwind CSS v4 plus an original light industrial
 - **Pre-solved Formeln:** Keine symbolische Umstellung zur Laufzeit, alle solveFor-Richtungen vordefiniert
 - **Kein Backend:** Alles laeuft client-side im Browser
 
+## Calculation-story seam
+
+`CalculationStory` is an optional module-owned presentation seam, not a second solver. It receives the selected `ReachabilityPlan`, immutable final solver values, `SolutionStep` provenance, and module variable metadata after numerical solving. The adapter returns `complete`, explicit `unavailable`, or `not-applicable`; store-level exception handling never alters accepted numeric state.
+
+The Joule adapter exposes one full Story only for the exact approved six-input reference-air preset. Changed or additional user inputs return `not-applicable`, preserving the generic solver presentation. The 44-direction registry is a reconciled future-expansion inventory, not active generalized runtime authority. Rows carry semantic chain state (chain ID, row role, structured bridge/left/relation/right equation, and KaTeX operation) so rendering never infers algebraic continuity from raw strings. Checks and alternatives remain separate presentation states. See [CALCULATION_STORY_PILOT.md](CALCULATION_STORY_PILOT.md), whose name is retained for link continuity although it now documents the full story.
+
 ## Static Joule / Brayton module
 
 src/modules/joule owns the ideal four-state Joule/Brayton configuration, formula registry, cross-variable validation, and diagram adapter. It registers through the existing module registry and generic result/store/renderer seams; no solver, store, renderer, or UI special case is introduced.
+
+## Semantic-family authority
+
+The 12-family registry reconciles 48 registered directions into 44 derive directions and four validate-only `Rs` checks for future route expansion. Another scenario requires explicit recipe/provenance enforcement, negative tests, and product approval before Full Story may activate.
+
+The reference journey groups rows into seven visible sections: material properties; state 1; compression; heat input; expansion; energy path; and cycle balance/performance. Numeric continuation rows deliberately omit their left subject.

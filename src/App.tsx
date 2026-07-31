@@ -7,16 +7,28 @@ import { ResultSummary } from './components/ResultSummary'
 import { StepDisplay } from './components/StepDisplay'
 import { ErrorDisplay } from './components/ErrorDisplay'
 import { DiagramPanel } from './components/diagrams/DiagramPanel'
+import { CalculationStoryDisplay } from './components/CalculationStoryDisplay'
+import { isConsumedStoryStep, removeConsumedStorySteps } from './core/calculation-story'
 
 function App() {
-  const { module, steps, errors, values, presentation } = useCalculatorStore()
+  const { module, steps, errors, values, presentation, story } = useCalculatorStore()
   useEffect(() => {
     if (module) document.title = `Ingenieursrechner · ${module.name}`
   }, [module])
+
   const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
   const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
   const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
     .filter(error => !presentation || error.type !== 'contradiction')
+  const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
+  const completeStory = story?.mode === 'complete' ? story.story : undefined
+  const legacySteps = completeStory ? steps.filter(step => !isConsumedStoryStep(completeStory, step)) : steps
+  const filteredPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
+  const legacyPresentation = completeStory?.route === 'joule-learning-story-v0.2' && filteredPresentation ? { ...filteredPresentation, alternatives: [] } : filteredPresentation
+  const hasLegacyContent = legacySteps.length > 0
+    || (legacyPresentation?.alternatives.length ?? 0) > 0
+    || (legacyPresentation?.blocked.length ?? 0) > 0
+    || presentationContradictions.length > 0
 
   return (
     <div className="app-shell">
@@ -68,9 +80,23 @@ function App() {
                 <ResultSummary />
                 <ErrorDisplay errors={visibleErrors} />
                 <DiagramPanel />
-                <StepDisplay steps={steps} presentation={presentation} contradictions={presentationContradictions} />
+                {!displayStory && hasLegacyContent && (
+                  <StepDisplay
+                    steps={legacySteps}
+                    presentation={legacyPresentation}
+                    contradictions={presentationContradictions}
+                  />
+                )}
               </aside>
             </div>
+            {displayStory && (
+              <section className="calculation-story-area" aria-label="Vollständiger Rechenweg">
+                <div className="calculation-story-separator" role="separator" aria-label="Beginn des vollständigen Rechenwegs">
+                  <span>Vollständiger Rechenweg</span>
+                </div>
+                <CalculationStoryDisplay story={displayStory} />
+              </section>
+            )}
           </>
         )}
       </main>

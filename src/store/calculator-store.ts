@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { CalculatorModule, PresentationPlan, SolutionStep, SolverError, VariableState } from '../core/types'
+import type { CalculationStoryState } from '../core/calculation-story'
 import { buildPresentationPlan } from '../core/derivation-builder'
 import type { ReachabilityPlan } from '../core/derivation-planner'
 import { FormulaRegistry } from '../core/formula-registry'
@@ -18,6 +19,7 @@ interface CalculatorStore {
   errors: SolverError[]
   plan?: ReachabilityPlan
   presentation?: PresentationPlan
+  story?: CalculationStoryState
   activeProcesses: Record<string, string>
   setModule: (moduleId: string) => void
   setValue: (variableId: string, value: number | null) => void
@@ -35,6 +37,7 @@ interface ScenarioResult {
   errors: SolverError[]
   plan?: ReachabilityPlan
   presentation?: PresentationPlan
+  story?: CalculationStoryState
 }
 
 function createInitialValues(mod: CalculatorModule): Record<string, VariableState> {
@@ -68,6 +71,15 @@ function userOnlyValues(module: CalculatorModule, displayValues: Record<string, 
   return values
 }
 
+function composeStory(module: CalculatorModule, result: { plan?: ReachabilityPlan; steps: SolutionStep[]; values: Record<string, VariableState> }): CalculationStoryState | undefined {
+  if (!module.calculationStory) return undefined
+  try {
+    return module.calculationStory({ plan: result.plan, steps: result.steps, values: result.values, variables: module.variables })
+  } catch {
+    return { mode: 'unavailable', reason: 'Die Herleitung konnte nicht aufgebaut werden. Die bestätigten Rechenergebnisse bleiben erhalten.' }
+  }
+}
+
 type PresentationExecutionConfig = PlannedExecutionConfig & { narrativeOrderingPolicy?: import('../core/types').NarrativeOrderingPolicy; diagnostics?: readonly import('../core/types').DiagnosticRelation[]; visibleAlternativeDirectionIds?: readonly string[] }
 
 function solveScenario(
@@ -84,7 +96,7 @@ function solveScenario(
   }
 
   const inputErrors = [...validateAllInputs(module.variables, siInputs), ...(module.validateValues?.(siInputs) ?? [])]
-  if (inputErrors.length > 0) return { values: userOnlyValues(module, displayValues), steps: [], unsolved: [], errors: inputErrors, plan: undefined, presentation: undefined }
+  if (inputErrors.length > 0) return { values: userOnlyValues(module, displayValues), steps: [], unsolved: [], errors: inputErrors, plan: undefined, presentation: undefined, story: undefined }
 
   const result = solve(registry, module.variables, siInputs, Object.values(activeProcesses), { plannedExecution: module.plannedExecution })
   const errors = [...result.errors, ...(module.validateValues?.(result.values) ?? [])]
@@ -109,7 +121,7 @@ function solveScenario(
       visibleAlternativeDirectionIds: presentationConfig?.visibleAlternativeDirectionIds,
     })
     : undefined
-  return { values, steps: result.steps, unsolved: result.unsolved, errors, plan: result.plan, presentation }
+  return { values, steps: result.steps, unsolved: result.unsolved, errors, plan: result.plan, presentation, story: composeStory(module, result) }
 }
 
 export const useCalculatorStore = create<CalculatorStore>((set, get) => ({
@@ -122,7 +134,7 @@ export const useCalculatorStore = create<CalculatorStore>((set, get) => ({
   setModule: (moduleId) => {
     const module = MODULES[moduleId]
     if (!module) return
-    set({ activeModuleId: moduleId, module, registry: FormulaRegistry.fromModule(module), values: createInitialValues(module), steps: [], unsolved: [], errors: [], plan: undefined, presentation: undefined, activeProcesses: {} })
+    set({ activeModuleId: moduleId, module, registry: FormulaRegistry.fromModule(module), values: createInitialValues(module), steps: [], unsolved: [], errors: [], plan: undefined, presentation: undefined, story: undefined, activeProcesses: {} })
   },
 
   setValue: (variableId, value) => {
@@ -163,7 +175,7 @@ export const useCalculatorStore = create<CalculatorStore>((set, get) => ({
   clearAll: () => {
     const module = get().module
     if (!module) return
-    set({ values: createInitialValues(module), steps: [], unsolved: [], errors: [], plan: undefined, presentation: undefined, activeProcesses: {} })
+    set({ values: createInitialValues(module), steps: [], unsolved: [], errors: [], plan: undefined, presentation: undefined, story: undefined, activeProcesses: {} })
   },
 
   recalculate: () => {

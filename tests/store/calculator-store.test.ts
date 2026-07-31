@@ -77,3 +77,33 @@ describe('calculator presets', () => {
   })
 
 })
+
+
+describe('Joule calculation-story store integration', () => {
+  beforeEach(() => {
+    useCalculatorStore.getState().setModule('joule')
+  })
+
+  it('commits a complete reference story without changing accepted solver values', () => {
+    const store = useCalculatorStore.getState()
+    store.loadPreset('reference-air')
+    const solved = useCalculatorStore.getState()
+
+    expect(solved.story?.mode).toBe('complete')
+    expect(solved.values.cv.value).toBeCloseTo(717.5, 8)
+    expect(solved.values.cp.value).toBeCloseTo(1004.5, 8)
+    expect(solved.steps.find(step => step.targetVariable === 'cv')?.derivationProvenance?.formulaId).toBe('cv_from_Rs_kappa')
+  })
+
+  it('clears a stale story when a valid reference becomes invalid', () => {
+    useCalculatorStore.getState().loadPreset('reference-air')
+    expect(useCalculatorStore.getState().story?.mode).toBe('complete')
+
+    useCalculatorStore.getState().setValue('kappa', 1)
+    const invalid = useCalculatorStore.getState()
+
+    expect(invalid.story).toBeUndefined()
+    expect(invalid.values.cv.value).toBeNull()
+    expect(invalid.values.cp.value).toBeNull()
+  })
+})

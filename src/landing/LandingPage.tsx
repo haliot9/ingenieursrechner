@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './landing.css'
 import { FloatingNavigation, type LandingNavigationSection } from './components/FloatingNavigation'
+import { ModuleAtlas } from './components/ModuleAtlas'
 import { WrightHero } from './components/WrightHero'
 import { useReducedMotion } from './motion/useReducedMotion'
 import { useLandingTheme } from './theme/useLandingTheme'
@@ -23,6 +24,12 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
   const reducedMotion = useReducedMotion()
   const selectedModuleId = 'carnot'
   const openSelectedModule = () => onOpenCalculator(selectedModuleId)
+  const exploreThermodynamics = () => {
+    document.getElementById('thermodynamik')?.scrollIntoView({
+      behavior: reducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    })
+  }
 
   return <main
     className={`landing-shell${reducedMotion ? ' landing-shell--reduced-motion' : ''}`}
@@ -56,6 +63,7 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
         </div>
       </header>
       <WrightHero reducedMotion={reducedMotion} />
+      <ModuleAtlas onExploreThermodynamics={exploreThermodynamics} />
     </div>
   </main>
 }

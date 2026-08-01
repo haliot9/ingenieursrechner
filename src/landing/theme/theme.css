@@ -1,0 +1,24 @@
+.landing-shell {
+  --landing-bg: #f1ede4;
+  --landing-surface: rgba(250, 247, 239, .78);
+  --landing-ink: #191b1e;
+  --landing-muted: #65625d;
+  --landing-metal: #9a6036;
+  --landing-metal-soft: #d3aa78;
+  --landing-line: rgba(63, 52, 42, .2);
+  --landing-glow: transparent;
+  min-height: 100vh;
+  color: var(--landing-ink);
+  background: var(--landing-bg);
+}
+
+.landing-shell[data-landing-theme="dark"] {
+  --landing-bg: #080b12;
+  --landing-surface: rgba(17, 23, 34, .62);
+  --landing-ink: #f3f6fb;
+  --landing-muted: #aab5c5;
+  --landing-metal: #c6cfda;
+  --landing-metal-soft: #eef3f8;
+  --landing-line: rgba(185, 205, 229, .18);
+  --landing-glow: rgba(100, 205, 255, .42);
+}

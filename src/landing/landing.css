@@ -1,0 +1,129 @@
+@import './theme/theme.css';
+
+.landing-shell {
+  overflow-x: clip;
+  font-family: Inter, "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.landing-shell * {
+  box-sizing: border-box;
+}
+
+.landing-shell :focus-visible {
+  outline: 3px solid var(--landing-metal);
+  outline-offset: 4px;
+}
+
+.landing-shell__header,
+.landing-shell__content {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+}
+
+.landing-shell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 5rem;
+  border-bottom: 1px solid var(--landing-line);
+}
+
+.landing-shell__eyebrow {
+  margin: 0;
+  color: var(--landing-muted);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.landing-shell__theme-toggle,
+.landing-shell__calculator-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--landing-line);
+  color: var(--landing-ink);
+  background: var(--landing-surface);
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.landing-shell__theme-toggle {
+  padding-inline: 1rem;
+}
+
+.landing-shell__content {
+  display: grid;
+  align-content: center;
+  gap: 1.5rem;
+  min-height: calc(100vh - 5rem);
+  padding-block: clamp(4rem, 12vh, 9rem);
+}
+
+.landing-shell__title {
+  max-width: 13ch;
+  margin: 0;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(3rem, 8vw, 7.25rem);
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: .94;
+}
+
+.landing-shell[data-landing-theme="dark"] .landing-shell__title {
+  color: var(--landing-ink);
+  font-family: Inter, "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 750;
+  letter-spacing: -.065em;
+  background: linear-gradient(100deg, var(--landing-metal-soft), #b9e9ff 56%, var(--landing-ink));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-shell__intro {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--landing-muted);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.landing-shell__calculator-link {
+  width: fit-content;
+  padding-inline: 1.25rem;
+  border-color: var(--landing-metal);
+  background: var(--landing-metal);
+  color: var(--landing-bg);
+}
+
+@media (max-width: 40rem) {
+  .landing-shell__header,
+  .landing-shell__content {
+    width: min(100% - 1.25rem, 72rem);
+  }
+
+  .landing-shell__header {
+    min-height: 4.5rem;
+  }
+
+  .landing-shell__theme-toggle {
+    padding-inline: .75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-shell *,
+  .landing-shell *::before,
+  .landing-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

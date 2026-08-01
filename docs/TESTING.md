@@ -114,6 +114,18 @@ For relevant UI, responsive-layout, diagram, or formatting changes, inspect:
 
 Critical journeys should be automated with Playwright. Screenshots supplement automated assertions; they do not replace them.
 
+Run the production browser journeys with:
+
+```bash
+npm run test:e2e
+```
+
+This builds the production application, enforces the initial-entry budget, and runs Chromium at 1440 × 900 and 390 × 844. The suite covers keyboard-only landing navigation, reduced motion, failed Wright media, query routing and browser Back, light-theme control contrast, below-fold chunk deferral, and the real Joule reference-air calculator journey. Install the pinned browser in a new environment with `npx playwright install chromium`; CI uses `--with-deps`.
+
+## Initial bundle budget
+
+`npm run build` runs `npm run check:bundle` after Vite. The HTML entry's initial module scripts and module-preload graph may total at most 230 KiB minified and 75 KiB gzip. Route and below-fold chunks are excluded only when they are genuinely absent from the initial HTML graph; `e2e/performance.spec.ts` additionally confirms that the solver chunk is not requested at first paint.
+
 ## Required verification
 
 Run the narrowest relevant test first:
@@ -129,6 +141,8 @@ npm run verify
 ```
 
 The gate comprises tests, lint, production build, and `npm audit --audit-level=high`.
+
+For a landing-page release, also run `npm run test:e2e`; it is enforced in both CI and the Pages release workflow.
 
 ## Evidence report
 

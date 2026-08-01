@@ -1,0 +1,275 @@
+.liquid-surface {
+  --liquid-pointer-x: 50%;
+  --liquid-pointer-y: 50%;
+  --liquid-shift-x: 0px;
+  --liquid-shift-y: 0px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--landing-line);
+  background: var(--landing-bg);
+  background: color-mix(in srgb, var(--landing-surface) 88%, var(--landing-bg));
+  -webkit-backdrop-filter: blur(24px) saturate(1.18);
+  backdrop-filter: blur(24px) saturate(1.18);
+  isolation: isolate;
+}
+
+.liquid-surface-filter {
+  position: absolute;
+}
+
+.liquid-surface-refraction {
+  position: absolute;
+  z-index: 0;
+  inset: -12%;
+  background:
+    radial-gradient(circle at var(--liquid-pointer-x) var(--liquid-pointer-y), rgba(255, 255, 255, .2), transparent 24%),
+    linear-gradient(125deg, rgba(255, 255, 255, .11), transparent 32% 70%, rgba(255, 255, 255, .07));
+  opacity: .7;
+  pointer-events: none;
+  transform: translate3d(var(--liquid-shift-x), var(--liquid-shift-y), 0);
+  transition: transform 180ms ease-out;
+}
+
+.liquid-surface[data-liquid-mode="frosted"] .liquid-surface-refraction {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .1), transparent 58%);
+  opacity: .45;
+  transform: none;
+  transition: none;
+}
+
+.liquid-surface-content {
+  position: relative;
+  z-index: 1;
+}
+
+.floating-rail {
+  position: relative;
+  z-index: 50;
+}
+
+.floating-rail-trigger-surface {
+  position: fixed;
+  z-index: 60;
+  right: clamp(.85rem, 2.4vw, 1.75rem);
+  bottom: clamp(.85rem, 2.4vw, 1.75rem);
+  border-radius: 999px;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, .18), 0 0 18px var(--landing-glow);
+}
+
+.floating-rail-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: .65rem 1rem;
+  border: 0;
+  color: var(--landing-ink);
+  background: transparent;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.floating-rail-trigger [aria-hidden="true"] {
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.floating-rail-overlay {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+}
+
+.floating-rail-dimmer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(4, 7, 12, .66);
+  cursor: default;
+}
+
+.floating-rail-panel {
+  position: fixed;
+  z-index: 1;
+  inset: clamp(14px, 3vw, 32px);
+  border-radius: clamp(24px, 3vw, 42px);
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-line);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .28), 0 0 34px var(--landing-glow);
+}
+
+.floating-rail-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: clamp(1.25rem, 4.5vw, 4rem);
+  overflow: auto;
+  color: var(--landing-ink);
+}
+
+.floating-rail-dialog__header,
+.floating-rail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.floating-rail-dialog__eyebrow {
+  margin: 0 0 .35rem;
+  color: var(--landing-muted);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.floating-rail-dialog h2 {
+  margin: 0;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: .95;
+}
+
+.floating-rail-dialog h2:focus {
+  outline: none;
+}
+
+.floating-rail-close,
+.floating-rail-chapters button,
+.floating-rail-actions button {
+  min-width: 44px;
+  min-height: 44px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.floating-rail-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  border: 1px solid var(--landing-line);
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.floating-rail-chapters {
+  display: grid;
+  align-content: center;
+  max-width: 58rem;
+  margin: 0;
+  padding: clamp(1rem, 3vh, 2.5rem) 0;
+  list-style: none;
+}
+
+.floating-rail-chapters li {
+  border-bottom: 1px solid var(--landing-line);
+}
+
+.floating-rail-chapters li:first-child {
+  border-top: 1px solid var(--landing-line);
+}
+
+.floating-rail-chapters button {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  width: 100%;
+  padding: clamp(.55rem, 1.6vh, 1.15rem) .25rem;
+  border: 0;
+  background: transparent;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 4.5vh, 3.5rem);
+  text-align: left;
+}
+
+.floating-rail-chapters button:hover,
+.floating-rail-chapters button:focus-visible {
+  color: var(--landing-metal);
+}
+
+.floating-rail-chapter__number {
+  color: var(--landing-muted);
+  font-family: Inter, "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: .67rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.floating-rail-actions {
+  justify-content: flex-end;
+}
+
+.floating-rail-actions button {
+  padding: .7rem 1rem;
+  border: 1px solid var(--landing-line);
+  background: transparent;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.floating-rail-actions .floating-rail-calculator {
+  border-color: var(--landing-metal);
+  color: var(--landing-bg);
+  background: var(--landing-metal);
+}
+
+.floating-rail-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 34rem) {
+  .floating-rail-trigger {
+    padding-inline: .8rem;
+  }
+
+  .floating-rail-dialog {
+    padding: 1.25rem;
+  }
+
+  .floating-rail-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    gap: .55rem;
+  }
+
+  .floating-rail-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+  .liquid-surface-refraction {
+    transform: none;
+    transition: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-surface {
+    background: var(--landing-bg);
+  }
+}

@@ -1,0 +1,180 @@
+@import './theme/theme.css';
+
+.landing-shell {
+  position: relative;
+  overflow-x: clip;
+  font-family: Inter, "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.particle-field {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle-field__particle {
+  position: absolute;
+  width: calc(1px + var(--particle-depth) * 2px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--landing-metal-soft) 76%, transparent);
+  box-shadow: 0 0 calc(5px + var(--particle-depth) * 8px) var(--landing-glow);
+  opacity: calc(.12 + var(--particle-depth) * .4);
+  transform: translate3d(
+    calc(var(--particle-shift-x) * var(--particle-depth)),
+    calc(var(--particle-shift-y) * var(--particle-depth)),
+    0
+  );
+  animation: particle-breathe 6.4s ease-in-out var(--particle-delay) infinite alternate;
+  animation-play-state: var(--particle-animation-state);
+}
+
+.landing-shell__content {
+  position: relative;
+  z-index: 1;
+}
+
+.deferred-landing-section {
+  display: grid;
+  width: min(100% - 2rem, 72rem);
+  min-height: 36rem;
+  margin-inline: auto;
+  place-items: center;
+  color: var(--landing-muted);
+}
+
+.deferred-landing-section[data-deferred-section="thermodynamik"],
+.deferred-landing-section--loading#thermodynamik {
+  min-height: 48rem;
+}
+
+.deferred-landing-section[data-deferred-section="rechenweg"],
+.deferred-landing-section--loading#rechenweg {
+  min-height: 44rem;
+}
+
+.deferred-landing-section > span,
+.deferred-landing-section > p {
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.async-content__error {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid currentColor;
+}
+
+.async-content__error a {
+  min-height: 44px;
+  color: inherit;
+  font-weight: 800;
+}
+
+@keyframes particle-breathe {
+  to {
+    opacity: calc(.2 + var(--particle-depth) * .52);
+    scale: 1.22;
+  }
+}
+
+.landing-shell * {
+  box-sizing: border-box;
+}
+
+.landing-shell :focus-visible {
+  outline: 3px solid var(--landing-metal);
+  outline-offset: 4px;
+}
+
+.landing-shell__header {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+}
+
+.landing-shell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 5rem;
+  border-bottom: 1px solid var(--landing-line);
+}
+
+.landing-shell__header-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.landing-shell__eyebrow {
+  margin: 0;
+  color: var(--landing-muted);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.landing-shell__theme-toggle,
+.landing-shell__calculator-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--landing-line);
+  color: var(--landing-ink);
+  background: var(--landing-surface);
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.landing-shell__theme-toggle {
+  padding-inline: 1rem;
+}
+
+.landing-shell__calculator-link {
+  padding-inline: 1.25rem;
+  border-color: var(--landing-metal);
+  background: var(--landing-metal);
+  color: var(--landing-bg);
+}
+
+@media (max-width: 40rem) {
+  .landing-shell__header {
+    width: min(100% - 1.25rem, 72rem);
+  }
+
+  .landing-shell__header {
+    min-height: 4.5rem;
+  }
+
+  .landing-shell__theme-toggle {
+    padding-inline: .75rem;
+  }
+
+  .landing-shell__calculator-link {
+    padding-inline: .8rem;
+  }
+}
+
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion {
+  --landing-motion-reduced: 1;
+}
+
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *,
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *::before,
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *::after {
+  scroll-behavior: auto !important;
+  transition-duration: .01ms !important;
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+}

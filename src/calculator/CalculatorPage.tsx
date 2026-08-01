@@ -1,0 +1,120 @@
+import { useEffect, useLayoutEffect } from 'react'
+import { useCalculatorStore } from '../store/calculator-store'
+import { ModuleSelector } from '../components/ModuleSelector'
+import { CalculatorTable } from '../components/CalculatorTable'
+import { CalculatorControls } from '../components/CalculatorControls'
+import { ResultSummary } from '../components/ResultSummary'
+import { StepDisplay } from '../components/StepDisplay'
+import { ErrorDisplay } from '../components/ErrorDisplay'
+import { DiagramPanel } from '../components/diagrams/DiagramPanel'
+import { CalculationStoryDisplay } from '../components/CalculationStoryDisplay'
+import { isConsumedStoryStep, removeConsumedStorySteps } from '../core/calculation-story'
+
+interface CalculatorPageProps {
+  moduleId?: string
+  onBackToLanding: () => void
+}
+
+export function CalculatorPage({ moduleId, onBackToLanding }: CalculatorPageProps) {
+  const { module, steps, errors, values, presentation, story } = useCalculatorStore()
+  useLayoutEffect(() => {
+    if (moduleId) useCalculatorStore.getState().setModule(moduleId)
+  }, [moduleId])
+  useEffect(() => {
+    if (module) document.title = `Ingenieursrechner · ${module.name}`
+  }, [module])
+
+  const cycleSolved = values.eta?.value !== null && values.eta?.value !== undefined
+  const presentationContradictions = presentation ? errors.filter(error => error.type === 'contradiction') : []
+  const visibleErrors = (cycleSolved ? errors.filter(error => error.type !== 'insufficient_data') : errors)
+    .filter(error => !presentation || error.type !== 'contradiction')
+  const displayStory = story && story.mode !== 'not-applicable' ? story : undefined
+  const completeStory = story?.mode === 'complete' ? story.story : undefined
+  const legacySteps = completeStory ? steps.filter(step => !isConsumedStoryStep(completeStory, step)) : steps
+  const filteredPresentation = completeStory ? removeConsumedStorySteps(presentation, completeStory) : presentation
+  const legacyPresentation = completeStory?.route === 'joule-learning-story-v0.2' && filteredPresentation ? { ...filteredPresentation, alternatives: [] } : filteredPresentation
+  const hasLegacyContent = legacySteps.length > 0
+    || (legacyPresentation?.alternatives.length ?? 0) > 0
+    || (legacyPresentation?.blocked.length ?? 0) > 0
+    || presentationContradictions.length > 0
+
+  return (
+    <div className="app-shell">
+      <header className="site-header">
+        <div className="page-width header-inner">
+          <button className="brand brand-button" type="button" onClick={onBackToLanding} aria-label="Zur Projektstartseite">
+            <span className="brand-mark" aria-hidden="true">IR</span>
+            <span>
+              <strong>Ingenieursrechner</strong>
+              <small>Deterministische Rechenwege</small>
+            </span>
+          </button>
+          <ModuleSelector />
+        </div>
+      </header>
+
+      <main id="top" className="page-width main-content">
+        {module && (
+          <>
+            <section className="hero" aria-labelledby="module-title">
+              <div>
+                <p className="eyebrow">Thermodynamik · Kreisprozesse</p>
+                <h1 id="module-title">{module.name}</h1>
+                <p className="hero-copy">{module.description}</p>
+              </div>
+              <div className="hero-facts" aria-label="Modellannahmen">
+                <span>Ideales Gas</span>
+                <span>κ konstant</span>
+                <span>SI intern</span>
+                <span>Rechenweg sichtbar</span>
+              </div>
+            </section>
+
+            <CalculatorControls />
+
+            <div className="workspace-grid">
+              <section className="input-panel" aria-labelledby="input-title">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Eingaben & Zustände</p>
+                    <h2 id="input-title">Bekannte Größen</h2>
+                  </div>
+                  <p>Nur vorhandene Werte eintragen. Alle übrigen Felder werden automatisch berechnet.</p>
+                </div>
+                <CalculatorTable />
+              </section>
+
+              <aside className="analysis-panel" aria-label="Ergebnisse und Diagramme">
+                <ResultSummary />
+                <ErrorDisplay errors={visibleErrors} />
+                <DiagramPanel />
+                {!displayStory && hasLegacyContent && (
+                  <StepDisplay
+                    steps={legacySteps}
+                    presentation={legacyPresentation}
+                    contradictions={presentationContradictions}
+                  />
+                )}
+              </aside>
+            </div>
+            {displayStory && (
+              <section className="calculation-story-area" aria-label="Vollständiger Rechenweg">
+                <div className="calculation-story-separator" role="separator" aria-label="Beginn des vollständigen Rechenwegs">
+                  <span>Vollständiger Rechenweg</span>
+                </div>
+                <CalculationStoryDisplay story={displayStory} />
+              </section>
+            )}
+          </>
+        )}
+      </main>
+
+      <footer className="site-footer">
+        <div className="page-width footer-inner">
+          <p><strong>Ingenieursrechner</strong> · {module?.name ?? 'Rechenmodule'}</p>
+          <p>Idealisiertes Lehrmodell. Ergebnisse immer mit Aufgabenstellung und Stoffmodell abgleichen.</p>
+        </div>
+      </footer>
+    </div>
+  )
+}

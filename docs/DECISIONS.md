@@ -99,3 +99,15 @@ Jede Entscheidung mit Kontext, Alternativen und Begruendung.
 - DiagramSpec ist ein Zwischenformat: Zustandspunkte + Segmente + Energiefluesse
 - Neue Module (Otto, Diesel) implementieren nur ihren Adapter, Rendering bleibt gleich
 - Curve-Math-Utils (`sampleCurve_pv/ts`) arbeiten nur mit dem generischen Format
+
+---
+
+## D11: Query-based application boundary and native motion
+**Decided:** The public root renders the landing page. The calculator uses a stable `?view=calculator` query entry, with an optional registered `module` parameter. Navigation uses the browser History API and `popstate`. Landing motion uses native browser APIs, CSS transitions and transforms, and the existing custom SVG approach rather than a general animation dependency.
+**Alternatives:** Path-based client routing with a router dependency, or an animation framework shared across the landing experience.
+**Rationale:**
+- Query navigation works on GitHub Pages without server-side rewrite rules and preserves the relative Vite asset strategy.
+- Browser history still provides direct links and Back navigation for the bounded landing/calculator split.
+- Native scrolling, media, observer, and CSS primitives cover the current video, rail, settling, and SVG reveal requirements without adding runtime dependency weight.
+- Landing presentation state remains outside the Zustand calculator store and cannot change accepted numeric state.
+**Trade-off:** The boundary is intentionally limited rather than a general routing system, and native motion lifecycles require explicit cleanup, reduced-motion handling, and browser fallbacks.

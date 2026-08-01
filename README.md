@@ -1,8 +1,10 @@
 # Ingenieursrechner
 
-[**Live calculator → haliot9.github.io/ingenieursrechner**](https://haliot9.github.io/ingenieursrechner/)
+[**Live project → haliot9.github.io/ingenieursrechner**](https://haliot9.github.io/ingenieursrechner/) · [**Direct calculator → `?view=calculator`**](https://haliot9.github.io/ingenieursrechner/?view=calculator)
 
 A deterministic, browser-based engineering calculator that derives every solvable quantity from the values provided and exposes the complete calculation path.
+
+The public root is a product landing page that introduces the available thermodynamic modules and presents bounded evidence from their existing diagrams and reference calculations. It keeps its visual, theme, and exploration state separate from the calculator; the direct calculator link bypasses the landing experience.
 
 The current production-ready modules cover the ideal Carnot cycle, the ideal air-standard Diesel cycle, the ideal air-standard Otto cycle, and the static ideal Joule/Brayton cycle.
 

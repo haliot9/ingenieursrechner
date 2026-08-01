@@ -10,6 +10,7 @@ type ParticleStyle = CSSProperties & {
 }
 
 type ParticleFieldStyle = CSSProperties & {
+  '--particle-animation-state': string
   '--particle-shift-x': string
   '--particle-shift-y': string
 }
@@ -49,31 +50,41 @@ export function ParticleField({ enabled }: ParticleFieldProps) {
     const pauseOutsideViewport = (event: PointerEvent) => {
       if (event.relatedTarget === null) resetParallax()
     }
-    const pauseWhenHidden = () => {
-      if (document.visibilityState !== 'visible') resetParallax()
+    const syncVisibility = () => {
+      const visible = document.visibilityState === 'visible'
+      fieldRef.current?.setAttribute('data-particle-visibility', visible ? 'visible' : 'hidden')
+      fieldRef.current?.style.setProperty('--particle-animation-state', visible ? 'running' : 'paused')
+      if (!visible) resetParallax()
     }
 
     window.addEventListener('pointermove', updateParallax, passiveOptions)
     window.addEventListener('pointerout', pauseOutsideViewport, passiveOptions)
     window.addEventListener('blur', resetParallax)
-    document.addEventListener('visibilitychange', pauseWhenHidden)
+    document.addEventListener('visibilitychange', syncVisibility)
 
     return () => {
       window.removeEventListener('pointermove', updateParallax, passiveOptions)
       window.removeEventListener('pointerout', pauseOutsideViewport, passiveOptions)
       window.removeEventListener('blur', resetParallax)
-      document.removeEventListener('visibilitychange', pauseWhenHidden)
+      document.removeEventListener('visibilitychange', syncVisibility)
     }
   }, [enabled])
 
   if (!enabled) return null
 
   const fieldStyle: ParticleFieldStyle = {
+    '--particle-animation-state': document.visibilityState === 'visible' ? 'running' : 'paused',
     '--particle-shift-x': '0px',
     '--particle-shift-y': '0px',
   }
 
-  return <div ref={fieldRef} className="particle-field" aria-hidden="true" style={fieldStyle}>
+  return <div
+    ref={fieldRef}
+    className="particle-field"
+    aria-hidden="true"
+    data-particle-visibility={document.visibilityState === 'visible' ? 'visible' : 'hidden'}
+    style={fieldStyle}
+  >
     {Array.from({ length: PARTICLE_DATA.length / 3 }, (_, index) => {
       const offset = index * 3
       const depth = PARTICLE_DATA[offset + 2]

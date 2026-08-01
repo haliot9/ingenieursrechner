@@ -4,6 +4,20 @@ import { chooseMagneticTarget, type MagneticCandidate } from './magnetic-target'
 const CHAPTER_IDS = ['haltung', 'module', 'thermodynamik', 'rechenweg', 'projekt'] as const
 const SETTLE_DELAY_MS = 140
 
+function measureCandidate(chapter: HTMLElement): MagneticCandidate {
+  const bounds = chapter.getBoundingClientRect()
+  const visibleHeight = Math.max(
+    0,
+    Math.min(bounds.bottom, window.innerHeight) - Math.max(bounds.top, 0),
+  )
+
+  return {
+    id: chapter.id,
+    visibleRatio: bounds.height > 0 ? Math.min(1, visibleHeight / bounds.height) : 0,
+    distanceToLanding: bounds.top,
+  }
+}
+
 export function useMagneticLanding(reducedMotion: boolean) {
   useEffect(() => {
     if (reducedMotion || !window.IntersectionObserver) return
@@ -11,31 +25,22 @@ export function useMagneticLanding(reducedMotion: boolean) {
     const chapters = CHAPTER_IDS
       .map(id => document.getElementById(id))
       .filter((chapter): chapter is HTMLElement => chapter !== null)
-    const candidates = new Map<string, MagneticCandidate>()
     const passiveOptions: AddEventListenerOptions = { passive: true }
     let settleTimer: number | undefined
-    let pointerActive = false
-    let touchActive = false
+    const activePointerIds = new Set<number>()
+    let activeTouchCount = 0
     let dominantChapterId: string | undefined
     let settledChapterId: string | undefined
 
-    const observer = new window.IntersectionObserver(entries => {
-      for (const entry of entries) {
-        candidates.set(entry.target.id, {
-          id: entry.target.id,
-          visibleRatio: entry.intersectionRatio,
-          distanceToLanding: entry.boundingClientRect.top,
-        })
-      }
-    }, { threshold: [0, .72, 1] })
+    const observer = new window.IntersectionObserver(() => undefined, { threshold: [0, .72, 1] })
 
     for (const chapter of chapters) observer.observe(chapter)
 
     const settle = () => {
       settleTimer = undefined
-      if (pointerActive || touchActive) return
+      if (activePointerIds.size > 0 || activeTouchCount > 0) return
 
-      const currentCandidates = Array.from(candidates.values())
+      const currentCandidates = chapters.map(measureCandidate)
       const dominant = currentCandidates
         .slice()
         .sort((a, b) => b.visibleRatio - a.visibleRatio)[0]?.id
@@ -56,19 +61,24 @@ export function useMagneticLanding(reducedMotion: boolean) {
       if (settleTimer !== undefined) window.clearTimeout(settleTimer)
       settleTimer = window.setTimeout(settle, SETTLE_DELAY_MS)
     }
-    const markPointerActive = () => { pointerActive = true }
-    const markPointerInactive = () => { pointerActive = false }
-    const markTouchActive = () => { touchActive = true }
-    const markTouchInactive = () => { touchActive = false }
+    const markPointerActive: EventListener = event => {
+      activePointerIds.add((event as PointerEvent).pointerId)
+    }
+    const markPointerInactive: EventListener = event => {
+      activePointerIds.delete((event as PointerEvent).pointerId)
+    }
+    const syncTouchContacts: EventListener = event => {
+      activeTouchCount = (event as TouchEvent).touches.length
+    }
 
     const listeners: Array<readonly [string, EventListener]> = [
       ['scroll', scheduleSettle],
       ['pointerdown', markPointerActive],
       ['pointerup', markPointerInactive],
       ['pointercancel', markPointerInactive],
-      ['touchstart', markTouchActive],
-      ['touchend', markTouchInactive],
-      ['touchcancel', markTouchInactive],
+      ['touchstart', syncTouchContacts],
+      ['touchend', syncTouchContacts],
+      ['touchcancel', syncTouchContacts],
     ]
 
     for (const [type, listener] of listeners) {

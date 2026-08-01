@@ -28,6 +28,7 @@
     0
   );
   animation: particle-breathe 6.4s ease-in-out var(--particle-delay) infinite alternate;
+  animation-play-state: var(--particle-animation-state);
 }
 
 .landing-shell__content {

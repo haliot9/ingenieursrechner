@@ -117,7 +117,15 @@ describe('complete landing page', () => {
 })
 
 describe('ParticleField', () => {
-  afterEach(() => vi.restoreAllMocks())
+  const originalVisibilityState = document.visibilityState
+
+  afterEach(() => {
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: originalVisibilityState,
+    })
+    vi.restoreAllMocks()
+  })
 
   it('renders the same fixed 24-depth field without random generation', () => {
     const random = vi.spyOn(Math, 'random')
@@ -159,6 +167,24 @@ describe('ParticleField', () => {
     unmount()
     fireEvent.pointerMove(window, { clientX: 0, clientY: window.innerHeight })
     expect(field.style.getPropertyValue('--particle-shift-x')).toBe('0px')
+  })
+
+  it('pauses particle animation while the document is hidden and resumes when visible', () => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+    const { container } = render(<ParticleField enabled />)
+    const field = container.querySelector<HTMLElement>('.particle-field') as HTMLElement
+
+    expect(field).toHaveAttribute('data-particle-visibility', 'visible')
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
+    fireEvent(document, new Event('visibilitychange'))
+    expect(field).toHaveAttribute('data-particle-visibility', 'hidden')
+    expect(field.style.getPropertyValue('--particle-animation-state')).toBe('paused')
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+    fireEvent(document, new Event('visibilitychange'))
+    expect(field).toHaveAttribute('data-particle-visibility', 'visible')
+    expect(field.style.getPropertyValue('--particle-animation-state')).toBe('running')
   })
 
   it('renders nothing when the composing page disables it', () => {

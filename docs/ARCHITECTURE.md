@@ -27,6 +27,18 @@ User-Input (Werte + Einheiten)
   UI-Rendering (React Components + KaTeX)
 ```
 
+## Landing and calculator boundary
+
+The public root presents the landing experience. `?view=calculator` is the stable direct entry to the existing calculator, with an optional `module` query parameter selecting an existing registered module. Landing-only theme, navigation-rail, exploration, and motion state never enters the calculator store.
+
+```text
+URL boundary
+├── Landing presentation state → registry/reference adapters → existing SVG/story evidence
+└── Calculator page → Zustand store → deterministic solver
+```
+
+Landing content derives available calculators from the existing module registry and reads reference evidence through public module, diagram, and calculation-story interfaces. It does not duplicate solver authority or introduce a second calculation path.
+
 ## Schichten
 
 ### 1. Core Engine (`src/core/`)

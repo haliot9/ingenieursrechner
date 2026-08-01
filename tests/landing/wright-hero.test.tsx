@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WrightHero } from '../../src/landing/components/WrightHero'
 
-type ObserverEntry = Pick<IntersectionObserverEntry, 'isIntersecting'>
+type ObserverEntry = Pick<IntersectionObserverEntry, 'isIntersecting' | 'target'>
 
 describe('WrightHero', () => {
   const originalIntersectionObserver = window.IntersectionObserver
@@ -77,6 +77,46 @@ describe('WrightHero', () => {
     expect(screen.getByText('Überlieferte Formel ist Ausgangspunkt. Beweis ist das Ziel.')).toBeTruthy()
   })
 
+  it('keeps the theme transition responsive when video metadata is unavailable', () => {
+    const { container } = render(<WrightHero reducedMotion={false} />)
+    const section = container.querySelector('#haltung') as HTMLElement
+    const video = container.querySelector('video') as HTMLVideoElement
+
+    vi.spyOn(section, 'getBoundingClientRect').mockReturnValue({
+      top: -1600,
+      height: 2400,
+      bottom: 800,
+      left: 0,
+      right: 1280,
+      width: 1280,
+      x: 0,
+      y: -1600,
+      toJSON: () => ({}),
+    })
+    Object.defineProperty(video, 'duration', { configurable: true, value: Number.NaN })
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 })
+
+    fireEvent.error(video)
+    act(() => intersectionCallback?.([{ isIntersecting: true, target: section } as ObserverEntry as IntersectionObserverEntry], {} as IntersectionObserver))
+    act(() => frameCallback?.(0))
+
+    expect(section.style.getPropertyValue('--wright-theme-fade')).toBe('1')
+  })
+
+  it('uses the final hero visibility state from a batched observer callback', () => {
+    const addEventListener = vi.spyOn(window, 'addEventListener')
+    const { container } = render(<WrightHero reducedMotion={false} />)
+    const section = container.querySelector('#haltung') as HTMLElement
+
+    act(() => intersectionCallback?.([
+      { isIntersecting: true, target: section } as ObserverEntry as IntersectionObserverEntry,
+      { isIntersecting: false, target: section } as ObserverEntry as IntersectionObserverEntry,
+    ], {} as IntersectionObserver))
+
+    expect(addEventListener.mock.calls.some(([type]) => type === 'scroll' || type === 'resize')).toBe(false)
+    expect(window.requestAnimationFrame).not.toHaveBeenCalled()
+  })
+
   it('scrubs through one animation frame only while the hero is visible and cleans up', () => {
     const addEventListener = vi.spyOn(window, 'addEventListener')
     const removeEventListener = vi.spyOn(window, 'removeEventListener')
@@ -102,7 +142,7 @@ describe('WrightHero', () => {
     fireEvent.loadedMetadata(video)
     expect(window.requestAnimationFrame).not.toHaveBeenCalled()
 
-    act(() => intersectionCallback?.([{ isIntersecting: true } as ObserverEntry as IntersectionObserverEntry], {} as IntersectionObserver))
+    act(() => intersectionCallback?.([{ isIntersecting: true, target: section } as ObserverEntry as IntersectionObserverEntry], {} as IntersectionObserver))
     window.dispatchEvent(new Event('scroll'))
     window.dispatchEvent(new Event('resize'))
 
@@ -129,7 +169,7 @@ describe('WrightHero', () => {
     act(() => frameCallback?.(16))
     expect(section.style.getPropertyValue('--wright-theme-fade')).toBe('1')
 
-    act(() => intersectionCallback?.([{ isIntersecting: false } as ObserverEntry as IntersectionObserverEntry], {} as IntersectionObserver))
+    act(() => intersectionCallback?.([{ isIntersecting: false, target: section } as ObserverEntry as IntersectionObserverEntry], {} as IntersectionObserver))
     expect(removeEventListener.mock.calls.some(([type]) => type === 'scroll')).toBe(true)
     expect(removeEventListener.mock.calls.some(([type]) => type === 'resize')).toBe(true)
 

@@ -15,13 +15,15 @@ export function useScrollVideo(
     const update = () => {
       frame = undefined
       const section = sectionRef.current
-      const video = videoRef.current
-      if (!section || !video || !Number.isFinite(video.duration)) return
+      if (!section) return
 
       const rect = section.getBoundingClientRect()
       const progress = scrollProgress(rect.top, rect.height, window.innerHeight)
       const themeFade = progress >= 1 ? 1 : Math.max(0, (progress - .8) / .2)
       section.style.setProperty('--wright-theme-fade', String(themeFade))
+
+      const video = videoRef.current
+      if (!video || !Number.isFinite(video.duration)) return
       video.currentTime = progress * video.duration
     }
 
@@ -75,7 +77,13 @@ export function useScrollVideo(
     }
 
     const observer = new window.IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) startListening()
+      let latestEntry: IntersectionObserverEntry | undefined
+      for (const entry of entries) {
+        if (entry.target === section) latestEntry = entry
+      }
+      if (!latestEntry) return
+
+      if (latestEntry.isIntersecting) startListening()
       else stopListening()
     })
 

@@ -70,6 +70,7 @@ describe('LandingPage theme', () => {
     act(() => media.emit('(prefers-reduced-motion: reduce)', true))
 
     expect(shell.getAttribute('data-reduced-motion')).toBe('true')
+    expect(shell.classList.contains('landing-shell--reduced-motion')).toBe(true)
   })
 
   it('renders when matchMedia is unavailable', () => {

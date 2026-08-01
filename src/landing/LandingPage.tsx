@@ -11,7 +11,7 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
   const reducedMotion = useReducedMotion()
 
   return <main
-    className="landing-shell"
+    className={`landing-shell${reducedMotion ? ' landing-shell--reduced-motion' : ''}`}
     aria-labelledby="landing-title"
     data-landing-theme={theme}
     data-reduced-motion={reducedMotion}

@@ -117,13 +117,15 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .landing-shell *,
-  .landing-shell *::before,
-  .landing-shell *::after {
-    scroll-behavior: auto !important;
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-  }
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion {
+  --landing-motion-reduced: 1;
+}
+
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *,
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *::before,
+.landing-shell[data-reduced-motion="true"].landing-shell--reduced-motion *::after {
+  scroll-behavior: auto !important;
+  transition-duration: .01ms !important;
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
 }

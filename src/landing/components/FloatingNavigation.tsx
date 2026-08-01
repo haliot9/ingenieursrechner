@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { LandingTheme } from '../theme/useLandingTheme'
 import { useReducedMotion } from '../motion/useReducedMotion'
 import { LiquidSurface } from './LiquidSurface'
@@ -31,8 +31,8 @@ export function FloatingNavigation({
   const dialogRef = useRef<HTMLElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const restoreFocusRef = useRef<HTMLElement | null>(null)
-  const onOpenChangeRef = useRef(onOpenChange)
   const reducedMotion = useReducedMotion()
+  const notifyUnmount = useEffectEvent(() => onOpenChange?.(false))
 
   const closeNavigation = useCallback(() => {
     setOpen(false)
@@ -46,11 +46,7 @@ export function FloatingNavigation({
     onOpenChange?.(true)
   }
 
-  useEffect(() => {
-    onOpenChangeRef.current = onOpenChange
-  }, [onOpenChange])
-
-  useEffect(() => () => onOpenChangeRef.current?.(false), [])
+  useEffect(() => () => notifyUnmount(), [])
 
   useEffect(() => {
     if (!open) return

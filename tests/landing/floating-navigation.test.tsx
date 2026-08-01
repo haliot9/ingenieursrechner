@@ -166,6 +166,38 @@ describe('FloatingNavigation', () => {
     expect(background).not.toHaveAttribute('inert')
   })
 
+  it('uses a replacement callback when cleanup immediately follows its render', () => {
+    const initialCallback = vi.fn()
+    const replacementCallback = vi.fn()
+    const { rerender, unmount } = render(
+      <FloatingNavigation
+        sections={sections}
+        theme="light"
+        onOpenChange={initialCallback}
+        onToggleTheme={vi.fn()}
+        onOpenCalculator={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
+    expect(initialCallback).toHaveBeenCalledWith(true)
+
+    rerender(
+      <FloatingNavigation
+        sections={sections}
+        theme="light"
+        onOpenChange={replacementCallback}
+        onToggleTheme={vi.fn()}
+        onOpenCalculator={vi.fn()}
+      />,
+    )
+    unmount()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(replacementCallback).toHaveBeenCalledWith(false)
+    expect(initialCallback).not.toHaveBeenCalledWith(false)
+  })
+
   it('scrolls to an available chapter and closes the dialog', () => {
     const target = document.createElement('section')
     target.id = 'thermodynamik'

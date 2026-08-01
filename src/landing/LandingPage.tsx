@@ -1,4 +1,5 @@
 import './landing.css'
+import { WrightHero } from './components/WrightHero'
 import { useReducedMotion } from './motion/useReducedMotion'
 import { useLandingTheme } from './theme/useLandingTheme'
 
@@ -18,24 +19,21 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
   >
     <header className="landing-shell__header">
       <p className="landing-shell__eyebrow">Ingenieursrechner</p>
-      <button
-        className="landing-shell__theme-toggle"
-        type="button"
-        aria-label="Darstellung wechseln"
-        aria-pressed={theme === 'dark'}
-        onClick={toggleTheme}
-      >
-        {theme === 'dark' ? 'Helle Darstellung' : 'Dunkle Darstellung'}
-      </button>
+      <div className="landing-shell__header-actions">
+        <button className="landing-shell__calculator-link" type="button" onClick={() => onOpenCalculator('carnot')}>
+          Rechner öffnen
+        </button>
+        <button
+          className="landing-shell__theme-toggle"
+          type="button"
+          aria-label="Darstellung wechseln"
+          aria-pressed={theme === 'dark'}
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? 'Helle Darstellung' : 'Dunkle Darstellung'}
+        </button>
+      </div>
     </header>
-    <section className="landing-shell__content">
-      <h1 className="landing-shell__title" id="landing-title">Nicht nur rechnen. Systeme verstehen.</h1>
-      <p className="landing-shell__intro">
-        Thermodynamische Zusammenhänge nachvollziehen – mit überprüfbaren Formeln und klaren Einheiten.
-      </p>
-      <button className="landing-shell__calculator-link" type="button" onClick={() => onOpenCalculator('carnot')}>
-        Rechner öffnen
-      </button>
-    </section>
+    <WrightHero reducedMotion={reducedMotion} />
   </main>
 }

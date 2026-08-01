@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
 import { useCalculatorStore } from '../store/calculator-store'
 import { ModuleSelector } from '../components/ModuleSelector'
 import { CalculatorTable } from '../components/CalculatorTable'
@@ -10,10 +10,16 @@ import { DiagramPanel } from '../components/diagrams/DiagramPanel'
 import { CalculationStoryDisplay } from '../components/CalculationStoryDisplay'
 import { isConsumedStoryStep, removeConsumedStorySteps } from '../core/calculation-story'
 
-interface CalculatorPageProps { onBackToLanding: () => void }
+interface CalculatorPageProps {
+  moduleId?: string
+  onBackToLanding: () => void
+}
 
-export function CalculatorPage({ onBackToLanding }: CalculatorPageProps) {
+export function CalculatorPage({ moduleId, onBackToLanding }: CalculatorPageProps) {
   const { module, steps, errors, values, presentation, story } = useCalculatorStore()
+  useLayoutEffect(() => {
+    if (moduleId) useCalculatorStore.getState().setModule(moduleId)
+  }, [moduleId])
   useEffect(() => {
     if (module) document.title = `Ingenieursrechner · ${module.name}`
   }, [module])

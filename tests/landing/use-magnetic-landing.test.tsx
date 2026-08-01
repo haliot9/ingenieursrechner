@@ -158,6 +158,36 @@ describe('useMagneticLanding', () => {
     expect(target.scrollIntoView).not.toHaveBeenCalled()
   })
 
+  it('settles the current chapter element after a deferred placeholder is replaced', () => {
+    render(<MagneticHarness />)
+
+    const original = document.getElementById('module') as HTMLElement
+    const replacement = document.createElement('section')
+    replacement.id = 'module'
+    replacement.scrollIntoView = vi.fn()
+    replacement.getBoundingClientRect = () => ({
+      x: 0,
+      y: 20,
+      top: 20,
+      right: 100,
+      bottom: 820,
+      left: 0,
+      width: 100,
+      height: 800,
+      toJSON: () => ({}),
+    })
+    original.replaceWith(replacement)
+
+    fireEvent.scroll(window)
+    act(() => vi.advanceTimersByTime(140))
+
+    try {
+      expect(replacement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    } finally {
+      replacement.replaceWith(original)
+    }
+  })
+
   it('refreshes dominance before resetting the repeat guard', () => {
     render(<MagneticHarness />)
 

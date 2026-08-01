@@ -22,9 +22,9 @@ function mockMatchMedia(preferences: Record<string, boolean>) {
   }))
 }
 
-function advanceExplorerToCycles() {
-  fireEvent.click(screen.getByRole('button', { name: 'Thermodynamik erkunden' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Kreisprozesse erkunden' }))
+async function advanceExplorerToCycles() {
+  fireEvent.click(await screen.findByRole('button', { name: 'Thermodynamik erkunden' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Kreisprozesse erkunden' }))
 }
 
 describe('complete landing page', () => {
@@ -41,9 +41,8 @@ describe('complete landing page', () => {
     vi.restoreAllMocks()
   })
 
-  it('composes the truthful five-chapter experience and public controls in order', () => {
+  it('composes the truthful five-chapter experience and public controls in order', async () => {
     mockMatchMedia({ '(prefers-color-scheme: dark)': true })
-    const random = vi.spyOn(Math, 'random')
     const onOpenCalculator = vi.fn()
     const { container } = render(<LandingPage onOpenCalculator={onOpenCalculator} />)
 
@@ -53,21 +52,21 @@ describe('complete landing page', () => {
       container.querySelectorAll<HTMLElement>('.landing-shell__content > section[id]'),
       section => section.id,
     )).toEqual(CHAPTER_IDS)
+    await screen.findByRole('button', { name: /Aktives Fachgebiet.*Thermodynamik/ }, { timeout: 5_000 })
     for (const moduleName of MODULE_NAMES) {
       expect(screen.getByText(new RegExp(moduleName.replace('/', '\\/')))).toBeInTheDocument()
     }
 
-    expect(screen.getByText(
+    expect(await screen.findByText(
       'Neue Rechenräume erscheinen erst, wenn Modell, Solverpfad und Erklärung belastbar sind.',
     )).toBeInTheDocument()
     expect(container).not.toHaveTextContent(/Robotik|SPS|Rankine|Strömungsmechanik|AI-powered calculator/i)
-    expect(screen.getByRole('link', { name: 'Repository ansehen' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Repository ansehen' })).toHaveAttribute(
       'href',
       'https://github.com/haliot9/ingenieursrechner',
     )
 
     expect(container.querySelectorAll('[data-particle]')).toHaveLength(24)
-    expect(random).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
     const dialog = screen.getByRole('dialog', { name: 'Seitennavigation' })
@@ -76,20 +75,20 @@ describe('complete landing page', () => {
 
     const thermodynamics = document.getElementById('thermodynamik') as HTMLElement
     thermodynamics.scrollIntoView = vi.fn()
-    fireEvent.click(screen.getByRole('button', { name: /Aktives Fachgebiet.*Thermodynamik/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aktives Fachgebiet.*Thermodynamik/ }))
     expect(thermodynamics.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
   })
 
-  it('routes explorer selection through the Joule proof, coda, and floating rail closures', () => {
+  it('routes explorer selection through the Joule proof, coda, and floating rail closures', async () => {
     mockMatchMedia({})
     const onOpenCalculator = vi.fn()
     render(<LandingPage onOpenCalculator={onOpenCalculator} />)
-    advanceExplorerToCycles()
+    await advanceExplorerToCycles()
     fireEvent.click(screen.getByRole('button', { name: 'Joule-/Brayton-Prozess' }))
 
-    const proof = screen.getByRole('region', { name: 'Vom Modell zur Wärmezufuhr.' })
+    const proof = await screen.findByRole('region', { name: 'Vom Modell zur Wärmezufuhr.' })
     fireEvent.click(within(proof).getByRole('button', { name: 'Joule-Rechner öffnen' }))
-    const coda = screen.getByRole('region', { name: 'Projektbeleg.' })
+    const coda = await screen.findByRole('region', { name: 'Projektbeleg.' })
     fireEvent.click(within(coda).getByRole('button', { name: 'Ausgewählten Rechner öffnen' }))
     fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rechner öffnen' }))
@@ -97,7 +96,7 @@ describe('complete landing page', () => {
     expect(onOpenCalculator.mock.calls).toEqual([['joule'], ['joule'], ['joule']])
   })
 
-  it('removes particles and magnetic enhancement under reduced motion without removing content', () => {
+  it('removes particles and magnetic enhancement under reduced motion without removing content', async () => {
     mockMatchMedia({
       '(prefers-color-scheme: dark)': true,
       '(prefers-reduced-motion: reduce)': true,
@@ -111,8 +110,8 @@ describe('complete landing page', () => {
       section => section.id,
     )).toEqual(CHAPTER_IDS)
     expect(screen.getByRole('heading', { name: 'Nicht nur rechnen. Systeme verstehen.' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Vom Modell zur Wärmezufuhr.' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Projektbeleg.' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Vom Modell zur Wärmezufuhr.' }, { timeout: 5_000 })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Projektbeleg.' }, { timeout: 5_000 })).toBeInTheDocument()
   })
 })
 

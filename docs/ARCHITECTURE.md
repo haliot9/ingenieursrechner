@@ -39,6 +39,8 @@ URL boundary
 
 Landing content derives available calculators from the existing module registry and reads reference evidence through public module, diagram, and calculation-story interfaces. It does not duplicate solver authority or introduce a second calculation path.
 
+The URL boundary lazy-loads the landing and calculator pages independently. Solver-backed landing chapters are loaded only as their stable chapter placeholders approach the viewport; accessible loading and reload states preserve navigation targets without placing solver or calculator code in the initial entry.
+
 ## Schichten
 
 ### 1. Core Engine (`src/core/`)
@@ -62,7 +64,7 @@ Jedes Modul definiert ein abgeschlossenes Rechengebiet.
 - `index.ts` - Export als `CalculatorModule`
 
 **Aktuell:** Carnot-Prozess sowie ideale Luftstandard-Diesel-, Otto- und statische ideale Joule-/Brayton-Prozesse (Thermodynamik)
-**Geplant:** Weitere Module (Kinematik, Stroemungsmechanik, etc.)
+**Perspektive:** Weitere Fachgebiete erscheinen erst, wenn Modell, Solverpfad und Erklaerung belastbar implementiert sind.
 
 ### 3. State Management (`src/store/`)
 Zustand-Store der alles verbindet:

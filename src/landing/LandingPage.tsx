@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react'
+import { lazy, useEffect, useState } from 'react'
 import './landing.css'
+import { AsyncContent } from '../components/AsyncContent'
+import { DeferredLandingSection } from './components/DeferredLandingSection'
 import { FloatingNavigation, type LandingNavigationSection } from './components/FloatingNavigation'
-import { JouleProof } from './components/JouleProof'
-import { ModuleAtlas } from './components/ModuleAtlas'
 import { ParticleField } from './components/ParticleField'
-import { ProjectCoda } from './components/ProjectCoda'
-import { ThermodynamicsExplorer } from './components/ThermodynamicsExplorer'
 import { WrightHero } from './components/WrightHero'
 import type { ThermodynamicsModuleId } from './model/landing-modules'
 import { useMagneticLanding } from './motion/useMagneticLanding'
 import { useReducedMotion } from './motion/useReducedMotion'
 import { useLandingTheme } from './theme/useLandingTheme'
+
+const JouleProof = lazy(() => import('./components/JouleProof').then(module => ({ default: module.JouleProof })))
+const ModuleAtlas = lazy(() => import('./components/ModuleAtlas').then(module => ({ default: module.ModuleAtlas })))
+const ProjectCoda = lazy(() => import('./components/ProjectCoda').then(module => ({ default: module.ProjectCoda })))
+const ThermodynamicsExplorer = lazy(() => import('./components/ThermodynamicsExplorer').then(module => ({
+  default: module.ThermodynamicsExplorer,
+})))
 
 export interface LandingPageProps {
   onOpenCalculator: (moduleId: string) => void
@@ -76,16 +81,36 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
         </div>
       </header>
       <WrightHero reducedMotion={reducedMotion} />
-      <ModuleAtlas onExploreThermodynamics={exploreThermodynamics} />
-      <ThermodynamicsExplorer
-        onSelectionChange={setSelectedModuleId}
-        onOpenCalculator={onOpenCalculator}
-      />
-      <JouleProof onOpenCalculator={() => onOpenCalculator('joule')} />
-      <ProjectCoda
-        onOpenCalculator={openSelectedModule}
-        calculatorAccessibleName="Ausgewählten Rechner öffnen"
-      />
+      <DeferredLandingSection id="module" label="Modulatlas">
+        <AsyncContent loadingLabel="Modulatlas wird geladen" sectionId="module" sectionLabel="Modulatlas">
+          <ModuleAtlas onExploreThermodynamics={exploreThermodynamics} />
+        </AsyncContent>
+      </DeferredLandingSection>
+      <DeferredLandingSection id="thermodynamik" label="Thermodynamik-Explorer">
+        <AsyncContent
+          loadingLabel="Thermodynamik-Explorer wird geladen"
+          sectionId="thermodynamik"
+          sectionLabel="Thermodynamik-Explorer"
+        >
+          <ThermodynamicsExplorer
+            onSelectionChange={setSelectedModuleId}
+            onOpenCalculator={onOpenCalculator}
+          />
+        </AsyncContent>
+      </DeferredLandingSection>
+      <DeferredLandingSection id="rechenweg" label="Rechenweg">
+        <AsyncContent loadingLabel="Rechenweg wird geladen" sectionId="rechenweg" sectionLabel="Rechenweg">
+          <JouleProof onOpenCalculator={() => onOpenCalculator('joule')} />
+        </AsyncContent>
+      </DeferredLandingSection>
+      <DeferredLandingSection id="projekt" label="Projektbeleg">
+        <AsyncContent loadingLabel="Projektbeleg wird geladen" sectionId="projekt" sectionLabel="Projektbeleg">
+          <ProjectCoda
+            onOpenCalculator={openSelectedModule}
+            calculatorAccessibleName="Ausgewählten Rechner öffnen"
+          />
+        </AsyncContent>
+      </DeferredLandingSection>
     </div>
   </main>
 }

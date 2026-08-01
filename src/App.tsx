@@ -1,21 +1,26 @@
-import { useEffect } from 'react'
-import { CalculatorPage } from './calculator/CalculatorPage'
-import { LandingPage } from './landing/LandingPage'
-import { getModule } from './modules'
+import { lazy } from 'react'
+import { AsyncContent } from './components/AsyncContent'
 import { useAppLocation } from './navigation/useAppLocation'
-import { useCalculatorStore } from './store/calculator-store'
+
+const CalculatorPage = lazy(() => import('./calculator/CalculatorPage').then(module => ({
+  default: module.CalculatorPage,
+})))
+const LandingPage = lazy(() => import('./landing/LandingPage').then(module => ({
+  default: module.LandingPage,
+})))
 
 export default function App() {
   const { location, navigate } = useAppLocation()
-  const setModule = useCalculatorStore(state => state.setModule)
 
-  useEffect(() => {
-    if (location.page === 'calculator' && location.moduleId && getModule(location.moduleId)) {
-      setModule(location.moduleId)
-    }
-  }, [location, setModule])
-
-  return location.page === 'calculator'
-    ? <CalculatorPage onBackToLanding={() => navigate({ page: 'landing' })} />
-    : <LandingPage onOpenCalculator={moduleId => navigate({ page: 'calculator', moduleId })} />
+  return <AsyncContent
+    key={location.page}
+    loadingLabel={location.page === 'calculator' ? 'Rechner wird geladen' : 'Landingpage wird geladen'}
+  >
+    {location.page === 'calculator'
+      ? <CalculatorPage
+          moduleId={location.moduleId}
+          onBackToLanding={() => navigate({ page: 'landing' })}
+        />
+      : <LandingPage onOpenCalculator={moduleId => navigate({ page: 'calculator', moduleId })} />}
+  </AsyncContent>
 }

@@ -40,7 +40,10 @@ export function useMagneticLanding(reducedMotion: boolean) {
       settleTimer = undefined
       if (activePointerIds.size > 0 || activeTouchCount > 0) return
 
-      const currentCandidates = chapters.map(measureCandidate)
+      const currentChapters = CHAPTER_IDS
+        .map(id => document.getElementById(id))
+        .filter((chapter): chapter is HTMLElement => chapter !== null)
+      const currentCandidates = currentChapters.map(measureCandidate)
       const dominant = currentCandidates
         .slice()
         .sort((a, b) => b.visibleRatio - a.visibleRatio)[0]?.id

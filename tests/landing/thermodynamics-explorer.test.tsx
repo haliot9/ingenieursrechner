@@ -6,13 +6,13 @@ import { LandingPage } from '../../src/landing/LandingPage'
 import { ThermodynamicsExplorer } from '../../src/landing/components/ThermodynamicsExplorer'
 import { getThermodynamicsModules } from '../../src/landing/model/landing-modules'
 
-function advanceToCycles() {
-  fireEvent.click(screen.getByRole('button', { name: 'Thermodynamik erkunden' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Kreisprozesse erkunden' }))
+async function advanceToCycles() {
+  fireEvent.click(await screen.findByRole('button', { name: 'Thermodynamik erkunden' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Kreisprozesse erkunden' }))
 }
 
 describe('ThermodynamicsExplorer', () => {
-  it('advances one layer at a time and reverses the exact path on one live surface', () => {
+  it('advances one layer at a time and reverses the exact path on one live surface', async () => {
     render(<ThermodynamicsExplorer onSelectionChange={vi.fn()} onOpenCalculator={vi.fn()} />)
 
     const explorer = screen.getByRole('region', { name: 'Thermodynamik-Explorer' })
@@ -22,7 +22,7 @@ describe('ThermodynamicsExplorer', () => {
     expect(screen.getByRole('heading', { name: 'Thermodynamik' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Kreisprozesse' })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Thermodynamik erkunden' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Thermodynamik erkunden' }))
     expect(screen.getByRole('heading', { name: 'Kreisprozesse' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Carnot-Prozess' })).not.toBeInTheDocument()
 
@@ -50,7 +50,7 @@ describe('ThermodynamicsExplorer', () => {
     expect(explorer.querySelector('[aria-live="polite"]')).toBe(stage)
   })
 
-  it('reports and opens the correct calculator for every registered process', () => {
+  it('reports and opens the correct calculator for every registered process', async () => {
     const onSelectionChange = vi.fn()
     const onOpenCalculator = vi.fn()
     render(
@@ -59,7 +59,7 @@ describe('ThermodynamicsExplorer', () => {
         onOpenCalculator={onOpenCalculator}
       />,
     )
-    advanceToCycles()
+    await advanceToCycles()
 
     const modules = getThermodynamicsModules()
     for (const module of modules) {
@@ -78,10 +78,10 @@ describe('ThermodynamicsExplorer', () => {
     )
   })
 
-  it('keeps the selected module in the landing page for its global calculator action', () => {
+  it('keeps the selected module in the landing page for its global calculator action', async () => {
     const onOpenCalculator = vi.fn()
     render(<LandingPage onOpenCalculator={onOpenCalculator} />)
-    advanceToCycles()
+    await advanceToCycles()
 
     fireEvent.click(screen.getByRole('button', { name: 'Joule-/Brayton-Prozess' }))
     fireEvent.click(screen.getByRole('button', { name: 'Rechner öffnen' }))

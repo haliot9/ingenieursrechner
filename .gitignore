@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+playwright-report
+test-results
 *.local
 
 # Personal cheat sheet and legacy local agent runtime (not for public repo)

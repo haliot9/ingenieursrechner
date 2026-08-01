@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './landing.css'
 import { FloatingNavigation, type LandingNavigationSection } from './components/FloatingNavigation'
+import { JouleProof } from './components/JouleProof'
 import { ModuleAtlas } from './components/ModuleAtlas'
+import { ParticleField } from './components/ParticleField'
+import { ProjectCoda } from './components/ProjectCoda'
 import { ThermodynamicsExplorer } from './components/ThermodynamicsExplorer'
 import { WrightHero } from './components/WrightHero'
 import type { ThermodynamicsModuleId } from './model/landing-modules'
+import { useMagneticLanding } from './motion/useMagneticLanding'
 import { useReducedMotion } from './motion/useReducedMotion'
 import { useLandingTheme } from './theme/useLandingTheme'
 
@@ -26,8 +30,14 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
   const reducedMotion = useReducedMotion()
   const [selectedModuleId, setSelectedModuleId] = useState<ThermodynamicsModuleId>('carnot')
   const openSelectedModule = () => onOpenCalculator(selectedModuleId)
+  useMagneticLanding(reducedMotion)
+
+  useEffect(() => {
+    document.title = 'Ingenieursrechner · Systeme verstehen'
+  }, [])
+
   const exploreThermodynamics = () => {
-    document.getElementById('thermodynamik')?.scrollIntoView({
+    document.getElementById('thermodynamik')?.scrollIntoView?.({
       behavior: reducedMotion ? 'auto' : 'smooth',
       block: 'start',
     })
@@ -39,6 +49,7 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
     data-landing-theme={theme}
     data-reduced-motion={reducedMotion}
   >
+    <ParticleField enabled={theme === 'dark' && !reducedMotion} />
     <FloatingNavigation
       sections={LANDING_NAVIGATION_SECTIONS}
       theme={theme}
@@ -69,6 +80,11 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
       <ThermodynamicsExplorer
         onSelectionChange={setSelectedModuleId}
         onOpenCalculator={onOpenCalculator}
+      />
+      <JouleProof onOpenCalculator={() => onOpenCalculator('joule')} />
+      <ProjectCoda
+        onOpenCalculator={openSelectedModule}
+        calculatorAccessibleName="Ausgewählten Rechner öffnen"
       />
     </div>
   </main>

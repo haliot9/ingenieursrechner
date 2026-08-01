@@ -2,7 +2,11 @@ import { renderLatex } from '../../utils/latex'
 import { getJouleProofExcerpt } from '../model/joule-proof'
 import './JouleProof.css'
 
-export function JouleProof() {
+export interface JouleProofProps {
+  onOpenCalculator?: () => void
+}
+
+export function JouleProof({ onOpenCalculator }: JouleProofProps = {}) {
   const rows = getJouleProofExcerpt()
 
   return <section id="rechenweg" className="joule-proof" aria-labelledby="joule-proof-title">
@@ -15,6 +19,13 @@ export function JouleProof() {
         technischer Arbeit im Heizer und konstanten Stoffwerten des idealen Gases wird die abschließende
         Wärmezufuhrbeziehung gültig.
       </p>
+      {onOpenCalculator && <button
+        className="joule-proof__calculator"
+        type="button"
+        onClick={() => onOpenCalculator()}
+      >
+        Joule-Rechner öffnen
+      </button>}
     </header>
 
     <ol className="joule-proof__equations" aria-label="Auszug aus dem Joule-Rechenweg">

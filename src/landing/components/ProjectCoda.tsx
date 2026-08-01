@@ -2,6 +2,7 @@ import './JouleProof.css'
 
 export interface ProjectCodaProps {
   onOpenCalculator: () => void
+  calculatorAccessibleName?: string
 }
 
 const PROOF_POINTS = [
@@ -12,7 +13,7 @@ const PROOF_POINTS = [
   'Agent-ready',
 ] as const
 
-export function ProjectCoda({ onOpenCalculator }: ProjectCodaProps) {
+export function ProjectCoda({ onOpenCalculator, calculatorAccessibleName }: ProjectCodaProps) {
   return <section id="projekt" className="project-coda" aria-labelledby="project-coda-title">
     <div className="project-coda__layout">
       <div>
@@ -29,7 +30,12 @@ export function ProjectCoda({ onOpenCalculator }: ProjectCodaProps) {
         >
           Repository ansehen
         </a>
-        <button className="project-coda__calculator" type="button" onClick={() => onOpenCalculator()}>
+        <button
+          className="project-coda__calculator"
+          type="button"
+          aria-label={calculatorAccessibleName}
+          onClick={() => onOpenCalculator()}
+        >
           Rechner öffnen
         </button>
       </div>

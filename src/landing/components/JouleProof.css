@@ -27,11 +27,26 @@
   line-height: .95;
 }
 
-.joule-proof__header > p:last-child {
+.joule-proof__header > p:not(.landing-eyebrow) {
   max-width: 38rem;
   margin: 0;
   color: var(--landing-muted);
   line-height: 1.7;
+}
+
+.joule-proof__calculator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 1.5rem;
+  padding: .75rem 1.1rem;
+  border: 1px solid var(--landing-metal);
+  color: var(--landing-bg);
+  background: var(--landing-metal);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .joule-proof__equations {

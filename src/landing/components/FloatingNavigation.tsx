@@ -12,41 +12,79 @@ export interface LandingNavigationSection {
 export interface FloatingNavigationProps {
   sections: LandingNavigationSection[]
   theme: LandingTheme
+  onOpenChange?: (open: boolean) => void
   onToggleTheme: () => void
   onOpenCalculator: () => void
 }
 
 const DIALOG_ID = 'floating-navigation-dialog'
 
-export function FloatingNavigation({ sections, theme, onToggleTheme, onOpenCalculator }: FloatingNavigationProps) {
+export function FloatingNavigation({
+  sections,
+  theme,
+  onOpenChange,
+  onToggleTheme,
+  onOpenCalculator,
+}: FloatingNavigationProps) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const reducedMotion = useReducedMotion()
 
   const closeNavigation = useCallback(() => {
     setOpen(false)
+    onOpenChange?.(false)
     restoreFocusRef.current?.focus()
-  }, [])
+  }, [onOpenChange])
 
   const openNavigation = () => {
     restoreFocusRef.current = triggerRef.current
     setOpen(true)
+    onOpenChange?.(true)
   }
+
+  useEffect(() => () => onOpenChange?.(false), [onOpenChange])
 
   useEffect(() => {
     if (!open) return
 
     headingRef.current?.focus()
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      closeNavigation()
+    const containDialogFocus = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeNavigation()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const dialog = dialogRef.current
+      if (!dialog) return
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )).filter(element => element.tabIndex >= 0)
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (!first || !last) {
+        event.preventDefault()
+        headingRef.current?.focus()
+        return
+      }
+
+      const active = document.activeElement
+      const outsideDialog = !(active instanceof Node) || !dialog.contains(active)
+      if (event.shiftKey && (active === first || active === headingRef.current || outsideDialog)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || outsideDialog)) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
-    document.addEventListener('keydown', closeOnEscape)
-    return () => document.removeEventListener('keydown', closeOnEscape)
+    document.addEventListener('keydown', containDialogFocus)
+    return () => document.removeEventListener('keydown', containDialogFocus)
   }, [closeNavigation, open])
 
   const visitChapter = (id: LandingNavigationSection['id']) => {
@@ -71,6 +109,8 @@ export function FloatingNavigation({ sections, theme, onToggleTheme, onOpenCalcu
         aria-expanded={open}
         aria-controls={DIALOG_ID}
         aria-label="Navigation öffnen"
+        aria-hidden={open || undefined}
+        tabIndex={open ? -1 : undefined}
         onClick={openNavigation}
       >
         <span aria-hidden="true">⌁</span>
@@ -79,14 +119,14 @@ export function FloatingNavigation({ sections, theme, onToggleTheme, onOpenCalcu
     </LiquidSurface>
 
     {open && <div className="floating-rail-overlay">
-      <button
+      <div
         className="floating-rail-dimmer"
-        type="button"
-        aria-label="Navigation schließen"
+        aria-hidden="true"
         onClick={closeNavigation}
       />
       <LiquidSurface className="floating-rail-panel" reducedMotion={reducedMotion}>
         <section
+          ref={dialogRef}
           id={DIALOG_ID}
           className="floating-rail-dialog"
           role="dialog"

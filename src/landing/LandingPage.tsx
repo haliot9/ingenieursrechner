@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import './landing.css'
 import { FloatingNavigation, type LandingNavigationSection } from './components/FloatingNavigation'
 import { WrightHero } from './components/WrightHero'
@@ -17,6 +18,7 @@ const LANDING_NAVIGATION_SECTIONS: LandingNavigationSection[] = [
 ]
 
 export function LandingPage({ onOpenCalculator }: LandingPageProps) {
+  const [navigationOpen, setNavigationOpen] = useState(false)
   const { theme, toggleTheme } = useLandingTheme()
   const reducedMotion = useReducedMotion()
   const selectedModuleId = 'carnot'
@@ -31,26 +33,29 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
     <FloatingNavigation
       sections={LANDING_NAVIGATION_SECTIONS}
       theme={theme}
+      onOpenChange={setNavigationOpen}
       onToggleTheme={toggleTheme}
       onOpenCalculator={openSelectedModule}
     />
-    <header className="landing-shell__header">
-      <p className="landing-shell__eyebrow">Ingenieursrechner</p>
-      <div className="landing-shell__header-actions">
-        <button className="landing-shell__calculator-link" type="button" onClick={openSelectedModule}>
-          Rechner öffnen
-        </button>
-        <button
-          className="landing-shell__theme-toggle"
-          type="button"
-          aria-label="Darstellung wechseln"
-          aria-pressed={theme === 'dark'}
-          onClick={toggleTheme}
-        >
-          {theme === 'dark' ? 'Helle Darstellung' : 'Dunkle Darstellung'}
-        </button>
-      </div>
-    </header>
-    <WrightHero reducedMotion={reducedMotion} />
+    <div className="landing-shell__content" inert={navigationOpen || undefined}>
+      <header className="landing-shell__header">
+        <p className="landing-shell__eyebrow">Ingenieursrechner</p>
+        <div className="landing-shell__header-actions">
+          <button className="landing-shell__calculator-link" type="button" onClick={openSelectedModule}>
+            Rechner öffnen
+          </button>
+          <button
+            className="landing-shell__theme-toggle"
+            type="button"
+            aria-label="Darstellung wechseln"
+            aria-pressed={theme === 'dark'}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? 'Helle Darstellung' : 'Dunkle Darstellung'}
+          </button>
+        </div>
+      </header>
+      <WrightHero reducedMotion={reducedMotion} />
+    </div>
   </main>
 }

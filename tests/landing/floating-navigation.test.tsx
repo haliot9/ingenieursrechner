@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -21,6 +21,21 @@ function mockMatchMedia(preferences: Record<string, boolean>) {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   }))
+}
+
+function InertBackgroundHarness({ showNavigation = true }: { showNavigation?: boolean }) {
+  const [navigationOpen, setNavigationOpen] = useState(false)
+
+  return <>
+    {showNavigation && <FloatingNavigation
+      sections={sections}
+      theme="light"
+      onOpenChange={setNavigationOpen}
+      onToggleTheme={vi.fn()}
+      onOpenCalculator={vi.fn()}
+    />}
+    <div data-testid="background" inert={navigationOpen || undefined}>Seiteninhalt</div>
+  </>
 }
 
 describe('FloatingNavigation', () => {
@@ -60,6 +75,58 @@ describe('FloatingNavigation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).toHaveFocus()
+  })
+
+  it('contains forward and reverse Tab navigation inside the dialog', () => {
+    render(
+      <FloatingNavigation
+        sections={sections}
+        theme="light"
+        onToggleTheme={vi.fn()}
+        onOpenCalculator={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
+    const dialog = screen.getByRole('dialog')
+    const heading = within(dialog).getByRole('heading', { name: 'Seitennavigation' })
+    const close = within(dialog).getByRole('button', { name: 'Navigation schließen' })
+    const calculator = within(dialog).getByRole('button', { name: 'Rechner öffnen' })
+
+    expect(screen.getAllByRole('button', { name: 'Navigation schließen' })).toHaveLength(1)
+
+    calculator.focus()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(close).toHaveFocus()
+
+    heading.focus()
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    expect(calculator).toHaveFocus()
+  })
+
+  it('makes landing content inert while open and restores it after close', () => {
+    render(<LandingPage onOpenCalculator={vi.fn()} />)
+    const content = document.querySelector<HTMLElement>('.landing-shell__content')
+
+    expect(content).not.toBeNull()
+    expect(content).not.toHaveAttribute('inert')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
+    expect(content).toHaveAttribute('inert')
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(content).not.toHaveAttribute('inert')
+  })
+
+  it('restores a background element inert state when an open rail unmounts', () => {
+    const { rerender } = render(<InertBackgroundHarness />)
+    const background = screen.getByTestId('background')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
+    expect(background).toHaveAttribute('inert')
+
+    rerender(<InertBackgroundHarness showNavigation={false} />)
+    expect(background).not.toHaveAttribute('inert')
   })
 
   it('scrolls to an available chapter and closes the dialog', () => {

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import './landing.css'
 import { FloatingNavigation, type LandingNavigationSection } from './components/FloatingNavigation'
 import { ModuleAtlas } from './components/ModuleAtlas'
+import { ThermodynamicsExplorer } from './components/ThermodynamicsExplorer'
 import { WrightHero } from './components/WrightHero'
+import type { ThermodynamicsModuleId } from './model/landing-modules'
 import { useReducedMotion } from './motion/useReducedMotion'
 import { useLandingTheme } from './theme/useLandingTheme'
 
@@ -22,7 +24,7 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
   const [navigationOpen, setNavigationOpen] = useState(false)
   const { theme, toggleTheme } = useLandingTheme()
   const reducedMotion = useReducedMotion()
-  const selectedModuleId = 'carnot'
+  const [selectedModuleId, setSelectedModuleId] = useState<ThermodynamicsModuleId>('carnot')
   const openSelectedModule = () => onOpenCalculator(selectedModuleId)
   const exploreThermodynamics = () => {
     document.getElementById('thermodynamik')?.scrollIntoView({
@@ -64,6 +66,10 @@ export function LandingPage({ onOpenCalculator }: LandingPageProps) {
       </header>
       <WrightHero reducedMotion={reducedMotion} />
       <ModuleAtlas onExploreThermodynamics={exploreThermodynamics} />
+      <ThermodynamicsExplorer
+        onSelectionChange={setSelectedModuleId}
+        onOpenCalculator={onOpenCalculator}
+      />
     </div>
   </main>
 }

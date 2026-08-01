@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import '@testing-library/jest-dom/vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -35,6 +35,25 @@ function InertBackgroundHarness({ showNavigation = true }: { showNavigation?: bo
       onOpenCalculator={vi.fn()}
     />}
     <div data-testid="background" inert={navigationOpen || undefined}>Seiteninhalt</div>
+  </>
+}
+
+function RecreatedCallbackHarness({ revision }: { revision: number }) {
+  const [navigationOpen, setNavigationOpen] = useState(false)
+  const reportNavigationOpen = useCallback((nextOpen: boolean) => {
+    void revision
+    setNavigationOpen(nextOpen)
+  }, [revision])
+
+  return <>
+    <FloatingNavigation
+      sections={sections}
+      theme="light"
+      onOpenChange={reportNavigationOpen}
+      onToggleTheme={vi.fn()}
+      onOpenCalculator={vi.fn()}
+    />
+    <div data-testid="changing-background" inert={navigationOpen || undefined}>Seiteninhalt</div>
   </>
 }
 
@@ -126,6 +145,24 @@ describe('FloatingNavigation', () => {
     expect(background).toHaveAttribute('inert')
 
     rerender(<InertBackgroundHarness showNavigation={false} />)
+    expect(background).not.toHaveAttribute('inert')
+  })
+
+  it('keeps the background inert when an open rail receives a recreated callback', () => {
+    const { rerender } = render(<RecreatedCallbackHarness revision={1} />)
+    const background = screen.getByTestId('changing-background')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Navigation öffnen' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(background).toHaveAttribute('inert')
+
+    rerender(<RecreatedCallbackHarness revision={2} />)
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(background).toHaveAttribute('inert')
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(background).not.toHaveAttribute('inert')
   })
 

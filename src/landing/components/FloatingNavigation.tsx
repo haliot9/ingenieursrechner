@@ -31,6 +31,7 @@ export function FloatingNavigation({
   const dialogRef = useRef<HTMLElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const restoreFocusRef = useRef<HTMLElement | null>(null)
+  const onOpenChangeRef = useRef(onOpenChange)
   const reducedMotion = useReducedMotion()
 
   const closeNavigation = useCallback(() => {
@@ -45,7 +46,11 @@ export function FloatingNavigation({
     onOpenChange?.(true)
   }
 
-  useEffect(() => () => onOpenChange?.(false), [onOpenChange])
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange
+  }, [onOpenChange])
+
+  useEffect(() => () => onOpenChangeRef.current?.(false), [])
 
   useEffect(() => {
     if (!open) return

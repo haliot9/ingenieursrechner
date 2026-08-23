@@ -1,9 +1,11 @@
 // @vitest-environment node
 
+import { EventEmitter } from 'node:events'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { createLogger, createServer, resolveConfig } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createConfigHotReloadPlugin } from '../../scripts/vite-config-hot-reload'
 
@@ -136,6 +138,30 @@ if (values.some(value => value.includes('INVALID'))) {
   }
 }
 
+function createControlledPlugin(root: string) {
+  const watcher = Object.assign(new EventEmitter(), {
+    add: () => undefined,
+  })
+  const logger = createLogger('silent', { allowClearScreen: false })
+  const server = {
+    config: { logger },
+    watcher,
+  } as unknown as ViteDevServer
+  const plugin = createConfigHotReloadPlugin({ root })
+  const configureServer = plugin.configureServer as Exclude<Plugin['configureServer'], undefined>
+  const closeBundle = plugin.closeBundle as Exclude<Plugin['closeBundle'], undefined>
+
+  if (typeof configureServer !== 'function' || typeof closeBundle !== 'function') {
+    throw new Error('config hot-reload plugin must expose callable lifecycle hooks')
+  }
+  configureServer(server)
+
+  return {
+    close: () => closeBundle.call(plugin),
+    emitChange: (path: string) => watcher.emit('change', path),
+  }
+}
+
 afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map(path => rm(path, { force: true, recursive: true })))
 })
@@ -222,25 +248,20 @@ describe('Vite config hot reload', () => {
     }
   })
 
-  it('keeps the newest authoring state after rapid consecutive saves', async () => {
+  it('rechecks the newest authoring state when an in-flight save coalesces into one watcher event', async () => {
     const paths = await createFixture()
-    const server = await createServer({
-      configFile: false,
-      root: paths.root,
-      plugins: [createConfigHotReloadPlugin({ root: paths.root })],
-      server: { hmr: false, middlewareMode: true },
-    })
+    const controlledPlugin = createControlledPlugin(paths.root)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 100))
       await writeFile(join(paths.root, paths.background), 'background: SLOW_OLD\n')
+      controlledPlugin.emitChange(join(paths.root, paths.background))
       await waitForFile(paths.compilerStarted, contents => contents.includes('SLOW_OLD'))
-      await writeFile(join(paths.root, paths.background), 'background: newest\n')
+      await writeFile(join(paths.root, paths.background), 'background: newest__\n')
       await waitForFile(paths.compilerCompleted, contents => contents.trim().split('\n').length >= 2)
 
-      expect(await readFile(paths.backgroundOutput, 'utf8')).toContain('newest')
+      expect(await readFile(paths.backgroundOutput, 'utf8')).toContain('newest__')
     } finally {
-      await server.close()
+      await controlledPlugin.close()
     }
   })
 

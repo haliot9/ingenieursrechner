@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { Plugin, ViteDevServer } from 'vite'
 
@@ -6,6 +7,18 @@ type CompilerTarget = {
   inputs: string[]
   name: string
   script: string
+}
+
+function captureInputRevision(inputs: string[]) {
+  return inputs.map(path => {
+    try {
+      const stats = statSync(path, { bigint: true })
+      return `${stats.dev}:${stats.ino}:${stats.size}:${stats.mtimeNs}:${stats.ctimeNs}`
+    } catch (error) {
+      const code = error instanceof Error && 'code' in error ? String(error.code) : 'UNKNOWN'
+      return `unreadable:${code}`
+    }
+  }).join('|')
 }
 
 function compilerTargets(root: string): CompilerTarget[] {
@@ -83,13 +96,16 @@ export function createConfigHotReloadPlugin(options: { root?: string } = {}): Pl
         const state = targetStates.get(target)
         if (!state || state.running || closing) return
         state.pending = false
+        const startingInputRevision = captureInputRevision(target.inputs)
         const child = compile(target, root, viteServer, () => closing)
         state.running = child
         activeCompilers.add(child)
         child.once('close', () => {
           activeCompilers.delete(child)
           state.running = undefined
-          if (state.pending && !closing) startCompiler(target)
+          const inputsChangedDuringCompile = !closing
+            && captureInputRevision(target.inputs) !== startingInputRevision
+          if ((state.pending || inputsChangedDuringCompile) && !closing) startCompiler(target)
         })
       }
       viteServer.watcher.add([...targetByInput.keys()])

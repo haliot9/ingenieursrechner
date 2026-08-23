@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
+.app-route-state {
+  display: grid;
+  min-height: 100vh;
+  padding: 2rem;
+  place-items: center;
+  color: var(--text-primary, #20242a);
+  background: var(--bg-primary, #f4f3ef);
+}
+
 :root {
   --bg-primary: #f3f5f7;
   --bg-secondary: #ffffff;
@@ -386,4 +395,3 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   .calculation-story-area { margin-top: 28px; padding-top: 20px; }
   .calculation-story-separator { margin-bottom: 12px; }
 }
-

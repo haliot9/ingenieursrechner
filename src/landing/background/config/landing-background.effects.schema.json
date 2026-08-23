@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ingenieursrechner.local/schemas/landing-background.effects.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "dark", "light"],
+  "properties": {
+    "version": { "const": 1 },
+    "dark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seed",
+        "count",
+        "spread",
+        "speed",
+        "baseSize",
+        "opacity",
+        "glowStrength",
+        "hoverFactor",
+        "rotationSpeed",
+        "maximumDpr"
+      ],
+      "properties": {
+        "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "count": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "spread": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "multipleOf": 0.01 },
+        "speed": { "type": "number", "minimum": 0, "maximum": 5, "multipleOf": 0.01 },
+        "baseSize": { "type": "number", "exclusiveMinimum": 0, "maximum": 512, "multipleOf": 0.01 },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "glowStrength": { "type": "number", "minimum": 0, "maximum": 2, "multipleOf": 0.01 },
+        "hoverFactor": { "type": "number", "minimum": 0, "maximum": 5, "multipleOf": 0.01 },
+        "rotationSpeed": { "type": "number", "minimum": 0, "maximum": 5, "multipleOf": 0.01 },
+        "maximumDpr": { "type": "number", "minimum": 0.5, "maximum": 3, "multipleOf": 0.01 }
+      }
+    },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layerPlacement",
+        "centerXRatio",
+        "widthRatio",
+        "heightRatio",
+        "borderRadiusPx",
+        "borderWidthRatio",
+        "brightness",
+        "surfaceOpacity",
+        "edgeBlurPx",
+        "displacementBlurPx",
+        "backgroundOpacity",
+        "saturation",
+        "distortionScale",
+        "redOffset",
+        "greenOffset",
+        "blueOffset"
+      ],
+      "properties": {
+        "layerPlacement": {
+          "type": "string",
+          "enum": ["below-wavefield", "above-wavefield"]
+        },
+        "centerXRatio": { "type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "widthRatio": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "heightRatio": { "type": "number", "exclusiveMinimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "borderRadiusPx": { "type": "number", "minimum": 0, "maximum": 256, "multipleOf": 0.01 },
+        "borderWidthRatio": { "type": "number", "minimum": 0, "maximum": 0.5, "multipleOf": 0.01 },
+        "brightness": { "type": "number", "minimum": 0, "maximum": 100, "multipleOf": 0.01 },
+        "surfaceOpacity": { "type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "edgeBlurPx": { "type": "number", "minimum": 0, "maximum": 64, "multipleOf": 0.01 },
+        "displacementBlurPx": { "type": "number", "minimum": 0, "maximum": 64, "multipleOf": 0.01 },
+        "backgroundOpacity": { "type": "number", "minimum": 0, "maximum": 1, "multipleOf": 0.01 },
+        "saturation": { "type": "number", "minimum": 0, "maximum": 4, "multipleOf": 0.01 },
+        "distortionScale": { "type": "number", "minimum": -500, "maximum": 500, "multipleOf": 0.01 },
+        "redOffset": { "type": "number", "minimum": -200, "maximum": 200, "multipleOf": 0.01 },
+        "greenOffset": { "type": "number", "minimum": -200, "maximum": 200, "multipleOf": 0.01 },
+        "blueOffset": { "type": "number", "minimum": -200, "maximum": 200, "multipleOf": 0.01 }
+      }
+    }
+  }
+}

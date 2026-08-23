@@ -29,8 +29,10 @@ jobs:
         run: npm test
       - name: Run lint
         run: npm run lint
-      - name: Build
-        run: npm run build
+      - name: Install Chromium for browser journeys
+        run: npx playwright install --with-deps chromium
+      - name: Run production build and browser journeys
+        run: npm run test:e2e
       - name: Audit runtime dependencies
         run: npm run audit:production
       - name: Report development dependency audit (non-blocking)

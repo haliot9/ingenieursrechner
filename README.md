@@ -1,8 +1,10 @@
 # Ingenieursrechner
 
-[**Live calculator → haliot9.github.io/ingenieursrechner**](https://haliot9.github.io/ingenieursrechner/)
+[**Live project → haliot9.github.io/ingenieursrechner**](https://haliot9.github.io/ingenieursrechner/) · [**Direct calculator → `?view=calculator`**](https://haliot9.github.io/ingenieursrechner/?view=calculator)
 
 A deterministic, browser-based engineering calculator that derives every solvable quantity from the values provided and exposes the complete calculation path.
+
+The public root is a product landing page that introduces the available thermodynamic modules and presents bounded evidence from their existing diagrams and reference calculations. It keeps its visual, theme, and exploration state separate from the calculator; the direct calculator link bypasses the landing experience.
 
 The current production-ready modules cover the ideal Carnot cycle, the ideal air-standard Diesel cycle, the ideal air-standard Otto cycle, and the static ideal Joule/Brayton cycle.
 
@@ -14,7 +16,7 @@ The public site is hosted by GitHub Pages; normal connection metadata is therefo
 
 ## What the thermodynamic modules provide
 
-- Automatic fixed-point solving from partial input sets
+- Automatic derivation from partial input sets through legacy fixed-point or selected finite routes
 - SI-based internal calculations with selectable display units
 - Four thermodynamic state points
 - Ideal-gas, isothermal, adiabatic, entropy, energy-balance, and efficiency relations
@@ -67,19 +69,17 @@ This runs the complete test, lint, production-build, and high-severity **runtime
 ## Architecture
 
 ```text
-module definitions + formulas + presets
-                 │
-                 ▼
-         FormulaRegistry
-                 │
-user values → validation → route planning → fixed-point solver
-                 │                                  │
-                 ▼                                  ▼
-     values + SolutionStep provenance + PresentationPlan
-                 │
-                 ├── optional finite module calculation-story composer
-                 ▼
-       Zustand store → React UI
+module definitions + formulas + presets ──> FormulaRegistry ─┐
+user values ──> validation ──────────────────────────────────┼─> solver dispatch
+                                                             ├─> legacy fixed-point execution
+                                                             └─> directions → route plan → selected execution
+                                                                                         │
+                                                                                         ▼
+                                            values + SolutionStep provenance + PresentationPlan
+                                                                                         │
+                                                                                         ├─> optional finite module story
+                                                                                         ▼
+                                                                               Zustand store → React UI
 ```
 
 - `src/core/` — framework-independent solver, validation, units, and types
@@ -92,7 +92,9 @@ user values → validation → route planning → fixed-point solver
 - `tests/` — unit, property-based, robustness, store, and component regression tests
 - `docs/` — architecture, decisions, and testing guidance
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md) (the filename is retained for link continuity; it now documents the full Joule story contract), [src/modules/carnot/README.md](src/modules/carnot/README.md), [src/modules/diesel/README.md](src/modules/diesel/README.md), [src/modules/otto/README.md](src/modules/otto/README.md), and [src/modules/joule/README.md](src/modules/joule/README.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the system map, [docs/DERIVATION_ARCHITECTURE.md](docs/DERIVATION_ARCHITECTURE.md) for the fact/direction/proof contract, and [docs/CALCULATION_STORY_PILOT.md](docs/CALCULATION_STORY_PILOT.md) for the current reference-only Joule story. Module-specific physics and limits live in the [Carnot](src/modules/carnot/README.md), [Diesel](src/modules/diesel/README.md), [Otto](src/modules/otto/README.md), and [Joule](src/modules/joule/README.md) documentation.
+
+Landing ownership, configuration pipelines, and verification routes are in [src/landing/README.md](src/landing/README.md); the concise status timeline is [docs/frontend/MILESTONES.md](docs/frontend/MILESTONES.md).
 
 ## For coding agents and contributors
 
@@ -102,7 +104,7 @@ Start with [`AGENTS.md`](AGENTS.md), then follow [`docs/TESTING.md`](docs/TESTIN
 
 - Ideal gas only
 - Constant isentropic exponent $\kappa$
-- Fixed-point solver handles formulas with exactly one unknown, not arbitrary implicit systems
+- Numerical routes use registered, pre-solved one-target directions; the calculator does not solve arbitrary implicit systems
 - Absolute entropy uses a documented reference state
 - The tool is an educational calculation aid, not a substitute for validating the assumptions in the original task
 
@@ -114,6 +116,8 @@ The Vite build uses relative asset paths so the app works below a repository-spe
 ## License
 
 Licensed under the [MIT License](LICENSE).
+Adapted components and bundled media are documented in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Joule / Brayton
 

@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=./line-field.animation.schema.json
+# All values use their documented source-space units; browser code consumes generated TypeScript only.
+version: 1 # formula: schema revision; unit: integer; range: const 1; visual: locks this calibration contract.
+
+# Geometry calibrates the projected spine and the ordered lanes around it.
+geometry:
+  staggeredTipCount: 36 # formula: N_tip; unit: tips; range: 5..40 int; visual: number of staggered endpoints before fixed-40 zero-offset fill.
+  spineWidthPx: 1.80 # formula: spine stroke width; unit: px; range: 0.50..6; visual: keeps the proof filament legible.
+  lineWidthPx: 0.75 # formula: lane stroke width; unit: px; range: 0.25..3; visual: keeps lanes subordinate to the spine.
+  headerGapPx: 0.00 # formula: header bottom offset; unit: px; range: 0..64; visual: sets spine endpoint clearance.
+
+# Wave exposes phase timing only; diagonal and amplitude geometry stay fixed to the accepted field.
+wave:
+  scrollPhaseCycles: 2.40 # formula: phase = progress * cycles; unit: cycles; range: 0.10..8; visual: controls scroll rhythm.
+  autonomousCyclesPerSecond: 0.65 # formula: phase rate; unit: cycles/s; range: 0.05..3; visual: controls settled drift.
+
+# Reveal begins with the Wright clip fade and then maps scroll to the spatial opening.
+reveal:
+  preloadFilmProgress: 0.72 # formula: preload threshold; unit: film progress; range: 0..1; visual: warms renderer before exposure.
+  startFilmProgress: 0.80 # formula: WRIGHT_TIMELINE.themeFadeStart; unit: film progress; range: 0..1; visual: the first endpoint appears as the clip starts fading.
+
+fronts:
+  seed: 3817 # formula: PRNG seed; unit: integer; range: 0..2147483647; visual: preserves repeatable lane offsets.
+  maximumTipGapVh: 3.00 # formula: max(tip_i - tip_j); unit: vh; range: 0..10; visual: prevents torn fronts.
+  staggerStrength: 0.75 # formula: seeded offset multiplier; unit: ratio; range: 0..1; visual: gives the front measured variation.
+  catchupRatePerSecond: 7.00 # formula: convergence rate; unit: 1/s; range: 0.10..30; visual: reunites straggling tips.
+  autonomousVelocityViewportPerSecond: 0.72 # formula: dx/dt; unit: viewport/s; range: 0.05..3; visual: sets settled advance.
+  autonomousAccelerationViewportPerSecondSquared: 1.20 # formula: d2x/dt2; unit: viewport/s^2; range: 0..8; visual: eases autonomous pickup.
+
+# Handoff begins only after the revealed field has passed the motto card.
+handoff:
+  triggerPastMottoVh: 8.00 # formula: card-bottom overshoot; unit: vh; range: 0..25; visual: delays autonomy past the motto.
+  velocityBlendSeconds: 0.45 # formula: handoff blend duration; unit: s; range: 0.05..3; visual: removes temporal jumps.
+  reverseDeadbandPx: 2 # formula: reverse threshold; unit: px; range: 0..24 int; visual: filters scroll jitter.
+
+pointer:
+  radiusVw: 18.00 # formula: pointer influence radius; unit: vw; range: 4..50; visual: localizes interaction.
+  smoothingSeconds: 0.16 # formula: exponential smoothing tau; unit: s; range: 0.01..1.50; visual: removes cursor twitch.
+
+# Orbit values define the motto's readable final card as well as its approach.
+motto:
+  travelViewportHeights: 1.00 # formula: orbit travel length; unit: viewport heights; range: 0.25..2; visual: owns one reading beat.
+  cardMaxWidthRem: 34.00 # formula: max inline card size; unit: rem; range: 18..60; visual: preserves line length.
+  finalRightInsetVw: 8.00 # formula: final right offset; unit: vw; range: 2..20; visual: weights the card right.
+  mobileFinalLeftInsetRem: 3.00 # formula: mobile slot inline-start inset; unit: rem; range: 1..5; visual: shifts the readable card toward the right.
+  mobileFinalRightInsetRem: 1.00 # formula: mobile slot inline-end inset; unit: rem; range: 0.50..3 and below left inset; visual: preserves a safe right edge.
+  finalCenterViewportY: 0.56 # formula: final y / viewport; unit: ratio; range: 0.20..0.80; visual: settles the reading line.
+  orbit:
+    thetaXDegrees: 30.00 # formula: orbit-plane x tilt; unit: degrees; range: -75..75; visual: tilts the approach plane.
+    thetaYDegrees: 10.00 # formula: orbit-plane y tilt; unit: degrees; range: -75..75; visual: offsets the approach plane.
+    phiStartDegrees: 80.00 # formula: initial orbit angle; unit: degrees; range: -720..720; visual: begins above the readable card.
+    phiPeakDegrees: 180.00 # formula: orbit depth landmark; unit: degrees; range: -720..720; visual: marks the mid-approach bulge.
+    phiEndDegrees: 290.00 # formula: final orbit angle; unit: degrees; range: -720..720; visual: resolves the approach.
+    originDriftRadiusRatio: 0.16 # formula: z origin drift / orbit radius; unit: ratio; range: 0..2; visual: keeps the responsive orbit visibly recessed.
+    localOffsetRadiusRatio: 0.25 # formula: z local offset / orbit radius; unit: ratio; range: 0..1; visual: separates the readable card from its path.
+  projection:
+    startCenterXViewportRatio: 0.70 # formula: start center x / viewport; unit: ratio; range: 0..1; visual: anchors the initial card position.
+    preferredBulge: 0.08 # formula: projection bulge preference; unit: ratio; range: -2..2; visual: calibrates the largest consistently visible responsive arc.
+    minimumLeftGutterPx: 16.00 # formula: minimum left clearance; unit: px; range: 0..96; visual: protects the card from the edge.
+    minimumLeftGutterVw: 2.00 # formula: minimum left clearance / viewport; unit: vw; range: 0..10; visual: scales edge protection.
+    blurSafetyMultiplier: 2.00 # formula: blur clearance multiplier; unit: ratio; range: 0..4; visual: preserves legibility during approach.
+    sampleCount: 96 # formula: path sample count; unit: integer; range: 16..256; visual: calibrates projection inspection.
+  depthCues:
+    scaleStart: 0.22 # formula: scale at phi start; unit: ratio; range: 0.05..2; visual: starts as distant copy.
+    scaleAtPhiPeak: 0.50 # formula: scale at phi peak; unit: ratio; range: 0.05..2; visual: stages the middle reveal.
+    scaleEnd: 1.00 # formula: scale at phi end; unit: ratio; range: 0.05..2; visual: reaches reading size.
+    blurStart: 1.00 # formula: normalized blur at phi start; unit: ratio; range: 0..1; visual: defers legibility.
+    blurAtPhiPeak: 0.50 # formula: normalized blur at phi peak; unit: ratio; range: 0..1; visual: brings the copy forward.
+    blurEnd: 0.00 # formula: normalized blur at phi end; unit: ratio; range: 0..1; visual: yields crisp final copy.
+    blurMaximumPx: 8.00 # formula: maximum blur; unit: px; range: 0..40; visual: caps visual diffusion.
+  visibility:
+    phiStartDegrees: 80.00 # formula: fade-in phi start; unit: degrees; range: -720..720; visual: withholds early copy.
+    phiEndDegrees: 120.00 # formula: fade-in phi end; unit: degrees; range: -720..720; visual: completes readable entry.
+    opacityStart: 0.00 # formula: opacity at fade start; unit: ratio; range: 0..1; visual: starts hidden.
+    opacityEnd: 1.00 # formula: opacity at fade end; unit: ratio; range: 0..1; visual: reaches full presence.
+
+performance:
+  maximumDpr: 1.50 # formula: min(device DPR, cap); unit: ratio; range: 1..1.50; visual: limits invisible pixel cost.
+  maximumRenderDimensionPx: 1600 # formula: min(render side, cap); unit: px; range: 512..1600 int; visual: preserves a crisp narrow field.

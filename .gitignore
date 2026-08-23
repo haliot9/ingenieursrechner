@@ -10,7 +10,23 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+playwright-report
+test-results
 *.local
+
+# Local browser/evidence output (never publication source)
+output/
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.netrc
 
 # Personal cheat sheet and legacy local agent runtime (not for public repo)
 USER.md
@@ -23,6 +39,7 @@ claude.md
 !.vscode/extensions.json
 .idea
 .DS_Store
+.superpowers/
 *.suo
 *.ntvs*
 *.njsproj

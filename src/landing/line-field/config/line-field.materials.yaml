@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=./line-field.materials.schema.json
+# Endpoint controls are frozen independently from the line-body material added below.
+version: 1
+
+theme:
+  tailOpacityAtTip: 0.10 # formula: alpha(t=1) for the tangent endpoint tail; unit: ratio; range: 0.10..1; visual: lets both material tails dissolve without disappearing abruptly.
+  dark:
+    body:
+      startColor: "#E945F5" # formula: body gradient at origin; unit: hex; range: #RRGGBB; visual: Floating-Lines-inspired luminous magenta start.
+      middleColor: "#6F6F6F" # formula: body gradient midpoint; unit: hex; range: #RRGGBB; visual: neutralizes the luminous start without changing geometry.
+      endColor: "#6A6A6A" # formula: body gradient at settled extent; unit: hex; range: #RRGGBB; visual: quiet neutral tail.
+      coreOpacity: 0.82 # formula: alpha_body_core multiplier; unit: ratio; range: 0..1; visual: keeps the accepted mask crisp.
+      emissionOpacity: 0.24 # formula: alpha_body_emission multiplier; unit: ratio; range: 0..1; visual: restrained screen-like energy around the core.
+      emissionRadiusPx: 8.50 # formula: body emission radius; unit: CSS px; range: 0.50..32; visual: inverse-distance-like soft falloff.
+      freshTrailLengthPx: 90.00 # formula: independent body freshness distance; unit: CSS px; range: 8..200; visual: preserves the accepted distance law without reading endpoint controls.
+    linePrimary: "#FFF8FF" # formula: primary RGB; unit: hex; range: #RRGGBB; visual: near-white endpoint core.
+    lineSecondary: "#FF4DB8" # formula: secondary RGB; unit: hex; range: #RRGGBB; visual: pink endpoint pulse.
+    lineAccent: "#78F2FF" # formula: accent RGB; unit: hex; range: #RRGGBB; visual: rare cyan endpoint mark.
+    baseOpacity: 0.76 # formula: alpha_base; unit: ratio; range: 0..1; visual: accepted endpoint-adjacent opacity calibration.
+    lineGlow:
+      radiusPx: 5.50 # formula: outer lane halo radius; unit: CSS px; range: 0.50..32; visual: accepted extent retained for endpoint and crop calibration.
+      opacity: 0.26 # formula: alpha_glow; unit: ratio; range: 0..0.50; visual: accepted endpoint emission calibration.
+    tipGlow:
+      diameterToLineWidth: 1.75 # formula: tip diameter / local accepted lane width; unit: ratio; range: 1..3; visual: keeps the comet head only slightly wider than its lane.
+      tailLengthToDiameter: 4.00 # formula: tangent tail length / head diameter; unit: ratio; range: 1.25..8; visual: gives the compact head a readable curved comet tail.
+      haloDiameterToHead: 2.50 # formula: halo diameter / head diameter; unit: ratio; range: 1..6; visual: adds compact emission without restoring the old oversized globe.
+      opacity: 0.88 # formula: alpha of the circular comet emission; unit: ratio; range: 0..1; visual: makes the head burn brightly while retaining the accepted compact footprint.
+      freshTrailLengthPx: 90.00 # formula: 18 px legacy tip radius * 5; unit: CSS px; range: 8..200; visual: preserves the accepted dark line-freshness falloff independently of endpoint size.
+      pinkMix: 0.70 # formula: pink color mix; unit: ratio; range: 0..1; visual: keeps Dark endpoint pink-dominant while preserving white cores.
+      cyanMix: 0.16 # formula: cyan color mix; unit: ratio; range: 0..1; visual: adds occasional cool endpoint accents.
+      pulseHz: 0.82 # formula: pulse cycles per field-phase cycle; unit: ratio; range: 0.05..3; visual: sets a slow visible instrument pulse.
+      pulseDepth: 0.72 # formula: pulse amplitude; unit: ratio; range: 0..1; visual: strengthens asynchronous endpoint breathing.
+      secondaryPulseRatio: 1.37 # formula: secondary/base frequency; unit: ratio; range: 1.01..3; visual: avoids a metronome pulse.
+  light:
+    body:
+      wetBlueBlack: "#0A2C5D" # formula: Blender linear (0.003,0.025,0.11) in sRGB; unit: hex; range: #RRGGBB; visual: wet blue-black at the fresh front.
+      settledBlue: "#164581" # formula: Blender linear (0.008,0.06,0.22) in sRGB; unit: hex; range: #RRGGBB; visual: settled liquid blue.
+      agedSepia: "#86613C" # formula: Blender linear (0.24,0.12,0.045) in sRGB; unit: hex; range: #RRGGBB; visual: absorbed brown-sepia.
+      fadedWarmSepia: "#BF9E6F" # formula: Blender linear (0.52,0.34,0.16) in sRGB; unit: hex; range: #RRGGBB; visual: faded warm sepia.
+      coreOpacity: 0.62 # formula: alpha_body_core multiplier; unit: ratio; range: 0..1; visual: readable stock-material trace.
+      freshTrailLengthPx: 52.50 # formula: body aging window; unit: CSS px; range: 8..200; visual: keeps wet blue local to the moving front.
+      fiberScalePx: 5.00 # formula: coherent fiber cell size; unit: CSS px; range: 1..32; visual: stable paper-scale variation.
+      fiberStrength: 0.28 # formula: coherent fiber modulation; unit: ratio; range: 0..1; visual: breaks digital uniformity without independent strings.
+      sheenOpacity: 0.12 # formula: wet core sheen multiplier; unit: ratio; range: 0..0.5; visual: restrained liquid response.
+      absorptionRadiusPx: 11.00 # formula: body fringe radius; unit: CSS px; range: 0.50..32; visual: wider low-alpha uptake on the same centerline.
+      absorptionOpacity: 0.10 # formula: alpha_body_absorption multiplier; unit: ratio; range: 0..0.5; visual: restrained translucent fiber fringe.
+    linePrimary: "#3B2B20" # formula: primary RGB; unit: hex; range: #RRGGBB; visual: accepted faded-sepia endpoint core.
+    lineSecondary: "#8B6748" # formula: secondary RGB; unit: hex; range: #RRGGBB; visual: accepted warm endpoint trace.
+    paperFiber: "#D8BE9A" # formula: fiber RGB; unit: hex; range: #RRGGBB; visual: accepted endpoint paper absorption grain.
+    baseOpacity: 0.44 # formula: alpha_base; unit: ratio; range: 0..1; visual: accepted endpoint-adjacent opacity calibration.
+    tipInk:
+      wetColor: "#0B2D5B" # formula: fresh ink RGB; unit: hex; range: #RRGGBB; visual: accepted deep Prussian-blue endpoint liquid.
+      diameterToLineWidth: 1.75 # formula: drop diameter / local accepted lane width; unit: ratio; range: 1..3; visual: keeps wet ink only slightly wider than the line.
+      tailLengthToDiameter: 3.00 # formula: tangent tail length / drop diameter; unit: ratio; range: 1.25..8; visual: forms a short curved wet-ink pull behind the circular head.
+      bleedDiameterToHead: 1.60 # formula: absorbed drop diameter / wet head diameter; unit: ratio; range: 1..4; visual: gives the drop a compact paper-soft edge.
+      lineBleedRadiusPx: 7.50 # formula: accepted absorbed halo extent; unit: CSS px; range: 0.50..32; visual: retains endpoint and crop calibration.
+      freshTrailLengthPx: 52.50 # formula: 7.5 px legacy bleed radius * 7; unit: CSS px; range: 8..200; visual: preserves the accepted wet-to-aged endpoint transition.
+      irregularity: 0.28 # formula: fiber noise amount; unit: ratio; range: 0..1; visual: preserves accepted endpoint irregularity.
+      absorptionOpacity: 0.22 # formula: paper absorption alpha; unit: ratio; range: 0..1; visual: preserves accepted endpoint absorption.
+      specularOpacity: 0.84 # formula: alpha of the compact wet highlight; unit: ratio; range: 0..1; visual: preserves accepted endpoint reflection.

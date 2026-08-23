@@ -1,0 +1,69 @@
+.module-atlas {
+  width: min(100% - 2rem, 72rem);
+  margin: 0 auto;
+  padding: clamp(4.5rem, 9vw, 8rem) 0;
+}
+
+.future-module > span {
+  margin: 0;
+  color: var(--landing-muted);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.module-atlas h2 {
+  max-width: 15ch;
+  margin: .75rem 0 2rem;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2.35rem, 5vw, 4.75rem);
+  font-weight: 400;
+  letter-spacing: -.045em;
+  line-height: .95;
+}
+
+.future-module {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.future-module strong {
+  display: block;
+  margin-top: auto;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2rem, 4.5vw, 4.25rem);
+  font-weight: 400;
+  letter-spacing: -.05em;
+  line-height: .95;
+}
+
+.future-module {
+  max-width: 43rem;
+  margin-top: 1rem;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--landing-line);
+}
+
+.future-module strong {
+  margin-top: .8rem;
+  font-size: clamp(1.5rem, 3vw, 2.45rem);
+}
+
+.future-module p {
+  max-width: 38rem;
+  margin: 1rem 0 0;
+  color: var(--landing-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 40rem) {
+  .module-atlas {
+    width: min(100% - 1.25rem, 72rem);
+  }
+}

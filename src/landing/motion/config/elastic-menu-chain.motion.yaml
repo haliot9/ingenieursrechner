@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=./elastic-menu-chain.motion.schema.json
+
+version: 1
+profiles:
+  # lead = the Thermodynamik banner; follower = each of the four process rows.
+  # distance is px (0, 10000]; duration/disappearDuration are seconds (0, 60], delay [0, 60].
+  # direction selects x/y; reverse=false starts at +distance (below for vertical) and exits at -distance.
+  # Entry ease is fixed per role: power3.out lead, bounce.out followers.
+  # initialOpacity [0, 1] applies when animateOpacity=true; initial scale is (0, 10], both tween to 1.
+  # Disappearance duration is (0, 60] seconds and uses the fixed power3.in exit ease.
+  lead:
+    distance: 180
+    direction: vertical
+    reverse: false
+    duration: 2.2
+    ease: power3.out
+    initialOpacity: 0
+    animateOpacity: true
+    scale: 1
+    delay: 0
+    disappearDuration: 0.5
+    disappearEase: power3.in
+  follower:
+    distance: 180
+    direction: vertical
+    reverse: false
+    duration: 2.2
+    ease: bounce.out
+    initialOpacity: 0
+    animateOpacity: true
+    scale: 1
+    delay: 0
+    disappearDuration: 0.5
+    disappearEase: power3.in
+chain:
+  # One shared ScrollTrigger and scheduler own the banner plus all four rows.
+  # Entry starts at top (1 - threshold) * 100%; threshold is [0, 1].
+  threshold: 0.1
+  # Each next item starts after previous delay + duration * this progress; range [0, 1].
+  pullAtPreviousProgress: 0.42
+  # Lower exit ends at bottom <value>% of the viewport; range [0, 100].
+  exitStartViewportPercent: 22

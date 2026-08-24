@@ -1,0 +1,137 @@
+.wright-motto-panel {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  overflow: visible;
+  overflow-anchor: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.wright-motto-panel[data-motto-motion="static"] {
+  overflow: clip;
+}
+
+.wright-motto-panel__slot {
+  position: absolute;
+  z-index: 3;
+  top: var(--motto-final-center-y);
+  right: var(--motto-final-right);
+  width: min(var(--motto-card-max-width), calc(100% - 2rem));
+  translate: 0 -50%;
+}
+
+.wright-motto-panel__card {
+  position: relative;
+  padding: clamp(1.5rem, 4vw, 3.25rem);
+  opacity: var(--motto-opacity, 1);
+  filter: blur(var(--motto-blur, 0px));
+  transform:
+    translate3d(
+      var(--motto-orbit-x, 0px),
+      var(--motto-orbit-y, 0px),
+      0
+    )
+    scale(var(--motto-scale, 1));
+  transform-origin: center;
+  will-change: transform, filter, opacity;
+}
+
+.wright-motto-panel__statement {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.wright-motto-panel[data-motto-theme="light"] .wright-motto-panel__card {
+  border: 1px solid rgba(91, 62, 36, .2);
+  background:
+    linear-gradient(112deg, rgba(255, 248, 230, .96), rgba(225, 201, 164, .9)),
+    #e8d6b8;
+  box-shadow:
+    0 1.75rem 4.5rem rgba(65, 42, 24, .2),
+    inset 0 0 0 1px rgba(255, 255, 255, .4);
+}
+
+.wright-motto-panel[data-motto-theme="light"] .wright-motto-panel__card::before {
+  position: absolute;
+  inset: .65rem auto .65rem .65rem;
+  width: clamp(.55rem, 1.4vw, 1rem);
+  background:
+    repeating-linear-gradient(
+      7deg,
+      rgba(112, 76, 44, .18) 0 1px,
+      transparent 1px 5px
+    ),
+    linear-gradient(90deg, rgba(194, 151, 102, .32), transparent);
+  content: "";
+  mix-blend-mode: multiply;
+  opacity: .72;
+}
+
+.wright-motto-panel[data-motto-theme="light"] .wright-motto-panel__statement {
+  color: #2f2117;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 4vw, 3.45rem);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.038em;
+  line-height: 1.06;
+}
+
+.wright-motto-panel[data-motto-theme="dark"] .wright-motto-panel__card {
+  border: 1px solid rgba(255, 255, 255, .13);
+  background:
+    linear-gradient(145deg, rgba(27, 36, 51, .86), rgba(8, 11, 18, .78)),
+    rgba(8, 11, 18, .82);
+  box-shadow:
+    0 2rem 5rem rgba(0, 0, 0, .34),
+    inset 0 0 0 1px rgba(109, 168, 255, .06);
+  backdrop-filter: blur(14px);
+}
+
+.wright-motto-panel[data-motto-theme="dark"] .wright-motto-panel__card::before {
+  position: absolute;
+  top: clamp(1rem, 2.5vw, 1.65rem);
+  right: clamp(1rem, 2.5vw, 1.65rem);
+  left: clamp(1rem, 2.5vw, 1.65rem);
+  height: 1px;
+  background: linear-gradient(90deg, #ff4db8 0 58%, transparent 58%);
+  content: "";
+}
+
+.wright-motto-panel[data-motto-theme="dark"] .wright-motto-panel__card::after {
+  position: absolute;
+  right: clamp(1rem, 2.5vw, 1.65rem);
+  bottom: clamp(1rem, 2.5vw, 1.65rem);
+  width: .42rem;
+  height: .42rem;
+  background: #78f2ff;
+  box-shadow: 0 0 .9rem rgba(120, 242, 255, .66);
+  content: "";
+}
+
+.wright-motto-panel[data-motto-theme="dark"] .wright-motto-panel__statement {
+  color: #fff8ff;
+  font-family: Inter, "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.65rem, 3.45vw, 3rem);
+  font-weight: 280;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+}
+
+.wright-motto-panel[data-motto-motion="static"] .wright-motto-panel__card {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  transition: none;
+  will-change: auto;
+}
+
+@media (max-width: 40rem) {
+  .wright-motto-panel__slot {
+    right: var(--motto-mobile-final-right);
+    left: var(--motto-mobile-final-left);
+    width: auto;
+  }
+}

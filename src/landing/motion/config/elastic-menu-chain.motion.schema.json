@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ingenieursrechner.local/schemas/elastic-menu-chain.motion.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "profiles", "chain"],
+  "properties": {
+    "version": { "const": 1 },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lead", "follower"],
+      "properties": {
+        "lead": { "$ref": "#/$defs/leadProfile" },
+        "follower": { "$ref": "#/$defs/followerProfile" }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["threshold", "pullAtPreviousProgress", "exitStartViewportPercent"],
+      "properties": {
+        "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "pullAtPreviousProgress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "exitStartViewportPercent": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    }
+  },
+  "$defs": {
+    "leadProfile": {
+      "allOf": [
+        { "$ref": "#/$defs/profile" },
+        {
+          "type": "object",
+          "properties": {
+            "ease": { "const": "power3.out" }
+          }
+        }
+      ]
+    },
+    "followerProfile": {
+      "allOf": [
+        { "$ref": "#/$defs/profile" },
+        {
+          "type": "object",
+          "properties": {
+            "ease": { "const": "bounce.out" }
+          }
+        }
+      ]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distance",
+        "direction",
+        "reverse",
+        "duration",
+        "ease",
+        "initialOpacity",
+        "animateOpacity",
+        "scale",
+        "delay",
+        "disappearDuration",
+        "disappearEase"
+      ],
+      "properties": {
+        "distance": { "type": "number", "exclusiveMinimum": 0, "maximum": 10000 },
+        "direction": { "type": "string", "enum": ["vertical", "horizontal"] },
+        "reverse": { "type": "boolean" },
+        "duration": { "type": "number", "exclusiveMinimum": 0, "maximum": 60 },
+        "ease": { "type": "string", "enum": ["power3.out", "bounce.out"] },
+        "initialOpacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "animateOpacity": { "type": "boolean" },
+        "scale": { "type": "number", "exclusiveMinimum": 0, "maximum": 10 },
+        "delay": { "type": "number", "minimum": 0, "maximum": 60 },
+        "disappearDuration": { "type": "number", "exclusiveMinimum": 0, "maximum": 60 },
+        "disappearEase": { "type": "string", "const": "power3.in" }
+      }
+    }
+  }
+}

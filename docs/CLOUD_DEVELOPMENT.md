@@ -14,14 +14,16 @@ This repository uses GitHub Codespaces as an optional isolated development works
 ## Standard verification
 
 ```bash
-npm ci
-npm test
-npm run lint
-npm run build
-npm audit --audit-level=high
+npm ci --no-audit --no-fund
+npm run verify
+npm run test:e2e
 ```
 
-The pull request must also pass the `verify` and `dependency-review` checks before merge.
+`verify` runs the complete unit/process/lint/build bundle and the blocking
+runtime dependency audit. Development-tool advisories are reviewed separately;
+they are not silently treated as browser-runtime vulnerabilities. The pull
+request must also pass the `verify`, browser, and `dependency-review` checks
+before merge.
 
 ## Agent evidence
 

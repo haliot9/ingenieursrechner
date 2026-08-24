@@ -1,0 +1,53 @@
+.landing-line-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.landing-line-field__renderer-host,
+.landing-line-field__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.landing-line-field__renderer-host canvas {
+  display: block;
+  background: transparent;
+}
+
+.landing-line-field__fallback,
+.landing-line-field__fallback * {
+  animation: none;
+  transition: none;
+}
+
+.landing-line-field__fallback svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.landing-line-field__fallback path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke: var(--line-field-secondary);
+  stroke-linecap: round;
+  opacity: .52;
+}
+
+.landing-line-field__fallback [data-line-field-spine] {
+  stroke: var(--line-field-primary);
+  opacity: .72;
+}
+
+.landing-line-field__fallback [data-line-field-lane="4"] {
+  stroke: var(--line-field-accent);
+  opacity: .34;
+}

@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=./landing-background.effects.schema.json
+
+version: 1
+# Dark theme: deterministic WebGL particle volume.
+dark:
+  # Seed [0, 2^32-1] and particle count [1, 1000].
+  seed: 7241
+  count: 200
+  # Spread is in scene units (0, 100]; speed is the per-second phase rate [0, 5].
+  # baseSize is the point size in CSS px before DPR/perspective scaling (0, 512].
+  spread: 10.00
+  speed: 0.12
+  baseSize: 125.00
+  # Visible intensity/pointer multipliers: opacity [0, 1], glow [0, 2], hover [0, 5].
+  opacity: 0.78
+  glowStrength: 0.72
+  hoverFactor: 1.00
+  # Rotation is radians per second [0, 5]; maximumDpr caps render density [0.5, 3].
+  rotationSpeed: 0.03
+  maximumDpr: 1.50
+# Light theme: one GlassSurface strip layered relative to the Wavefield.
+light:
+  # below-wavefield keeps z-index 0; above-wavefield raises the glass in front to z-index 1.
+  layerPlacement: above-wavefield
+  # centerXRatio is [0, 1]; width/height ratios are (0, 1].
+  # Horizontal edges are centerXRatio ± widthRatio / 2 and must stay within [0, 1].
+  centerXRatio: 0.55
+  widthRatio: 0.40
+  heightRatio: 0.80
+  # Pixel geometry: radius [0, 256], edge/displacement blur [0, 64].
+  borderRadiusPx: 28
+  # Edge width is a [0, 0.5] fraction of the shorter side before the internal 0.5 factor.
+  borderWidthRatio: 0.07
+  # Brightness [0, 100] is SVG-map HSL lightness; fallback CSS uses brightness / 50.
+  brightness: 50
+  # Surface/background opacity [0, 1]; saturation multiplier [0, 4].
+  surfaceOpacity: 0.93
+  edgeBlurPx: 11
+  displacementBlurPx: 0
+  backgroundOpacity: 0.08
+  saturation: 1.00
+  # Visible SVG displacement per channel = distortionScale + channel offset.
+  # Base scale is [-500, 500]; each RGB offset is [-200, 200] filter units.
+  distortionScale: -180
+  redOffset: 0
+  greenOffset: 10
+  blueOffset: 20

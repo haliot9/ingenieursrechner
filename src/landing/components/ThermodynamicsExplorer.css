@@ -1,0 +1,497 @@
+.thermodynamics-explorer {
+  --thermo-bronze-0: #3e2415;
+  --thermo-bronze-1: #81502b;
+  --thermo-bronze-2: #c58a51;
+  --thermo-bronze-3: #6a3f24;
+  --thermo-lead-ink: #fff2df;
+  --thermo-lead-muted: rgba(255, 241, 219, .76);
+  --thermo-lead-border: rgba(255, 221, 169, .42);
+  --thermo-lead-inset: rgba(255, 239, 207, .3);
+  --thermo-lead-shadow: rgba(75, 37, 17, .24);
+  --thermo-glass-fill: rgba(255, 255, 255, .3);
+  --thermo-glass-fill-strong: rgba(255, 255, 255, .46);
+  --thermo-glass-border: rgba(255, 255, 255, .74);
+  --thermo-glass-shadow: rgba(64, 48, 49, .16);
+  --thermo-glass-ink: #281c1e;
+  --thermo-glass-muted: #746a68;
+  --thermo-glass-sheen: rgba(255, 255, 255, .82);
+  width: min(100% - 2rem, 72rem);
+  min-height: max(48rem, 100vh);
+  margin-inline: auto;
+  padding: clamp(4rem, 9vw, 8rem) 0;
+  scroll-margin-top: 1rem;
+}
+
+.landing-shell[data-landing-theme="dark"] .thermodynamics-explorer {
+  --thermo-bronze-0: #3f444b;
+  --thermo-bronze-1: #8d949d;
+  --thermo-bronze-2: #f3f5f7;
+  --thermo-bronze-3: #666d76;
+  --thermo-lead-ink: #17191c;
+  --thermo-lead-muted: rgba(23, 25, 28, .72);
+  --thermo-lead-border: rgba(255, 255, 255, .55);
+  --thermo-lead-inset: rgba(255, 255, 255, .43);
+  --thermo-lead-shadow: rgba(0, 0, 0, .38);
+  --thermo-glass-fill: rgba(255, 255, 255, .075);
+  --thermo-glass-fill-strong: rgba(255, 255, 255, .12);
+  --thermo-glass-border: rgba(255, 255, 255, .22);
+  --thermo-glass-shadow: rgba(0, 0, 0, .45);
+  --thermo-glass-ink: #f3ebe2;
+  --thermo-glass-muted: #b9afaa;
+  --thermo-glass-sheen: rgba(255, 255, 255, .3);
+}
+
+.thermodynamics-menu {
+  --tree-trunk: 84px;
+  --tree-arm: 48px;
+  --tree-row-height: 5.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  row-gap: .8rem;
+  width: 100%;
+  background: transparent;
+}
+
+.thermodynamics-menu__lead {
+  inline-size: 100%;
+  min-width: 0;
+}
+
+.thermodynamics-menu__lead-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: clamp(9rem, 16vw, 12rem);
+  padding: clamp(1.75rem, 4vw, 3.25rem);
+  overflow: hidden;
+  color: var(--thermo-lead-ink);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 235, 196, .34), transparent 24%),
+    linear-gradient(
+      102deg,
+      var(--thermo-bronze-0) 0%,
+      var(--thermo-bronze-1) 14%,
+      var(--thermo-bronze-2) 29%,
+      var(--thermo-bronze-3) 48%,
+      var(--thermo-bronze-1) 67%,
+      var(--thermo-bronze-0) 100%
+    );
+  border: 1px solid var(--thermo-lead-border);
+  clip-path: polygon(1.4rem 0, calc(100% - 1.4rem) 0, 100% 50%, calc(100% - 1.4rem) 100%, 1.4rem 100%, 0 50%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 221, .55),
+    inset 0 -1px 0 rgba(30, 12, 4, .7),
+    0 1.4rem 3rem var(--thermo-lead-shadow);
+  isolation: isolate;
+}
+
+.thermodynamics-menu__lead-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(96deg, transparent 0 2px, rgba(255, 255, 255, .045) 3px, transparent 4px 8px),
+    linear-gradient(90deg, transparent 0%, rgba(255, 248, 225, .04) 31%, rgba(255, 248, 225, .34) 50%, rgba(255, 248, 225, .04) 69%, transparent 100%);
+  background-size: auto, 46% 100%;
+  background-position: 0 0, 50% 0;
+  background-repeat: repeat, no-repeat;
+  mix-blend-mode: screen;
+  opacity: .72;
+}
+
+.thermodynamics-menu__lead-surface::after {
+  content: "";
+  position: absolute;
+  inset: .35rem 1.35rem;
+  border: 1px solid var(--thermo-lead-inset);
+  clip-path: inherit;
+  pointer-events: none;
+}
+
+.thermodynamics-menu__lead-surface .landing-eyebrow {
+  margin: 0 0 1rem;
+  color: var(--thermo-lead-muted);
+}
+
+.thermodynamics-menu__lead-surface h2 {
+  margin: 0;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2.75rem, 5vw, 5.4rem);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.06em;
+  line-height: .88;
+  text-shadow: 0 .15rem .75rem rgba(30, 10, 2, .42);
+}
+
+.thermodynamics-menu__lead-surface > p:last-child {
+  max-width: 24ch;
+  margin: 1.5rem 0 0;
+  color: var(--thermo-lead-muted);
+  font-size: .72rem;
+  font-weight: 760;
+  letter-spacing: .1em;
+  line-height: 1.55;
+  text-transform: uppercase;
+}
+
+.thermodynamics-menu__follower {
+  position: relative;
+  min-width: 0;
+  margin-left: var(--tree-trunk);
+  padding-left: var(--tree-arm);
+}
+
+.thermodynamics-menu__lead + .thermodynamics-menu__follower {
+  margin-top: 2.5rem;
+}
+
+.thermodynamics-menu__follower::before {
+  content: "";
+  position: absolute;
+  top: -.4rem;
+  bottom: -.4rem;
+  left: 0;
+  width: var(--tree-arm);
+  border-bottom: 1px solid var(--landing-line);
+  border-left: 1px solid var(--landing-line);
+  pointer-events: none;
+}
+
+.thermodynamics-menu__follower:last-child::before {
+  bottom: auto;
+  height: calc(.4rem + var(--tree-row-height) / 2);
+}
+
+.thermodynamics-menu__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr) 4.25rem;
+  align-items: center;
+  width: 100%;
+  min-height: 5.25rem;
+  padding: 0;
+  overflow: hidden;
+  color: var(--thermo-glass-ink);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, .4), transparent 24%),
+    linear-gradient(110deg, var(--thermo-glass-fill-strong), var(--thermo-glass-fill) 55%, rgba(255, 255, 255, .12));
+  border: 1px solid var(--thermo-glass-border);
+  border-radius: 1.5rem .45rem 1.5rem .45rem;
+  box-shadow:
+    inset 1px 1px 0 var(--thermo-glass-sheen),
+    inset -1px -1px 0 rgba(255, 255, 255, .1),
+    0 .9rem 2.1rem var(--thermo-glass-shadow);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  cursor: pointer;
+  isolation: isolate;
+  text-align: left;
+  transition: border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.thermodynamics-menu__row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, .08) 43%, rgba(255, 255, 255, .56) 50%, rgba(255, 255, 255, .1) 57%, transparent 64%);
+  background-position: -120% 0;
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  transition: background-position 720ms cubic-bezier(.2, .8, .2, 1);
+  pointer-events: none;
+}
+
+.thermodynamics-menu__row::after {
+  content: "";
+  position: absolute;
+  inset: .3rem;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, .23);
+  border-radius: 1.18rem .3rem 1.18rem .3rem;
+  pointer-events: none;
+}
+
+.thermodynamics-menu__row:hover,
+.thermodynamics-menu__row:focus-visible {
+  border-color: rgba(255, 255, 255, .92);
+  box-shadow:
+    inset 1px 1px 0 var(--thermo-glass-sheen),
+    inset -1px -1px 0 rgba(255, 255, 255, .1),
+    0 1.15rem 2.65rem var(--thermo-glass-shadow),
+    0 0 0 2px color-mix(in srgb, var(--landing-metal) 16%, transparent);
+}
+
+.landing-shell[data-landing-theme="dark"] .thermodynamics-menu__row:hover,
+.landing-shell[data-landing-theme="dark"] .thermodynamics-menu__row:focus-visible {
+  border-color: rgba(255, 255, 255, .36);
+}
+
+.thermodynamics-menu__row:hover::before,
+.thermodynamics-menu__row:focus-visible::before {
+  background-position: 120% 0;
+}
+
+.thermodynamics-menu__number {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--landing-metal) 72%, transparent);
+  border-right: 1px solid rgba(255, 255, 255, .3);
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+}
+
+.thermodynamics-menu__copy {
+  min-width: 0;
+  padding: .85rem 1.2rem;
+}
+
+.thermodynamics-menu__copy strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 2.7vw, 2.15rem);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1;
+}
+
+.thermodynamics-menu__copy small {
+  display: block;
+  margin-top: .45rem;
+  color: var(--thermo-glass-muted);
+  font-size: .58rem;
+  font-weight: 780;
+  letter-spacing: .11em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.thermodynamics-menu__status-dot {
+  display: inline-block;
+  width: .38rem;
+  height: .38rem;
+  margin-right: .45rem;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: .04rem;
+}
+
+.thermodynamics-menu__arrow {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  color: var(--landing-metal);
+  border-left: 1px solid rgba(255, 255, 255, .26);
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: 1.55rem;
+  font-style: italic;
+}
+
+.thermodynamics-explorer__panel--detail {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(18rem, 1.1fr);
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 3rem);
+  margin-top: .8rem;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  color: var(--thermo-glass-ink);
+  animation: explorer-unfold 360ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.thermodynamics-explorer__panel--detail h3 {
+  max-width: 15ch;
+  margin: .7rem 0 1rem;
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-size: clamp(2.1rem, 4.5vw, 4rem);
+  font-weight: 400;
+  letter-spacing: -.05em;
+  line-height: .94;
+}
+
+.thermodynamics-explorer__detail-copy > p {
+  max-width: 43rem;
+  margin: 0 0 1.5rem;
+  color: var(--thermo-glass-muted);
+  line-height: 1.65;
+}
+
+.thermodynamics-explorer__processes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thermodynamics-explorer__processes li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: .8rem;
+  min-height: 44px;
+  padding: .65rem 0;
+  border-top: 1px solid var(--landing-line);
+  font-size: .84rem;
+}
+
+.thermodynamics-explorer__processes span {
+  color: var(--landing-metal);
+  font-variant-numeric: tabular-nums;
+}
+
+.thermodynamics-explorer__processes strong {
+  font-weight: 700;
+}
+
+.landing-diagram {
+  min-width: 0;
+  padding: clamp(.65rem, 2vw, 1.25rem);
+  border: 1px solid var(--landing-line);
+  border-radius: .35rem;
+  background: color-mix(in srgb, var(--landing-bg) 58%, transparent);
+}
+
+.landing-diagram svg > path:not([stroke-dasharray]) {
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: explorer-draw 900ms 140ms ease-out forwards;
+}
+
+.thermodynamics-explorer__detail-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  border-top: 1px solid var(--landing-line);
+  padding-top: 1rem;
+}
+
+.thermodynamics-explorer__open {
+  min-height: 44px;
+  padding: .75rem 1.1rem;
+  border: 1px solid var(--landing-metal);
+  color: var(--landing-bg);
+  background: var(--landing-metal);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@keyframes explorer-unfold {
+  from {
+    opacity: 0;
+    clip-path: inset(3% 6% 3% 6% round .5rem);
+    transform: translateY(12px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes explorer-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (max-width: 50rem) {
+  .thermodynamics-explorer {
+    width: min(100% - 1.25rem, 42rem);
+    min-height: max(48rem, 100svh);
+    padding: 3.5rem 0 5rem;
+  }
+
+  .thermodynamics-menu {
+    --tree-trunk: 12px;
+    --tree-arm: 16px;
+  }
+
+  .thermodynamics-menu__lead {
+    inline-size: 100%;
+  }
+
+  .thermodynamics-menu__lead-surface h2 {
+    font-size: clamp(2.25rem, 10vw, 3.25rem);
+  }
+
+  .thermodynamics-menu__follower {
+    margin-left: var(--tree-trunk);
+    padding-left: var(--tree-arm);
+  }
+
+  .thermodynamics-explorer__panel--detail {
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+
+  .thermodynamics-explorer__detail-actions {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 32.5rem) {
+  .thermodynamics-menu {
+    --tree-row-height: 4.75rem;
+  }
+
+  .thermodynamics-menu__row {
+    grid-template-columns: 3.375rem minmax(0, 1fr) 3rem;
+    min-height: 4.75rem;
+    border-radius: 1.15rem .35rem 1.15rem .35rem;
+  }
+
+  .thermodynamics-menu__copy {
+    padding: .8rem .75rem;
+  }
+
+  .thermodynamics-menu__copy strong {
+    font-size: clamp(1.15rem, 6vw, 1.7rem);
+  }
+
+  .thermodynamics-menu__copy small {
+    font-size: .52rem;
+  }
+
+  .thermodynamics-menu__number {
+    font-size: 1rem;
+  }
+
+  .thermodynamics-menu__arrow {
+    font-size: 1.3rem;
+  }
+
+  .thermodynamics-explorer__detail-actions,
+  .thermodynamics-explorer__open {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thermodynamics-explorer__panel--detail,
+  .landing-diagram svg > path:not([stroke-dasharray]) {
+    animation: none;
+  }
+
+  .landing-diagram svg > path:not([stroke-dasharray]) {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+.landing-shell[data-reduced-motion="true"] .thermodynamics-explorer__panel--detail,
+.landing-shell[data-reduced-motion="true"] .landing-diagram svg > path:not([stroke-dasharray]) {
+  animation: none;
+}
+
+.landing-shell[data-reduced-motion="true"] .landing-diagram svg > path:not([stroke-dasharray]) {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}

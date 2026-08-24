@@ -1,7 +1,7 @@
 import React from 'react'
 import { act, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import App from '../../src/App'
+import { CalculatorPage } from '../../src/calculator/CalculatorPage'
 import { useCalculatorStore } from '../../src/store/calculator-store'
 
 describe('App calculation-story desktop placement', () => {
@@ -12,7 +12,7 @@ describe('App calculation-story desktop placement', () => {
 
   it('keeps input and analysis above a permanently full-width calculation story', () => {
     const etaBefore = useCalculatorStore.getState().values.eta?.value
-    const { container } = render(<App />)
+    const { container } = render(<CalculatorPage onBackToLanding={() => undefined} />)
     const workspace = container.querySelector('.workspace-grid')
     const input = container.querySelector('.input-panel')
     const analysis = container.querySelector('.analysis-panel')

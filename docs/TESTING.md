@@ -102,6 +102,16 @@ Avoid relying on:
 - only the absence of an exception;
 - mocks that replace the behavior being tested.
 
+## Landing evidence ownership
+
+| Evidence | Owner and limit |
+|---|---|
+| Unit and DOM | The `unit` Vitest project owns pure logic and jsdom component contracts. It excludes every real child-process/file-watcher gate. |
+| Process integration | The serial `process-gates` project owns exactly the six files listed below, with one worker and no file parallelism. |
+| Browser | Playwright owns production-build journeys, real layout/WebGL/accessibility behavior, and its own preview process. |
+| Comparator negative control | A copied trace or observation is altered to prove that a comparator rejects bad evidence. This does not mutate production. |
+| Real-source mutation | One real production source is changed only in a fresh isolated copy; the unchanged owning test must RED once for the intended reason. |
+
 ## Browser verification
 
 For relevant UI, responsive-layout, diagram, or formatting changes, inspect:
@@ -114,12 +124,73 @@ For relevant UI, responsive-layout, diagram, or formatting changes, inspect:
 
 Critical journeys should be automated with Playwright. Screenshots supplement automated assertions; they do not replace them.
 
+Run the deterministic production release matrix with:
+
+```bash
+npm run test:e2e:release
+```
+
+This builds the production application, enforces the initial-entry budget, and
+runs the release-critical Chromium contracts at 1440 × 900 and 390 × 844. It
+proves query and Back routing, the real Joule reference-air calculator,
+approved theme materials, the accepted WebGL line and endpoint renderer,
+below-fold solver and renderer deferral, viewport coverage, and runtime-error
+absence. Pull-request CI runs each device in its own one-worker job.
+
+The exhaustive visual and wall-clock journey collection remains available as:
+
+```bash
+npm run test:e2e:full
+```
+
+It is a diagnostic/visual-QA suite, not a protected merge gate. Several of its
+long-running animation and screenshot probes intentionally observe real browser
+time and pixel scheduling; those observations are useful locally but are not a
+deterministic oracle on shared Linux runners. Motion legality, causal ordering,
+last-event-wins behavior, cleanup, and config freshness are instead owned by
+the deterministic unit and serial process gates. Do not make the exhaustive
+suite green by loosening product assertions or wall-clock limits.
+
+Playwright alone owns
+`127.0.0.1:4173`: its preview command uses `--strictPort`,
+`reuseExistingServer: false` locally and in CI, and bounded teardown. Do not
+pre-start or reuse a preview server. Install the pinned browser in a new
+environment with `npx playwright install chromium`; CI uses `--with-deps`.
+
+## Initial bundle budget
+
+`npm run build` runs `npm run check:bundle` after Vite. The HTML entry's initial module scripts and module-preload graph may total at most 230 KiB minified and 75 KiB gzip. Route and below-fold chunks are excluded only when they are genuinely absent from the initial HTML graph; `e2e/performance.spec.ts` additionally confirms that the solver chunk is not requested at first paint.
+
 ## Required verification
+
+The local test command is deliberately sequential:
+
+```bash
+npm run test:unit
+npm run test:process-gates
+# equivalent sequence, preceded by config freshness checks
+npm test
+```
+
+`test:unit` is the canonical Vitest unit/DOM project. `test:process-gates` owns
+exactly these six files from `vitest.config.ts`:
+
+1. `tests/dev/config-hot-reload.test.ts`
+2. `tests/dev/playwright-server-ownership.test.ts`
+3. `tests/landing/background-config.test.ts`
+4. `tests/landing/elastic-menu-chain-config.test.ts`
+5. `tests/landing/line-field-config.test.ts`
+6. `tests/landing/session3-evidence-finalizer.test.ts`
+
+That project uses `fileParallelism: false` and `maxWorkers: 1`; do not move its
+watchers, compilers, child processes, port ownership, or evidence finalizer into
+the parallel unit pool. The Landing guide lists the subsystem routes:
+[src/landing/README.md](../src/landing/README.md).
 
 Run the narrowest relevant test first:
 
 ```bash
-npm test -- <test-path>
+npm run test:unit -- <test-path>
 ```
 
 Then run the complete local gate:
@@ -128,7 +199,376 @@ Then run the complete local gate:
 npm run verify
 ```
 
-The gate comprises tests, lint, production build, and `npm audit --audit-level=high`.
+The gate comprises tests, lint, production build, and `audit:production`, which
+runs `npm audit --omit=dev --audit-level=high`.
+
+For a landing-page release, also run `npm run test:e2e:release`; it is enforced in both CI and the Pages release workflow. Pull-request CI keeps the desktop and mobile Playwright projects in separate jobs, with one worker and one preview server per job. The protected `verify` result depends on the quality job and the complete deterministic browser matrix, so neither device gate can be skipped or hidden behind the aggregate check. Run `npm run test:e2e:full` separately when a change touches timing-sensitive visual journeys and record any environment-specific uncertainty instead of presenting that diagnostic suite as a deterministic release oracle.
+
+## Manual Landing real-source mutation gate
+
+No one-command mutation automation exists. The reviewed fallback below is
+manual by design and must never edit the active checkout. Use one fresh copy per
+mutant, then a fourth pristine copy.
+
+### Mutants and fingerprints
+
+The orchestration below applies each mutation only after its exact source
+literal occurs once. Each mutant receives its own fresh copy and unchanged
+owning test; any other failure shape is rejected.
+
+| Mutant | Target and exact title | Required single-failure fingerprint |
+|---|---|---|
+| `chain` | `tests/landing/animated-content-chain.test.tsx` — `autonomously reverses in exact causal reverse order, rearms initial, and replays entry` | exit 1; expected call count 1 versus 0; stack in the target file |
+| `profiles` | `tests/landing/thermodynamics-explorer.test.tsx` — `refreshes the same owned trigger once for real open, move, and close revisions` | exit 1; one deep-equality failure containing `power3.out` and `bounce.out`; target-file stack |
+| `diagram` | `tests/landing/thermodynamics-explorer.test.tsx` — `opens authentic registry detail and a real reference T-s diagram without routing the row` | exit 1; one `Object.is equality` failure at diagram identity; target-file stack; do not require compacted object keys |
+
+### Complete four-copy orchestration
+
+The table above exposes every target and fingerprint for review. Run this
+self-contained orchestration from the active
+repository root. It creates three separate mutant copies and a fourth pristine
+copy, runs the active GREEN outside the checkout, compares the final active
+manifest, and validates every temporary root before cleanup. It requires POSIX
+process groups (macOS, Linux, or WSL) and refuses to spawn Vitest on native
+Windows. A normal close returns immediately; after a timeout, cleanup remains
+blocked until TERM/KILL escalation has completed and the process group is
+confirmed absent. Any failed guard exits non-zero; this is a documented manual
+command, not a package runner.
+
+```bash
+set -euo pipefail
+LANDING_ACTIVE_ROOT="$(git rev-parse --show-toplevel)"
+LANDING_NODE_BIN="$(command -v node)"
+export LANDING_ACTIVE_ROOT LANDING_NODE_BIN
+
+"$LANDING_NODE_BIN" --input-type=module <<'NODE'
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { spawn } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { basename, dirname, join, relative, sep } from 'node:path'
+
+const activeRoot = await realpath(process.env.LANDING_ACTIVE_ROOT)
+const nodeBin = process.env.LANDING_NODE_BIN
+const temporaryParent = await realpath(tmpdir())
+if (process.platform === 'win32') {
+  throw new Error('manual mutation gate requires POSIX process groups; use macOS, Linux, or WSL')
+}
+const excluded = new Set([
+  '.git', 'node_modules', 'dist', 'dist-ssr', 'output', '.superpowers',
+  'playwright-report', 'test-results', 'coverage', '.vitest-reports',
+])
+const manifest = [
+  'src/landing/components/AnimatedContentChain.tsx',
+  'src/landing/components/ThermodynamicsExplorer.tsx',
+  'tests/landing/animated-content-chain.test.tsx',
+  'tests/landing/thermodynamics-explorer.test.tsx',
+]
+const mutants = [
+  {
+    name: 'chain',
+    target: 'tests/landing/animated-content-chain.test.tsx',
+    title: 'autonomously reverses in exact causal reverse order, rearms initial, and replays entry',
+    fragments: ['called 1 times', 'got 0 times'],
+  },
+  {
+    name: 'profiles',
+    target: 'tests/landing/thermodynamics-explorer.test.tsx',
+    title: 'refreshes the same owned trigger once for real open, move, and close revisions',
+    fragments: ['power3.out', 'bounce.out'],
+  },
+  {
+    name: 'diagram',
+    target: 'tests/landing/thermodynamics-explorer.test.tsx',
+    title: 'opens authentic registry detail and a real reference T-s diagram without routing the row',
+    fragments: ['Object.is equality'],
+  },
+]
+const temporaryRoots = []
+const unconfirmedTimeoutGroups = new Set()
+const infrastructureReporterSource = [
+  "import { writeFile } from 'node:fs/promises'",
+  'export default class LandingInfrastructureReporter {',
+  '  async onTestRunEnd(_modules, unhandledErrors, reason) {',
+  '    const errors = unhandledErrors.map(error => ({',
+  "      name: error?.name ?? 'Error',",
+  "      message: error?.message ?? String(error),",
+  "      stack: error?.stack ?? '',",
+  '    }))',
+  "    await writeFile(process.env.LANDING_INFRA_REPORT, JSON.stringify({ reason, errors }))",
+  '  }',
+  '}',
+].join('\n')
+
+const sha256 = async file => createHash('sha256').update(await readFile(file)).digest('hex')
+const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
+const hashManifest = async root => Object.fromEntries(await Promise.all(
+  manifest.map(async file => [file, await sha256(join(root, file))]),
+))
+const requireSameManifest = (expected, actual, owner) => {
+  for (const file of manifest) {
+    if (expected[file] !== actual[file]) throw new Error(`${owner} changed ${file}`)
+  }
+}
+const once = (text, needle) => {
+  if (text.split(needle).length !== 2) throw new Error(`expected one literal: ${needle}`)
+}
+
+async function makeCopy(label, activeManifest) {
+  const root = await mkdtemp(join(temporaryParent, `landing-mutation-${label}.`))
+  temporaryRoots.push(root)
+  const copyRoot = join(root, 'repo')
+  const reporterFile = join(root, 'infrastructure-reporter.mjs')
+  await cp(activeRoot, copyRoot, {
+    recursive: true,
+    filter(source) {
+      const path = relative(activeRoot, source)
+      return path === '' || !excluded.has(path.split(sep)[0])
+    },
+  })
+  await symlink(join(activeRoot, 'node_modules'), join(copyRoot, 'node_modules'), 'dir')
+  await writeFile(reporterFile, infrastructureReporterSource)
+  requireSameManifest(activeManifest, await hashManifest(copyRoot), `${label} PRE copy`)
+  return { root, copyRoot, reporterFile }
+}
+
+async function applyMutant(copyRoot, name) {
+  const chain = join(copyRoot, 'src/landing/components/AnimatedContentChain.tsx')
+  const explorer = join(copyRoot, 'src/landing/components/ThermodynamicsExplorer.tsx')
+  if (name === 'chain') {
+    const before = `      }, [], finalCompletionAt)\n      ownedScheduler.play()\n    }\n\n    const exitDownward = () => {`
+    const after = `      }, [], finalCompletionAt)\n    }\n\n    const exitDownward = () => {`
+    const text = await readFile(chain, 'utf8'); once(text, before)
+    await writeFile(chain, text.replace(before, after))
+  } else if (name === 'profiles') {
+    let text = await readFile(explorer, 'utf8')
+    once(text, 'profiles.lead'); once(text, 'profiles.follower')
+    if (text.includes('__LANDING_LEAD__')) throw new Error('reserved swap token exists')
+    text = text.replace('profiles.lead', '__LANDING_LEAD__')
+      .replace('profiles.follower', 'profiles.lead')
+      .replace('__LANDING_LEAD__', 'profiles.follower')
+    await writeFile(explorer, text)
+  } else if (name === 'diagram') {
+    const before = '<LandingDiagram spec={referenceScenario.diagramSpec} />'
+    const after = '<LandingDiagram spec={{ ...referenceScenario.diagramSpec, statePoints: referenceScenario.diagramSpec.statePoints.slice(0, 3) }} />'
+    const text = await readFile(explorer, 'utf8'); once(text, before)
+    await writeFile(explorer, text.replace(before, after))
+  } else throw new Error(`unknown mutant ${name}`)
+}
+
+async function waitForGroupExit(pgid) {
+  const deadline = Date.now() + 5_000
+  while (true) {
+    try {
+      process.kill(-pgid, 0)
+    } catch (error) {
+      if (error?.code === 'ESRCH') return
+      throw error
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`process group ${pgid} survived SIGKILL; temporary roots retained`)
+    }
+    await delay(50)
+  }
+}
+
+async function runVitest(root, targets, titlePattern, outputFile, reporterFile, expectedExit) {
+  await mkdir(dirname(outputFile), { recursive: true })
+  const infrastructureFile = `${outputFile}.infrastructure.json`
+  const args = [
+    join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--project', 'unit',
+    ...targets, '-t', titlePattern, '--no-cache', '--no-file-parallelism',
+    '--maxWorkers=1', '--reporter=json', `--reporter=${reporterFile}`,
+    `--outputFile.json=${outputFile}`,
+  ]
+  const child = spawn(nodeBin, args, {
+    cwd: root,
+    detached: true,
+    env: {
+      CI: '1',
+      NODE_ENV: 'test',
+      LANDING_INFRA_REPORT: infrastructureFile,
+      PATH: '/usr/bin:/bin:/usr/sbin:/sbin',
+    },
+    stdio: 'inherit',
+  })
+  const closed = new Promise(resolve => {
+    child.once('error', error => resolve({ error }))
+    child.once('close', (code, signal) => resolve({ code, signal }))
+  })
+  const pgid = child.pid
+  if (!Number.isInteger(pgid)) {
+    const outcome = await closed
+    if (outcome.error) throw outcome.error
+    throw new Error('Vitest process group id unavailable')
+  }
+  let timeout
+  const first = await Promise.race([
+    closed.then(outcome => ({ kind: 'closed', outcome })),
+    new Promise(resolve => {
+      timeout = setTimeout(() => resolve({ kind: 'timeout' }), 45_000)
+    }),
+  ])
+  const timedOut = first.kind === 'timeout'
+  let outcome
+  if (!timedOut) {
+    clearTimeout(timeout)
+    outcome = first.outcome
+  } else {
+    unconfirmedTimeoutGroups.add(pgid)
+    let escalationError
+    const attemptTermination = signal => {
+      try {
+        process.kill(-pgid, signal)
+      } catch (error) {
+        if (error?.code !== 'ESRCH' && !escalationError) escalationError = error
+      }
+    }
+    attemptTermination('SIGTERM')
+    await delay(1_000)
+    attemptTermination('SIGKILL')
+    outcome = await closed
+    await waitForGroupExit(pgid)
+    unconfirmedTimeoutGroups.delete(pgid)
+    if (escalationError) throw escalationError
+  }
+  if (outcome.error) throw outcome.error
+  if (timedOut || outcome.signal || outcome.code !== expectedExit) {
+    throw new Error(`Vitest exit mismatch: code=${outcome.code} signal=${outcome.signal} timeout=${timedOut}`)
+  }
+  return {
+    report: JSON.parse(await readFile(outputFile, 'utf8')),
+    infrastructure: JSON.parse(await readFile(infrastructureFile, 'utf8')),
+  }
+}
+
+const assertions = report => (report.testResults ?? []).flatMap(result => result.assertionResults ?? [])
+const printSummary = (owner, report, infrastructure) => {
+  console.log(JSON.stringify({
+    owner,
+    success: report.success,
+    totalTests: report.numTotalTests,
+    passedTests: report.numPassedTests,
+    failedTests: report.numFailedTests,
+    pendingTests: report.numPendingTests,
+    failedSuites: report.numFailedTestSuites,
+    files: (report.testResults ?? []).map(result => ({
+      name: result.name,
+      status: result.status,
+      message: result.message,
+    })),
+    unhandledErrors: infrastructure?.errors?.length,
+  }))
+}
+const rejectInfrastructureErrors = ({ report, infrastructure }, owner) => {
+  if (!infrastructure || !Array.isArray(infrastructure.errors)) {
+    throw new Error(`${owner}: invalid infrastructure report`)
+  }
+  if (infrastructure.errors.length > 0) {
+    throw new Error(`${owner}: ${infrastructure.errors.length} unhandled error(s)`)
+  }
+  const fileErrors = (report.testResults ?? []).filter(result => result.message !== '')
+  if (fileErrors.length > 0) throw new Error(`${owner}: file or collection error`)
+}
+const validateRed = (execution, mutant) => {
+  const { report, infrastructure } = execution
+  printSummary(mutant.name, report, infrastructure)
+  rejectInfrastructureErrors(execution, mutant.name)
+  const failed = assertions(report).filter(assertion => assertion.status === 'failed')
+  const title = failed[0]?.title ?? failed[0]?.fullName ?? ''
+  const failureMessages = failed[0]?.failureMessages ?? []
+  const failure = failureMessages.join('\n')
+  const [fileResult] = report.testResults ?? []
+  if (
+    report.success !== false
+    || report.numPassedTests !== 0
+    || report.numFailedTests !== 1
+    || failed.length !== 1
+    || failureMessages.length !== 1
+    || report.testResults?.length !== 1
+    || fileResult?.status !== 'failed'
+    || !fileResult?.name?.endsWith(`${sep}${mutant.target}`)
+  ) {
+    throw new Error(`${mutant.name}: expected exactly one failed assertion`)
+  }
+  if (title !== mutant.title && !title.endsWith(mutant.title)) throw new Error(`${mutant.name}: wrong title`)
+  for (const fragment of mutant.fragments) if (!failure.includes(fragment)) throw new Error(`${mutant.name}: missing ${fragment}`)
+  if (!failure.includes(mutant.target)) throw new Error(`${mutant.name}: missing target stack`)
+}
+const validateGreen = (execution, owner) => {
+  const { report, infrastructure } = execution
+  printSummary(owner, report, infrastructure)
+  rejectInfrastructureErrors(execution, owner)
+  const passed = assertions(report).filter(assertion => assertion.status === 'passed')
+  if (
+    report.success !== true
+    || report.numPassedTests !== 3
+    || report.numFailedTests !== 0
+    || passed.length !== 3
+    || (report.testResults ?? []).some(result => result.status !== 'passed')
+  ) {
+    throw new Error(`${owner}: expected exactly 3 passed / 0 failed`)
+  }
+  for (const expected of mutants.map(mutant => mutant.title)) {
+    const matches = passed.filter(assertion => {
+      const title = assertion.title ?? assertion.fullName ?? ''
+      return title === expected || title.endsWith(expected)
+    })
+    if (matches.length !== 1) throw new Error(`${owner}: missing or duplicate ${expected}`)
+  }
+}
+async function cleanup(root) {
+  const resolved = await realpath(root)
+  if (dirname(resolved) !== temporaryParent || !basename(resolved).startsWith('landing-mutation-')) {
+    throw new Error(`refusing cleanup outside owned temp: ${resolved}`)
+  }
+  await rm(resolved, { recursive: true })
+}
+
+try {
+  const activeBefore = await hashManifest(activeRoot)
+  for (const mutant of mutants) {
+    const copy = await makeCopy(mutant.name, activeBefore)
+    await applyMutant(copy.copyRoot, mutant.name)
+    const execution = await runVitest(
+      copy.copyRoot,
+      [mutant.target],
+      mutant.title,
+      join(copy.root, 'result.json'),
+      copy.reporterFile,
+      1,
+    )
+    validateRed(execution, mutant)
+    console.log(`RED confirmed: ${mutant.name}`)
+  }
+
+  const pristine = await makeCopy('pristine', activeBefore)
+  const greenTargets = [...new Set(mutants.map(mutant => mutant.target))]
+  const greenPattern = mutants.map(mutant => mutant.title).join('|')
+  const pristineExecution = await runVitest(
+    pristine.copyRoot, greenTargets, greenPattern, join(pristine.root, 'pristine.json'),
+    pristine.reporterFile, 0,
+  )
+  validateGreen(pristineExecution, 'pristine copy')
+  const activeExecution = await runVitest(
+    activeRoot, greenTargets, greenPattern, join(pristine.root, 'active.json'),
+    pristine.reporterFile, 0,
+  )
+  validateGreen(activeExecution, 'active checkout')
+  requireSameManifest(activeBefore, await hashManifest(activeRoot), 'final active manifest')
+  console.log('GREEN confirmed: pristine copy and active checkout; active manifest unchanged')
+} finally {
+  if (unconfirmedTimeoutGroups.size > 0) {
+    throw new Error(`refusing temporary cleanup before confirmed process-group termination: ${[...unconfirmedTimeoutGroups].join(', ')}`)
+  }
+  const cleanupErrors = []
+  for (const root of temporaryRoots.reverse()) {
+    try { await cleanup(root) } catch (error) { cleanupErrors.push(error) }
+  }
+  if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, 'temporary cleanup failed')
+}
+NODE
+```
 
 ## Evidence report
 

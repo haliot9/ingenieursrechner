@@ -9,9 +9,11 @@ Preserve the core promise: the same physical inputs produce the same outputs and
 
 1. `src/modules/<module>/README.md` — domain conventions and limits
 2. `docs/ARCHITECTURE.md` — system boundaries
-3. `docs/DECISIONS.md` — architectural rationale
-4. `src/core/types.ts` — interface source of truth
-5. nearest source and tests
+3. `docs/DERIVATION_ARCHITECTURE.md` — quantity/direction/proof identities, ownership, and coverage
+4. `docs/DECISIONS.md` — architectural rationale
+5. `src/core/types.ts` — interface source of truth
+6. for landing work: `src/landing/README.md` and its public engineering journey
+7. nearest source and tests
 
 ## Work loop
 
@@ -47,8 +49,11 @@ This runs:
 npm test
 npm run lint
 npm run build
-npm audit --audit-level=high
+npm run audit:production
 ```
+
+Development-tool advisories are reported separately with
+`npm run audit:development`; they are not part of the deployed runtime graph.
 
 Do not claim release readiness unless the complete bundle was executed successfully or the blocker is explicit.
 
@@ -57,6 +62,10 @@ Do not claim release readiness unless the complete bundle was executed successfu
 - Internally use SI units; convert only at the input/output boundary.
 - Define every variable in `src/core/types.ts` and module `config.ts`.
 - Each formula must provide `solveFor` and `latexSteps` for every supported target.
+- Never overwrite a user-entered fact with a derived value.
+- For new or generalized planned execution, every active `formulaId:targetId` direction must resolve to reviewed module policy, whether through a safe declared default or an explicit override.
+- For new or generalized story work, every story-authorised direction needs matching proof authority and solver provenance; consistent redundancy must be validated and contradictions localised.
+- Phase A stories must not hide unconsumed steps, blocked facts, alternatives, or contradictions when they are partial or unavailable.
 - Validate computed values as well as user inputs.
 - Carnot convention: 1→2 adiabatic compression, 2→3 hot isothermal expansion, 3→4 adiabatic expansion, 4→1 cold isothermal compression.
 - Carnot temperatures: `T1 = T4 = T_cold`, `T2 = T3 = T_hot`.

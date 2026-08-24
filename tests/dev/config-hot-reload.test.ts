@@ -143,6 +143,8 @@ function createControlledPlugin(root: string) {
     add: () => undefined,
   })
   const logger = createLogger('silent', { allowClearScreen: false })
+  const infoMessages: string[] = []
+  logger.info = message => { infoMessages.push(message) }
   const server = {
     config: { logger },
     watcher,
@@ -159,6 +161,7 @@ function createControlledPlugin(root: string) {
   return {
     close: () => closeBundle.call(plugin),
     emitChange: (path: string) => watcher.emit('change', path),
+    infoMessages,
   }
 }
 
@@ -260,6 +263,31 @@ describe('Vite config hot reload', () => {
       await waitForFile(paths.compilerCompleted, contents => contents.trim().split('\n').length >= 2)
 
       expect(await readFile(paths.backgroundOutput, 'utf8')).toContain('newest__')
+    } finally {
+      await controlledPlugin.close()
+    }
+  })
+
+  it('rechecks an authoring save immediately after compiler close without a second watcher event', async () => {
+    const paths = await createFixture()
+    const controlledPlugin = createControlledPlugin(paths.root)
+
+    try {
+      await writeFile(join(paths.root, paths.background), 'background: first-save\n')
+      controlledPlugin.emitChange(join(paths.root, paths.background))
+      const deadline = Date.now() + 4_000
+      while (
+        !controlledPlugin.infoMessages.some(message => message.includes('landing background regenerated'))
+        && Date.now() < deadline
+      ) await new Promise(resolve => setTimeout(resolve, 5))
+      expect(controlledPlugin.infoMessages).toContainEqual(
+        expect.stringContaining('landing background regenerated'),
+      )
+
+      await writeFile(join(paths.root, paths.background), 'background: post-close\n')
+      await waitForFile(paths.compilerCompleted, contents => contents.trim().split('\n').length >= 2)
+
+      expect(await readFile(paths.backgroundOutput, 'utf8')).toContain('post-close')
     } finally {
       await controlledPlugin.close()
     }

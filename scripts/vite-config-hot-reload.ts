@@ -77,6 +77,7 @@ export function createConfigHotReloadPlugin(options: { root?: string } = {}): Pl
   let onChange: ((path: string) => void) | undefined
   let closing = false
   const activeCompilers = new Set<ReturnType<typeof spawn>>()
+  const reconciliationTimers = new Set<ReturnType<typeof setTimeout>>()
 
   return {
     name: 'ingenieursrechner-config-hot-reload',
@@ -90,11 +91,17 @@ export function createConfigHotReloadPlugin(options: { root?: string } = {}): Pl
       const targetByInput = new Map(targets.flatMap(target => target.inputs.map(path => [path, target] as const)))
       const targetStates = new Map(targets.map(target => [target, {
         pending: false,
+        reconciliationTimer: undefined as ReturnType<typeof setTimeout> | undefined,
         running: undefined as ReturnType<typeof spawn> | undefined,
       }]))
       const startCompiler = (target: CompilerTarget) => {
         const state = targetStates.get(target)
         if (!state || state.running || closing) return
+        if (state.reconciliationTimer) {
+          clearTimeout(state.reconciliationTimer)
+          reconciliationTimers.delete(state.reconciliationTimer)
+          state.reconciliationTimer = undefined
+        }
         state.pending = false
         const startingInputRevision = captureInputRevision(target.inputs)
         const child = compile(target, root, viteServer, () => closing)
@@ -103,9 +110,23 @@ export function createConfigHotReloadPlugin(options: { root?: string } = {}): Pl
         child.once('close', () => {
           activeCompilers.delete(child)
           state.running = undefined
-          const inputsChangedDuringCompile = !closing
-            && captureInputRevision(target.inputs) !== startingInputRevision
+          const closingInputRevision = captureInputRevision(target.inputs)
+          const inputsChangedDuringCompile = !closing && closingInputRevision !== startingInputRevision
           if ((state.pending || inputsChangedDuringCompile) && !closing) startCompiler(target)
+          else if (!closing) {
+            // Chokidar suppresses same-path changes inside a 50 ms window without
+            // emitting a trailing event. Reconcile once after that window so a
+            // save immediately following a fast compiler close is not lost.
+            const timer = setTimeout(() => {
+              reconciliationTimers.delete(timer)
+              if (state.reconciliationTimer === timer) state.reconciliationTimer = undefined
+              if (!closing && captureInputRevision(target.inputs) !== closingInputRevision) {
+                startCompiler(target)
+              }
+            }, 75)
+            state.reconciliationTimer = timer
+            reconciliationTimers.add(timer)
+          }
         })
       }
       viteServer.watcher.add([...targetByInput.keys()])
@@ -122,6 +143,8 @@ export function createConfigHotReloadPlugin(options: { root?: string } = {}): Pl
     async closeBundle() {
       closing = true
       if (server && onChange) server.watcher.off('change', onChange)
+      for (const timer of reconciliationTimers) clearTimeout(timer)
+      reconciliationTimers.clear()
       await Promise.all([...activeCompilers].map(child => new Promise<void>(resolveChild => {
         child.once('close', () => resolveChild())
         child.kill('SIGTERM')

@@ -187,7 +187,7 @@ npm run verify
 The gate comprises tests, lint, production build, and `audit:production`, which
 runs `npm audit --omit=dev --audit-level=high`.
 
-For a landing-page release, also run `npm run test:e2e`; it is enforced in both CI and the Pages release workflow.
+For a landing-page release, also run `npm run test:e2e`; it is enforced in both CI and the Pages release workflow. Pull-request CI keeps the desktop and mobile Playwright projects in separate jobs, with one worker and one preview server per job. The protected `verify` result depends on the quality job and the complete browser matrix, so neither device gate can be skipped or hidden behind the aggregate check.
 
 ## Manual Landing real-source mutation gate
 

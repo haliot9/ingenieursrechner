@@ -13,11 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
+  quality:
+    name: quality
     runs-on: ubuntu-latest
-    # The release gate runs 116 desktop/mobile browser journeys serially after
-    # unit tests, lint, browser installation, and a production build.
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -32,11 +31,52 @@ jobs:
         run: npm test
       - name: Run lint
         run: npm run lint
-      - name: Install Chromium for browser journeys
-        run: npx playwright install --with-deps chromium
-      - name: Run production build and browser journeys
-        run: npm run test:e2e
+      - name: Run production build
+        run: npm run build
       - name: Audit runtime dependencies
         run: npm run audit:production
       - name: Report development dependency audit (non-blocking)
         run: npm run audit:development || true
+
+  browser:
+    name: browser (${{ matrix.project }})
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - desktop-chromium
+          - mobile-chromium
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium for browser journeys
+        run: npx playwright install --with-deps chromium
+      - name: Run production build
+        run: npm run build
+      - name: Run isolated browser journeys
+        run: npx playwright test --project="${{ matrix.project }}" --workers=1 --reporter=line
+
+  verify:
+    name: verify
+    if: always()
+    needs: [quality, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every release gate
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: |
+          test "$QUALITY_RESULT" = "success"
+          test "$BROWSER_RESULT" = "success"

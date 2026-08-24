@@ -15,7 +15,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The release gate runs 116 desktop/mobile browser journeys serially after
+    # unit tests, lint, browser installation, and a production build.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7

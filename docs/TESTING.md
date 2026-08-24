@@ -124,22 +124,37 @@ For relevant UI, responsive-layout, diagram, or formatting changes, inspect:
 
 Critical journeys should be automated with Playwright. Screenshots supplement automated assertions; they do not replace them.
 
-Run the production browser journeys with:
+Run the deterministic production release matrix with:
 
 ```bash
-npm run test:e2e
+npm run test:e2e:release
 ```
 
 This builds the production application, enforces the initial-entry budget, and
-runs Chromium at 1440 × 900 and 390 × 844 with one worker. The visual journeys
-share a preview process plus browser animation/WebGL timing, so a parallel
-local matrix is not canonical evidence. Playwright alone owns
+runs the release-critical Chromium contracts at 1440 × 900 and 390 × 844. It
+proves query and Back routing, the real Joule reference-air calculator,
+approved theme materials, the accepted WebGL line and endpoint renderer,
+below-fold solver and renderer deferral, viewport coverage, and runtime-error
+absence. Pull-request CI runs each device in its own one-worker job.
+
+The exhaustive visual and wall-clock journey collection remains available as:
+
+```bash
+npm run test:e2e:full
+```
+
+It is a diagnostic/visual-QA suite, not a protected merge gate. Several of its
+long-running animation and screenshot probes intentionally observe real browser
+time and pixel scheduling; those observations are useful locally but are not a
+deterministic oracle on shared Linux runners. Motion legality, causal ordering,
+last-event-wins behavior, cleanup, and config freshness are instead owned by
+the deterministic unit and serial process gates. Do not make the exhaustive
+suite green by loosening product assertions or wall-clock limits.
+
+Playwright alone owns
 `127.0.0.1:4173`: its preview command uses `--strictPort`,
 `reuseExistingServer: false` locally and in CI, and bounded teardown. Do not
-pre-start or reuse a preview server. The suite covers keyboard-only landing
-navigation, Reduced Motion, failed Wright media, URL routing and browser Back,
-light-theme control contrast, below-fold chunk deferral, and the real Joule
-reference-air calculator journey. Install the pinned browser in a new
+pre-start or reuse a preview server. Install the pinned browser in a new
 environment with `npx playwright install chromium`; CI uses `--with-deps`.
 
 ## Initial bundle budget
@@ -187,7 +202,7 @@ npm run verify
 The gate comprises tests, lint, production build, and `audit:production`, which
 runs `npm audit --omit=dev --audit-level=high`.
 
-For a landing-page release, also run `npm run test:e2e`; it is enforced in both CI and the Pages release workflow. Pull-request CI keeps the desktop and mobile Playwright projects in separate jobs, with one worker and one preview server per job. The protected `verify` result depends on the quality job and the complete browser matrix, so neither device gate can be skipped or hidden behind the aggregate check.
+For a landing-page release, also run `npm run test:e2e:release`; it is enforced in both CI and the Pages release workflow. Pull-request CI keeps the desktop and mobile Playwright projects in separate jobs, with one worker and one preview server per job. The protected `verify` result depends on the quality job and the complete deterministic browser matrix, so neither device gate can be skipped or hidden behind the aggregate check. Run `npm run test:e2e:full` separately when a change touches timing-sensitive visual journeys and record any environment-specific uncertainty instead of presenting that diagnostic suite as a deterministic release oracle.
 
 ## Manual Landing real-source mutation gate
 

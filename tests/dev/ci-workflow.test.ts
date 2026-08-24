@@ -22,7 +22,13 @@ interface Workflow {
   jobs?: Record<string, WorkflowJob>
 }
 
+interface PackageManifest {
+  scripts?: Record<string, string>
+}
+
 const workflowPath = resolve(process.cwd(), '.github/workflows/ci.yml')
+const deploymentPath = resolve(process.cwd(), '.github/workflows/deploy-pages.yml')
+const packagePath = resolve(process.cwd(), 'package.json')
 
 function requireJob(workflow: Workflow, jobId: string): WorkflowJob {
   const job = workflow.jobs?.[jobId]
@@ -39,6 +45,8 @@ function requireStep(job: WorkflowJob, name: string): WorkflowStep {
 describe('pull-request CI ownership', () => {
   it('requires isolated desktop and mobile browser gates before the protected verify result', async () => {
     const workflow = parse(await readFile(workflowPath, 'utf8')) as Workflow
+    const deployment = parse(await readFile(deploymentPath, 'utf8')) as Workflow
+    const packageManifest = JSON.parse(await readFile(packagePath, 'utf8')) as PackageManifest
     const quality = requireJob(workflow, 'quality')
     const browser = requireJob(workflow, 'browser')
     const verify = requireJob(workflow, 'verify')
@@ -54,8 +62,14 @@ describe('pull-request CI ownership', () => {
       'mobile-chromium',
     ])
     expect(requireStep(browser, 'Run isolated browser journeys').run).toBe(
-      'npx playwright test --project="${{ matrix.project }}" --workers=1 --reporter=line',
+      'npm run test:e2e:release -- --project="${{ matrix.project }}" --workers=1 --reporter=line',
     )
+    expect(packageManifest.scripts?.['test:e2e:release']).toBe(
+      'npm run build && playwright test e2e/routing-calculator.spec.ts e2e/theme-control-materials.spec.ts e2e/line-field-renderer.spec.ts e2e/performance.spec.ts',
+    )
+    expect(packageManifest.scripts?.['test:e2e:full']).toBe('npm run build && playwright test')
+    expect(requireStep(requireJob(deployment, 'build'), 'Run production build and browser journeys').run)
+      .toBe('npm run test:e2e:release')
 
     expect(verify.name).toBe('verify')
     expect(verify.if).toBe('always()')
